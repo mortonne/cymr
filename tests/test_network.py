@@ -37,7 +37,14 @@ def test_pre_weights(net, weights):
     np.testing.assert_array_equal(net.w_cf_pre[f_ind, c_ind], weights)
 
 
-def test_update(net, weights):
+def test_update(net):
+    net.add_pre_weights(1, ('task', 'task'))
+    net.update('task', 0)
+    expected = np.array([0, 0, 0, 0, 0, 1])
+    np.testing.assert_allclose(net.c, expected)
+
+
+def test_present(net, weights):
     region = ('item', 'item')
     net.add_pre_weights(weights, region)
     f_ind, c_ind = net.get_slices(region)
