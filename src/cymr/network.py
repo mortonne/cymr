@@ -50,6 +50,8 @@ class Network(object):
 
     def present(self, segment, item, B):
         ind = self.f_ind[segment].start + item
+        self.f.fill(0)
+        self.f[ind] = 1
         self.c_in = self.w_fc_pre[ind, :].copy()
         self.c_in /= np.linalg.norm(self.c_in, ord=2)
         operations.update(self.c, self.c_in, B)
