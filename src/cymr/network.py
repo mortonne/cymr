@@ -11,8 +11,7 @@ class Network(object):
         n_c = 0
         self.f_ind = {}
         self.c_ind = {}
-        for name, n_unit in segments.items():
-            s_f, s_c = n_unit
+        for name, (s_f, s_c) in segments.items():
             self.f_ind[name] = slice(n_f, n_f + s_f)
             self.c_ind[name] = slice(n_c, n_c + s_c)
             n_f += s_f
@@ -23,8 +22,8 @@ class Network(object):
         self.f = np.zeros(n_f)
         self.c = np.zeros(n_c)
         self.c_in = np.zeros(n_c)
-        self.w_fc_pre = np.zeros((n_c, n_f))
-        self.w_fc_exp = np.zeros((n_c, n_f))
+        self.w_fc_pre = np.zeros((n_f, n_c))
+        self.w_fc_exp = np.zeros((n_f, n_c))
         self.w_cf_pre = np.zeros((n_f, n_c))
         self.w_cf_exp = np.zeros((n_f, n_c))
 
@@ -47,9 +46,10 @@ class Network(object):
         scaled = intercept + slope * weights
         f_ind, c_ind = self.get_slices(region)
         self.w_cf_pre[f_ind, c_ind] = scaled
-        self.w_fc_pre[c_ind, f_ind] = scaled.T
+        self.w_fc_pre[f_ind, c_ind] = scaled
 
-    def present_item(self, item, B):
-        self.c_in = self.w_fc_pre[:, item].copy()
+    def present(self, segment, item, B):
+        ind = self.f_ind[segment].start + item
+        self.c_in = self.w_fc_pre[ind, :].copy()
         self.c_in /= np.linalg.norm(self.c_in, ord=2)
         operations.update(self.c, self.c_in, B)
