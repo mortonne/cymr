@@ -7,15 +7,14 @@ from cymr import network
 
 @pytest.fixture()
 def net():
-    n_c = 5
-    n_f = 3
-    net = network.Network(n_c, n_f)
+    segments = {'item': (3, 5), 'task': (1, 1)}
+    net = network.Network(segments)
     return net
 
 
 @pytest.fixture()
 def weights():
-    mat = np.arange(15).reshape((5, 3))
+    mat = np.arange(15).reshape((3, 5))
     return mat
 
 
@@ -31,16 +30,20 @@ def test_network_init(net):
 
 
 def test_pre_weights(net, weights):
-    net.add_pre_weights(weights)
-    np.testing.assert_array_equal(net.w_fc_pre, weights)
-    np.testing.assert_array_equal(net.w_cf_pre, weights.T)
+    region = ('item', 'item')
+    net.add_pre_weights(weights, region)
+    f_ind, c_ind = net.get_slices(region)
+    np.testing.assert_array_equal(net.w_fc_pre[c_ind, f_ind], weights.T)
+    np.testing.assert_array_equal(net.w_cf_pre[f_ind, c_ind], weights)
 
 
 def test_update(net, weights):
-    net.add_pre_weights(weights)
+    region = ('item', 'item')
+    net.add_pre_weights(weights, region)
+    f_ind, c_ind = net.get_slices(region)
     net.c[0] = 1
     net.present_item(0, .5)
     np.testing.assert_allclose(np.linalg.norm(net.c, 2), 1)
     expected = np.array(
         [0.8660254, 0.09128709, 0.18257419, 0.27386128, 0.36514837])
-    np.testing.assert_allclose(net.c, expected)
+    np.testing.assert_allclose(net.c[c_ind], expected)

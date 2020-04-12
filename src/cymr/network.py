@@ -6,7 +6,18 @@ from cymr import operations
 
 class Network(object):
 
-    def __init__(self, n_c, n_f):
+    def __init__(self, segments):
+        n_f = 0
+        n_c = 0
+        self.f_ind = {}
+        self.c_ind = {}
+        for name, n_unit in segments.items():
+            s_f, s_c = n_unit
+            self.f_ind[name] = slice(n_f, n_f + s_f)
+            self.c_ind[name] = slice(n_c, n_c + s_c)
+            n_f += s_f
+            n_c += s_c
+
         self.n_f = n_f
         self.n_c = n_c
         self.f = np.zeros(n_f)
@@ -27,12 +38,16 @@ class Network(object):
         s = '\n\n'.join([s_f, s_c, s_fc_pre, s_fc_exp, s_cf_pre, s_cf_exp])
         return s
 
-    def add_pre_weights(self, weights, slope=1, intercept=0):
-        n_c, n_f = weights.shape
-        assert n_c == self.n_c
+    def get_slices(self, region):
+        f_ind = self.f_ind[region[0]]
+        c_ind = self.c_ind[region[1]]
+        return f_ind, c_ind
+
+    def add_pre_weights(self, weights, region, slope=1, intercept=0):
         scaled = intercept + slope * weights
-        self.w_cf_pre[:n_f, :] = scaled.T
-        self.w_fc_pre[:, :n_f] = scaled
+        f_ind, c_ind = self.get_slices(region)
+        self.w_cf_pre[f_ind, c_ind] = scaled
+        self.w_fc_pre[c_ind, f_ind] = scaled.T
 
     def present_item(self, item, B):
         self.c_in = self.w_fc_pre[:, item].copy()
