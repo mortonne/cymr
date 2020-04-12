@@ -28,6 +28,7 @@ class Network(object):
         self.w_cf_exp = np.zeros((n_f, n_c))
 
     def __repr__(self):
+        np.set_printoptions(precision=4, floatmode='fixed', sign=' ')
         s_f = 'f:\n' + self.f.__str__()
         s_c = 'c:\n' + self.c.__str__()
         s_fc_pre = 'W pre [fc]:\n' + self.w_fc_pre.__str__()
