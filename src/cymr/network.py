@@ -48,6 +48,12 @@ class Network(object):
         self.w_cf_pre[f_ind, c_ind] = scaled
         self.w_fc_pre[f_ind, c_ind] = scaled
 
+    def update(self, segment, item):
+        ind = self.f_ind[segment].start + item
+        self.c_in = self.w_fc_pre[ind, :].copy()
+        self.c_in /= np.linalg.norm(self.c_in, ord=2)
+        self.c = self.c_in.copy()
+
     def present(self, segment, item, B):
         ind = self.f_ind[segment].start + item
         self.f.fill(0)
