@@ -54,3 +54,20 @@ def test_present(net, weights):
     expected = np.array(
         [0.8660254, 0.09128709, 0.18257419, 0.27386128, 0.36514837])
     np.testing.assert_allclose(net.c[c_ind], expected)
+
+
+def test_learn(net, weights):
+    net.add_pre_weights(weights, ('item', 'item'))
+    net.add_pre_weights(1, ('task', 'task'))
+    net.update('task', 0)
+    net.present('item', 0, .5)
+    net.learn('fc', 'all', 0, 1)
+
+    expected = np.array([0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8660])
+    ind = net.get_ind('f', 'item', 0)
+    actual = net.w_fc_exp[ind, :]
+    np.testing.assert_allclose(actual, expected, atol=.0001)
+
+    net.learn('cf', 'all', 0, 2)
+    actual = net.w_cf_exp[ind, :]
+    np.testing.assert_allclose(actual, expected * 2, atol=.0001)
