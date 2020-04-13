@@ -73,3 +73,12 @@ class Network(object):
         self.c_in = self.w_fc_pre[ind, :].copy()
         self.c_in /= np.linalg.norm(self.c_in, ord=2)
         operations.update(self.c, self.c_in, B)
+
+    def learn(self, connect, segment, item, L):
+        ind = self.c_ind[segment]
+        if connect == 'fc':
+            self.w_fc_exp[item, ind] += self.c[ind] * L
+        elif connect == 'cf':
+            self.w_cf_exp[item, ind] += self.c[ind] * L
+        else:
+            raise ValueError(f'Invalid connection: {connect}')
