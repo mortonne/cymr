@@ -16,6 +16,8 @@ class Network(object):
             self.c_ind[name] = slice(n_c, n_c + s_c)
             n_f += s_f
             n_c += s_c
+        self.f_ind['all'] = slice(0, n_f)
+        self.c_ind['all'] = slice(0, n_c)
 
         self.n_f = n_f
         self.n_c = n_c
