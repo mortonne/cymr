@@ -45,6 +45,15 @@ class Network(object):
         c_ind = self.c_ind[region[1]]
         return f_ind, c_ind
 
+    def get_ind(self, layer, region, item):
+        if layer == 'f':
+            ind = self.f_ind[region].start + item
+        elif layer == 'c':
+            ind = self.c_ind[region].start + item
+        else:
+            raise ValueError(f'Invalid layer: {layer}')
+        return ind
+
     def add_pre_weights(self, weights, region, slope=1, intercept=0):
         scaled = intercept + slope * weights
         f_ind, c_ind = self.get_slices(region)
