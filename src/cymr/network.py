@@ -99,7 +99,8 @@ class Network(object):
         support = np.zeros(n_item)
         operations.p_recall(rec_ind.start, n_item, recalls,
                             self.w_fc_exp, self.w_fc_pre,
-                            self.w_cf_exp, self.w_cf_pre, self.c, self.c_in,
+                            self.w_cf_exp, self.w_cf_pre,
+                            self.f, self.c, self.c_in,
                             exclude, amin, B, T, p_stop, support, p)
         return p
 

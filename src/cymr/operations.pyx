@@ -26,7 +26,7 @@ def update(double [:] c, double[:] c_in, double B):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def present(const double [:, :] w_fc_exp,
+cpdef present(const double [:, :] w_fc_exp,
             const double [:, :] w_fc_pre,
             double [:] c,
             double [:] c_in,
@@ -76,6 +76,7 @@ def p_recall(int start,
              const double [:, :] w_fc_pre,
              const double [:, :] w_cf_exp,
              const double [:, :] w_cf_pre,
+             double [:] f,
              double [:] c,
              double [:] c_in,
              int [:] exclude,
@@ -116,24 +117,5 @@ def p_recall(int start,
         exclude[recalls[i]] = 1
 
         # update context
-        for j in range(n_c):
-            c_in[j] = w_fc_exp[recalls[i], j] + w_fc_pre[recalls[i], j]
-
-        # normalize input
-        total = 0
-        for j in range(n_c):
-            total += c_in[j] * c_in[j]
-        norm = sqrt(total)
-        for j in range(n_c):
-            c_in[j] /= norm
-
-        # calculate scaling factor
-        total = 0
-        for j in range(n_c):
-            total += c[j] * c_in[j]
-        rho = calc_rho(total, B)
-
-        # integrate context
-        for j in range(n_c):
-            c[j] = rho * c[j] + B * c_in[j]
+        present(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B)
     p[n_r] = p_stop[n_r]
