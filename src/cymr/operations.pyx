@@ -1,7 +1,7 @@
 # cython: profile=True
 
 cimport cython
-from libc.math cimport sqrt
+from libc.math cimport sqrt, exp
 
 
 @cython.profile(False)
@@ -65,3 +65,75 @@ def present(const double [:, :] w_fc_exp,
     # integrate context
     for i in range(n_c):
         c[i] = rho * c[i] + B * c_in[i]
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def p_recall(int start,
+             int n_f,
+             const int [:] recalls,
+             const double [:, :] w_fc_exp,
+             const double [:, :] w_fc_pre,
+             const double [:, :] w_cf_exp,
+             const double [:, :] w_cf_pre,
+             double [:] c,
+             double [:] c_in,
+             int [:] exclude,
+             double amin,
+             double B,
+             double T,
+             const double [:] p_stop,
+             double [:] support,
+             double [:] p):
+    cdef Py_ssize_t n_r = recalls.shape[0]
+    cdef Py_ssize_t n_c = w_cf_exp.shape[1]
+    cdef int i
+    cdef int j
+    cdef int k
+    cdef double total = 0
+    cdef double norm
+
+    for i in range(n_r):
+        # calculate support for each item
+        for j in range(n_f):
+            support[j] = 0
+            if exclude[j]:
+                continue
+            for k in range(n_c):
+                support[j] += ((w_cf_exp[start + j, k] + w_cf_pre[start + j, k])
+                               * c[k])
+                if support[j] < amin:
+                    support[j] = amin
+            support[j] = exp((2 * support[j]) / T)
+
+        # sum of support for all items
+        total = 0
+        for j in range(n_f):
+            total += support[j]
+
+        # calculate probability of this recall
+        p[i] = (support[recalls[i]] / total) * (1 - p_stop[i])
+        exclude[recalls[i]] = 1
+
+        # update context
+        for j in range(n_c):
+            c_in[j] = w_fc_exp[recalls[i], j] + w_fc_pre[recalls[i], j]
+
+        # normalize input
+        total = 0
+        for j in range(n_c):
+            total += c_in[j] * c_in[j]
+        norm = sqrt(total)
+        for j in range(n_c):
+            c_in[j] /= norm
+
+        # calculate scaling factor
+        total = 0
+        for j in range(n_c):
+            total += c[j] * c_in[j]
+        rho = calc_rho(total, B)
+
+        # integrate context
+        for j in range(n_c):
+            c[j] = rho * c[j] + B * c_in[j]
+    p[n_r] = p_stop[n_r]
