@@ -78,11 +78,8 @@ class Network(object):
 
     def present(self, segment, item, B):
         ind = self.f_ind[segment].start + item
-        self.f.fill(0)
-        self.f[ind] = 1
-        self.c_in = self.w_fc_pre[ind, :].copy()
-        self.c_in /= np.linalg.norm(self.c_in, ord=2)
-        operations.update(self.c, self.c_in, B)
+        operations.present(self.w_fc_exp, self.w_fc_pre,
+                           self.c, self.c_in, self.f, ind, B)
 
     def learn(self, connect, segment, item, L):
         ind = self.c_ind[segment]
