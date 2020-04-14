@@ -96,10 +96,10 @@ def test_study(net_study):
                          [0.1566,  0.2488,  0.3410,  0.4332,  0.5254,  0.5777],
                          [0.2722,  0.3420,  0.4118,  0.4816,  0.5514,  0.3215],
                          [0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]])
-    np.testing.assert_allclose(net.w_fc_exp, expected)
+    np.testing.assert_allclose(net.w_fc_exp, expected, atol=.0001)
 
     expected = np.array([[0.0000,  0.1826,  0.3651,  0.5477,  0.7303,  1.7321],
                          [0.3131,  0.4975,  0.6819,  0.8663,  1.0507,  1.1553],
                          [0.5444,  0.6840,  0.8236,  0.9632,  1.1029,  0.6429],
                          [0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]])
-    np.testing.assert_allclose(net.w_cf_exp, expected)
+    np.testing.assert_allclose(net.w_cf_exp, expected, atol=.0001)
