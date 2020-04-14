@@ -113,7 +113,7 @@ def test_recall(net_study):
     X1 = .05
     X2 = 1
     p_stop = network.p_stop_op(len(recalls), X1, X2)
-    p = net.p_recall('item', recalls, B, T, p_stop)
+    p = net.p_recall_cython('item', recalls, B, T, p_stop)
     expected = np.array([0.8335545, 0.0760874, 0.6305471, 1.])
     np.testing.assert_allclose(p, expected, atol=.0000001)
 
@@ -137,7 +137,7 @@ def test_sequences(net_study):
     p[:] = np.nan
     for i, recalls in enumerate(sequences):
         net.c = c_study.copy()
-        p_recalls = net.p_recall('item', recalls, B, T, p_stop)
+        p_recalls = net.p_recall_cython('item', recalls, B, T, p_stop)
         p[i, :len(p_recalls)] = p_recalls
 
     # probability of any recall sequence should be 1
