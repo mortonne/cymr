@@ -117,5 +117,6 @@ def p_recall(int start,
         exclude[recalls[i]] = 1
 
         # update context
-        present(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B)
+        if i < (n_r - 1):
+            present(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B)
     p[n_r] = p_stop[n_r]
