@@ -114,7 +114,7 @@ def test_recall(net_study):
     X2 = 1
     p_stop = network.p_stop_op(len(recalls), X1, X2)
     p = net.p_recall('item', recalls, B, T, p_stop)
-    expected = np.array([0.8335545, 0.07583738, 0.6305472, 1.])
+    expected = np.array([0.8335545, 0.0760874, 0.6305471, 1.])
     np.testing.assert_allclose(p, expected, atol=.0000001)
 
 
