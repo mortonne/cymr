@@ -1,5 +1,6 @@
 """Test network operations."""
 
+from itertools import permutations
 import pytest
 import numpy as np
 from cymr import network
@@ -102,3 +103,43 @@ def test_study(net_study):
                          [0.5444,  0.6840,  0.8236,  0.9632,  1.1029,  0.6429],
                          [0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]])
     np.testing.assert_allclose(net.w_cf_exp, expected, atol=.0001)
+
+
+def test_recall(net_study):
+    net = net_study
+    recalls = [2, 0, 1]
+    B = .8
+    T = 10
+    X1 = .05
+    X2 = 1
+    p_stop = network.p_stop_op(len(recalls), X1, X2)
+    p = net.p_recall('item', recalls, B, T, p_stop)
+    expected = np.array([0.8335545, 0.07583738, 0.6305472, 1.])
+    np.testing.assert_allclose(p, expected, atol=.0000001)
+
+
+def test_sequences(net_study):
+    net = net_study
+    c_study = net.c.copy()
+
+    # all possible recall sequences
+    n_item = 3
+    sequences = []
+    for i in range(n_item + 1):
+        sequences.extend(list(permutations(range(n_item), i)))
+
+    B = .8
+    T = 10
+    X1 = .05
+    X2 = 1
+    p_stop = network.p_stop_op(n_item, X1, X2)
+    p = np.empty((len(sequences), n_item + 1))
+    p[:] = np.nan
+    for i, recalls in enumerate(sequences):
+        net.c = c_study.copy()
+        p_recalls = net.p_recall('item', recalls, B, T, p_stop)
+        p[i, :len(p_recalls)] = p_recalls
+
+    # probability of any recall sequence should be 1
+    p_any = np.sum(np.nanprod(p, 1))
+    np.testing.assert_allclose(p_any, 1)
