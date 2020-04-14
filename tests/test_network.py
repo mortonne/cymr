@@ -18,6 +18,14 @@ def weights():
     return mat
 
 
+@pytest.fixture()
+def net_pre(net, weights):
+    region = ('item', 'item')
+    net.add_pre_weights(weights, region)
+    net.add_pre_weights(1, ('task', 'task'))
+    return net
+
+
 def test_network_init(net):
     n_f = net.n_f
     n_c = net.n_c
@@ -29,25 +37,23 @@ def test_network_init(net):
     assert net.f.shape[0] == n_f
 
 
-def test_pre_weights(net, weights):
-    region = ('item', 'item')
-    net.add_pre_weights(weights, region)
-    f_ind, c_ind = net.get_slices(region)
+def test_pre_weights(net_pre, weights):
+    net = net_pre
+    f_ind, c_ind = net.get_slices(('item', 'item'))
     np.testing.assert_array_equal(net.w_fc_pre[f_ind, c_ind], weights)
     np.testing.assert_array_equal(net.w_cf_pre[f_ind, c_ind], weights)
 
 
-def test_update(net):
-    net.add_pre_weights(1, ('task', 'task'))
+def test_update(net_pre):
+    net = net_pre
     net.update('task', 0)
     expected = np.array([0, 0, 0, 0, 0, 1])
     np.testing.assert_allclose(net.c, expected)
 
 
-def test_present(net, weights):
-    region = ('item', 'item')
-    net.add_pre_weights(weights, region)
-    f_ind, c_ind = net.get_slices(region)
+def test_present(net_pre):
+    net = net_pre
+    f_ind, c_ind = net.get_slices(('item', 'item'))
     net.c[0] = 1
     net.present('item', 0, .5)
     np.testing.assert_allclose(np.linalg.norm(net.c, 2), 1)
@@ -56,13 +62,11 @@ def test_present(net, weights):
     np.testing.assert_allclose(net.c[c_ind], expected)
 
 
-def test_learn(net, weights):
-    net.add_pre_weights(weights, ('item', 'item'))
-    net.add_pre_weights(1, ('task', 'task'))
+def test_learn(net_pre):
+    net = net_pre
     net.update('task', 0)
     net.present('item', 0, .5)
     net.learn('fc', 'all', 0, 1)
-
     expected = np.array([0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8660])
     ind = net.get_ind('f', 'item', 0)
     actual = net.w_fc_exp[ind, :]
