@@ -2,14 +2,8 @@
 
 import numpy as np
 cimport cython
+from libc.math cimport sqrt
 
-
-cdef extern from "math.h":
-    double sqrt(double x)
-
-
-cdef extern from "math.h":
-    double pow(double x, double y)
 
 
 cdef double calc_rho(double cdot, double B):
