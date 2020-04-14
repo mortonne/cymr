@@ -4,8 +4,8 @@ cimport cython
 from libc.math cimport sqrt
 
 
-
-cdef double calc_rho(double cdot, double B):
+@cython.profile(False)
+cdef inline double calc_rho(double cdot, double B):
     rho = sqrt(1 + pow(B, 2) * (pow(cdot, 2) - 1)) - (B * cdot)
     return rho
 
