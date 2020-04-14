@@ -37,4 +37,4 @@ class TimeLikelihood(object):
                 net.learn('fc', 'item', i, self.L)
                 net.learn('cf', 'item', i, self.L)
             p_stop = network.p_stop_op(self.n_item, self.X1, self.X2)
-            p = net.p_recall('item', recall, self.B, self.T, p_stop)
+            p = net.p_recall_cython('item', recall, self.B, self.T, p_stop)
