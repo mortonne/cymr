@@ -26,6 +26,19 @@ def net_pre(net, weights):
     return net
 
 
+@pytest.fixture()
+def net_study(net_pre):
+    net = net_pre
+    net.update('task', 0)
+    B = .5
+    L = 1
+    for item in range(net.f_ind['item'].stop):
+        net.present('item', item, B)
+        net.learn('fc', 'all', item, L)
+        net.learn('cf', 'all', item, L * 2)
+    return net
+
+
 def test_network_init(net):
     n_f = net.n_f
     n_c = net.n_c
@@ -75,3 +88,18 @@ def test_learn(net_pre):
     net.learn('cf', 'all', 0, 2)
     actual = net.w_cf_exp[ind, :]
     np.testing.assert_allclose(actual, expected * 2, atol=.0001)
+
+
+def test_study(net_study):
+    net = net_study
+    expected = np.array([[0.0000,  0.0913,  0.1826,  0.2739,  0.3651,  0.8660],
+                         [0.1566,  0.2488,  0.3410,  0.4332,  0.5254,  0.5777],
+                         [0.2722,  0.3420,  0.4118,  0.4816,  0.5514,  0.3215],
+                         [0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]])
+    np.testing.assert_allclose(net.w_fc_exp, expected)
+
+    expected = np.array([[0.0000,  0.1826,  0.3651,  0.5477,  0.7303,  1.7321],
+                         [0.3131,  0.4975,  0.6819,  0.8663,  1.0507,  1.1553],
+                         [0.5444,  0.6840,  0.8236,  0.9632,  1.1029,  0.6429],
+                         [0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]])
+    np.testing.assert_allclose(net.w_cf_exp, expected)
