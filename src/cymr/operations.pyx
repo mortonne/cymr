@@ -1,6 +1,5 @@
 # cython: profile=True
 
-import numpy as np
 cimport cython
 from libc.math cimport sqrt
 
