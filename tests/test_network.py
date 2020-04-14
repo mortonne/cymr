@@ -20,8 +20,7 @@ def weights():
 
 @pytest.fixture()
 def net_pre(net, weights):
-    region = ('item', 'item')
-    net.add_pre_weights(weights, region)
+    net.add_pre_weights(weights, ('item', 'item'))
     net.add_pre_weights(1, ('task', 'task'))
     return net
 
