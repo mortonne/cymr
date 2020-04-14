@@ -92,3 +92,33 @@ class Network(object):
             self.w_cf_exp[item, ind] += self.c[ind] * L
         else:
             raise ValueError(f'Invalid connection: {connect}')
+
+    def p_recall(self, segment, recalls, B, T, p_stop, amin=0.000001):
+        # weights to use for recall (assume fixed during recall)
+        rec_ind = self.f_ind[segment]
+        w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
+
+        exclude = np.zeros(w_cf.shape[0], dtype=bool)
+        p = np.zeros(len(recalls) + 1)
+        for output, recall in enumerate(recalls):
+            # project the current state of context; assume nonzero support
+            support = np.dot(w_cf, self.c)
+            support[support < amin] = amin
+
+            # scale based on choice parameter, set recalled items to zero
+            strength = np.exp((2 * support) / T)
+            strength[exclude] = 0
+
+            # probability of this recall, conditional on not stopping
+            p[output] = ((strength[recall] / np.sum(strength)) *
+                         (1 - p_stop[output]))
+
+            # remove recalled item from competition
+            exclude[recall] = True
+
+            # update context
+            self.present(segment, recall, B)
+
+        # probability of the stopping event
+        p[len(recalls)] = p_stop[len(recalls)]
+        return p
