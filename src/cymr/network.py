@@ -90,6 +90,19 @@ class Network(object):
         else:
             raise ValueError(f'Invalid connection: {connect}')
 
+    def p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
+        rec_ind = self.f_ind[segment]
+        n_item = rec_ind.stop - rec_ind.start
+        exclude = np.zeros(n_item, dtype=np.dtype('i'))
+        p = np.zeros(len(recalls) + 1)
+        recalls = np.array(recalls, dtype=np.dtype('i'))
+        support = np.zeros(n_item)
+        operations.p_recall(rec_ind.start, n_item, recalls,
+                            self.w_fc_exp, self.w_fc_pre,
+                            self.w_cf_exp, self.w_cf_pre, self.c, self.c_in,
+                            exclude, amin, B, T, p_stop, support, p)
+        return p
+
     def p_recall(self, segment, recalls, B, T, p_stop, amin=0.000001):
         # weights to use for recall (assume fixed during recall)
         rec_ind = self.f_ind[segment]
