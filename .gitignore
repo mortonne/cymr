@@ -133,3 +133,6 @@ dmypy.json
 
 # Cython
 *.c
+
+# asv
+.asv
