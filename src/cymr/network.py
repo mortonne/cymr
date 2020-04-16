@@ -98,7 +98,8 @@ class Network(object):
 
     def integrate(self, segment, item, B):
         ind = self.f_ind[segment].start + item
-        operations.integrate(self.c, self.c_in, B)
+        operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
+                             self.f, ind, B)
 
     def present(self, segment, item, B, Lfc=0, Lcf=0):
         ind = self.f_ind[segment].start + item
