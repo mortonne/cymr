@@ -12,7 +12,7 @@ cdef inline double calc_rho(double cdot, double B):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def update(double [:] c, double[:] c_in, double B):
+cpdef integrate_context(double [:] c, double[:] c_in, double B):
     cdef Py_ssize_t n = c.shape[0]
     cdef double cdot = 0
     cdef int i
@@ -59,15 +59,8 @@ cpdef present(double [:, :] w_fc_exp,
     for i in range(n_c):
         c_in[i] /= norm
 
-    # calculate scaling factor
-    cdef double cdot = 0
-    for i in range(n_c):
-        cdot += c[i] * c_in[i]
-    rho = calc_rho(cdot, B)
-
-    # integrate context
-    for i in range(n_c):
-        c[i] = rho * c[i] + B * c_in[i]
+    # integrate
+    integrate_context(c, c_in, B)
 
     # learn the association between f and c
     if Lfc > 0:
