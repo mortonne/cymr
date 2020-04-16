@@ -92,9 +92,8 @@ class Network(object):
 
     def update(self, segment, item):
         ind = self.f_ind[segment].start + item
-        self.c_in = self.w_fc_pre[ind, :].copy() + self.w_fc_exp[ind, :].copy()
-        self.c_in /= np.linalg.norm(self.c_in, ord=2)
-        self.c = self.c_in.copy()
+        operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
+                             self.f, ind, B=1)
 
     def integrate(self, segment, item, B):
         ind = self.f_ind[segment].start + item
