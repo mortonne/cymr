@@ -20,9 +20,13 @@ class Network(object):
         n_f = 0
         n_c = 0
         self.segments = segments
+        self.n_f_segment = {}
+        self.n_c_segment = {}
         self.f_ind = {}
         self.c_ind = {}
         for name, (s_f, s_c) in segments.items():
+            self.n_f_segment[name] = s_f
+            self.n_c_segment[name] = s_c
             self.f_ind[name] = slice(n_f, n_f + s_f)
             self.c_ind[name] = slice(n_c, n_c + s_c)
             n_f += s_f
