@@ -203,3 +203,35 @@ class Network(object):
         else:
             p = self._p_recall_python(segment, recalls, B, T, p_stop, amin)
         return p
+
+    def generate_recall(self, segment, B, T, p_stop, amin=0.000001):
+        # weights to use for recall (assume fixed during recall)
+        rec_ind = self.f_ind[segment]
+        w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
+
+        recalls = []
+        exclude = np.zeros(w_cf.shape[0], dtype=bool)
+        n_item = self.n_f_segment[segment]
+        item_ind = np.arange(n_item)
+        for i in range(n_item):
+            # stop recall with some probability
+            if np.random.rand() < p_stop[i]:
+                break
+
+            # project the current state of context; assume nonzero support
+            support = np.dot(w_cf, self.c)
+            support[support < amin] = amin
+
+            # scale based on choice parameter, set recalled items to zero
+            strength = np.exp((2 * support) / T)
+            strength[exclude] = 0
+
+            # select item for recall proportionate to support
+            p_recall = strength / np.sum(strength)
+            recall = np.random.choice(item_ind, p=p_recall)
+            recalls.append(recall)
+            exclude[recall] = 1
+
+            # integrate context associated with the item into context
+            self.integrate(segment, recall, B)
+        return recalls
