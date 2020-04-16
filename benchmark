@@ -15,12 +15,13 @@ def main(benchmark):
     m.setup()
     sub_test = getattr(m, method_name)
     cProfile.runctx('sub_test()', globals(), locals(), filename='.profile')
-    subprocess.run(['snakeviz', '.profile'])
+    subprocess.Popen(['snakeviz', '.profile'])
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Run and visualize a benchmark test.')
-    parser.add_argument('benchmark',
+    parser.add_argument('-b', '--benchmark',
+                        default='TimeLikelihood.time_likelihood',
                         help="benchmark to run (classname.methodname)")
     args = parser.parse_args()
     main(args.benchmark)
