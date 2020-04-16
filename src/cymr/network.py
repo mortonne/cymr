@@ -5,7 +5,24 @@ from cymr import operations
 
 
 def p_stop_op(n_item, X1, X2, pmin=0.000001):
-    """Probability of stopping based on output position."""
+    """
+    Probability of stopping based on output position.
+
+    Parameters
+    ----------
+    n_item : int
+        Number of items available for recall.
+
+    X1 : float
+        Probability of not recalling any items.
+
+    X2 : float
+        Shape parameter of exponential function increasing stop
+        probability by output position.
+
+    pmin : float, optional
+        Minimum probability of stopping recall at any position.
+    """
     p_stop = X1 * np.exp(X2 * np.arange(n_item + 1))
     p_stop[p_stop < pmin] = pmin
 
