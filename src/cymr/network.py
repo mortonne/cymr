@@ -112,7 +112,8 @@ class Network(object):
         else:
             raise ValueError(f'Invalid connection: {connect}')
 
-    def study(self, segment, item_list, B, Lfc, Lcf):
+    def study(self, segment, item_list, B, Lfc, Lcf, distract_segment=None,
+              distract_list=None, distract_B=None):
         ind = self.f_ind[segment].start + item_list
         ind = ind.astype(np.dtype('i'))
         if not isinstance(B, np.ndarray):
