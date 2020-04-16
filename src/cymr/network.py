@@ -51,6 +51,21 @@ class Network(object):
         s = '\n\n'.join([s_f, s_c, s_fc_pre, s_fc_exp, s_cf_pre, s_cf_exp])
         return s
 
+    def copy(self):
+        net = Network(self.segments)
+        net.f_ind = self.f_ind
+        net.c_ind = self.c_ind
+        net.n_f = self.n_f
+        net.n_c = self.n_c
+        net.f = self.f.copy()
+        net.c = self.c.copy()
+        net.c_in = self.c_in.copy()
+        net.w_fc_exp = self.w_fc_exp.copy()
+        net.w_fc_pre = self.w_fc_pre.copy()
+        net.w_cf_exp = self.w_cf_exp.copy()
+        net.w_cf_pre = self.w_cf_pre.copy()
+        return net
+
     def get_slices(self, region):
         f_ind = self.f_ind[region[0]]
         c_ind = self.c_ind[region[1]]
