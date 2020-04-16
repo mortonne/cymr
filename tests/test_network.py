@@ -32,7 +32,7 @@ def net_study(net_pre):
     net.update('task', 0)
     B = .5
     L = 1
-    for item in range(net.f_ind['item'].stop):
+    for item in range(net.n_f_segment['item']):
         net.present('item', item, B)
         net.learn('fc', 'all', item, L)
         net.learn('cf', 'all', item, L * 2)
@@ -46,7 +46,7 @@ def net_study_list(net_pre):
     B = .5
     Lfc = 1
     Lcf = 2
-    item_list = np.arange(net.f_ind['item'].start, net.f_ind['item'].stop)
+    item_list = np.arange(net.n_f_segment['item'])
     net.study('item', item_list, B, Lfc, Lcf)
     return net
 
