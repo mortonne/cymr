@@ -39,6 +39,21 @@ def net_study(net_pre):
     return net
 
 
+@pytest.fixture()
+def net_study_list(weights):
+    segments = {'item': (3, 5), 'task': (1, 1)}
+    net = network.Network(segments)
+    net.add_pre_weights(weights, ('item', 'item'))
+    net.add_pre_weights(1, ('task', 'task'))
+    net.update('task', 0)
+    B = .5
+    Lfc = 1
+    Lcf = 2
+    item_list = np.arange(net.f_ind['item'].start, net.f_ind['item'].stop)
+    net.study('item', item_list, B, Lfc, Lcf)
+    return net
+
+
 def test_network_init(net):
     n_f = net.n_f
     n_c = net.n_c
@@ -90,19 +105,20 @@ def test_learn(net_pre):
     np.testing.assert_allclose(actual, expected * 2, atol=.0001)
 
 
-def test_study(net_study):
-    net = net_study
+def test_study(net_study, net_study_list):
     expected = np.array([[0.0000,  0.0913,  0.1826,  0.2739,  0.3651,  0.8660],
                          [0.1566,  0.2488,  0.3410,  0.4332,  0.5254,  0.5777],
                          [0.2722,  0.3420,  0.4118,  0.4816,  0.5514,  0.3215],
                          [0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]])
-    np.testing.assert_allclose(net.w_fc_exp, expected, atol=.0001)
+    np.testing.assert_allclose(net_study.w_fc_exp, expected, atol=.0001)
+    np.testing.assert_allclose(net_study_list.w_fc_exp, expected, atol=.0001)
 
     expected = np.array([[0.0000,  0.1826,  0.3651,  0.5477,  0.7303,  1.7321],
                          [0.3131,  0.4975,  0.6819,  0.8663,  1.0507,  1.1553],
                          [0.5444,  0.6840,  0.8236,  0.9632,  1.1029,  0.6429],
                          [0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]])
-    np.testing.assert_allclose(net.w_cf_exp, expected, atol=.0001)
+    np.testing.assert_allclose(net_study.w_cf_exp, expected, atol=.0001)
+    np.testing.assert_allclose(net_study_list.w_cf_exp, expected, atol=.0001)
 
 
 def test_recall(net_study):
