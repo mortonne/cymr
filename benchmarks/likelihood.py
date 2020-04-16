@@ -32,7 +32,7 @@ class TimeLikelihood(object):
             net.add_pre_weights(item_patterns, ('item', 'item'))
             net.add_pre_weights(1, ('start', 'start'))
             net.update('start', 0)
-            for i in range(len(study)):
-                net.present('item', i, self.B, self.L, self.L)
+            item_list = np.arange(len(study), dtype=int)
+            net.study('item', item_list, self.B, self.L, self.L)
             p_stop = network.p_stop_op(self.n_item, self.X1, self.X2)
             p = net.p_recall_cython('item', recall, self.B, self.T, p_stop)
