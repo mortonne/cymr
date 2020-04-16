@@ -51,6 +51,26 @@ def net_study_list(net_pre):
     return net
 
 
+@pytest.fixture()
+def net_study_distract():
+    segments = {'item': (2, 5), 'start': (1, 1), 'distract': (3, 3)}
+    net = network.Network(segments)
+    weights = np.arange(10).reshape((2, 5))
+    net.add_pre_weights(weights, ('item', 'item'))
+    net.add_pre_weights(1, ('start', 'start'))
+    net.add_pre_weights(np.eye(3), ('distract', 'distract'))
+    net.update('start', 0)
+    B = .5
+    Lfc = 1
+    Lcf = 2
+    distract_B = .1
+    item_list = np.arange(net.n_f_segment['item'])
+    distract_list = np.arange(net.n_f_segment['distract'])
+    net.study('item', item_list, B, Lfc, Lcf,
+              'distract', distract_list, distract_B)
+    return net
+
+
 def test_network_init(net):
     n_f = net.n_f
     n_c = net.n_c
