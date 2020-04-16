@@ -121,9 +121,22 @@ class Network(object):
             Lfc = np.tile(Lfc, item_list.shape).astype(float)
         if not isinstance(Lcf, np.ndarray):
             Lcf = np.tile(Lcf, item_list.shape).astype(float)
+
+        if distract_segment is None or distract_list is None:
+            distract_ind = np.ndarray(shape=(0,), dtype=np.dtype('i'))
+        else:
+            distract_ind = self.f_ind[distract_segment].start + distract_list
+            distract_ind = distract_ind.astype(np.dtype('i'))
+
+        if distract_B is None:
+            distract_B = np.zeros(item_list.shape[0] + 1, dtype=float)
+        elif not isinstance(distract_B, np.ndarray):
+            distract_B = np.tile(distract_B,
+                                 item_list.shape[0] + 1).astype(float)
+
         operations.study(self.w_fc_exp, self.w_fc_pre,
                          self.w_cf_exp, self.c, self.c_in,
-                         self.f, ind, B, Lfc, Lcf)
+                         self.f, ind, B, Lfc, Lcf, distract_ind, distract_B)
 
     def _p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
         rec_ind = self.f_ind[segment]
