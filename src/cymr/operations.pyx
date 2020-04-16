@@ -1,4 +1,4 @@
-# cython: profile=True
+# cython: profile=False
 
 cimport cython
 from libc.math cimport sqrt, exp
