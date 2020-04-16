@@ -26,19 +26,15 @@ cpdef integrate_context(double [:] c, double[:] c_in, double B):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef present(double [:, :] w_fc_exp,
-              const double [:, :] w_fc_pre,
-              double [:, :] w_cf_exp,
-              double [:] c,
-              double [:] c_in,
-              double [:] f,
-              int item,
-              double B,
-              double Lfc,
-              double Lcf):
+cpdef integrate(double [:, :] w_fc_exp,
+                const double [:, :] w_fc_pre,
+                double [:] c,
+                double [:] c_in,
+                double [:] f,
+                int item,
+                double B):
     cdef Py_ssize_t n_f = f.shape[0]
     cdef Py_ssize_t n_c = c.shape[0]
-    cdef int i
 
     # set item unit
     for i in range(n_f):
@@ -61,6 +57,25 @@ cpdef present(double [:, :] w_fc_exp,
 
     # integrate
     integrate_context(c, c_in, B)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef present(double [:, :] w_fc_exp,
+              const double [:, :] w_fc_pre,
+              double [:, :] w_cf_exp,
+              double [:] c,
+              double [:] c_in,
+              double [:] f,
+              int item,
+              double B,
+              double Lfc,
+              double Lcf):
+    cdef Py_ssize_t n_f = f.shape[0]
+    cdef Py_ssize_t n_c = c.shape[0]
+    cdef int i
+    # retrieve item context and integrate into current context
+    integrate(w_fc_exp, w_fc_pre, c, c_in, f, item, B)
 
     # learn the association between f and c
     if Lfc > 0:
