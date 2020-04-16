@@ -84,9 +84,9 @@ cpdef present(double [:, :] w_fc_exp,
 def p_recall(int start,
              int n_f,
              const int [:] recalls,
-             const double [:, :] w_fc_exp,
+             double [:, :] w_fc_exp,
              const double [:, :] w_fc_pre,
-             const double [:, :] w_cf_exp,
+             double [:, :] w_cf_exp,
              const double [:, :] w_cf_pre,
              double [:] f,
              double [:] c,
@@ -130,5 +130,6 @@ def p_recall(int start,
 
         # update context
         if i < (n_r - 1):
-            present(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B)
+            present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f, recalls[i], B,
+                    Lfc=0, Lcf=0)
     p[n_r] = p_stop[n_r]
