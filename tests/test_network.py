@@ -210,3 +210,14 @@ def test_sequences(net_study):
     # probability of any recall sequence should be 1
     p_any = np.sum(np.nanprod(p, 1))
     np.testing.assert_allclose(p_any, 1)
+
+
+def test_generate(net_study):
+    net = net_study.copy()
+    B = .8
+    T = 10
+    X1 = .05
+    X2 = 1
+    n_item = 3
+    p_stop = network.p_stop_op(n_item, X1, X2)
+    recalls = net.generate_recall('item', B, T, p_stop)
