@@ -96,6 +96,10 @@ class Network(object):
         self.c_in /= np.linalg.norm(self.c_in, ord=2)
         self.c = self.c_in.copy()
 
+    def integrate(self, segment, item, B):
+        ind = self.f_ind[segment].start + item
+        operations.integrate(self.c, self.c_in, B)
+
     def present(self, segment, item, B, Lfc=0, Lcf=0):
         ind = self.f_ind[segment].start + item
         operations.present(self.w_fc_exp, self.w_fc_pre,
