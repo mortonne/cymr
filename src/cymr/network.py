@@ -19,6 +19,7 @@ class Network(object):
     def __init__(self, segments):
         n_f = 0
         n_c = 0
+        self.segments = segments
         self.f_ind = {}
         self.c_ind = {}
         for name, (s_f, s_c) in segments.items():
