@@ -55,6 +55,15 @@ class Network(object):
         s = '\n\n'.join([s_f, s_c, s_fc_pre, s_fc_exp, s_cf_pre, s_cf_exp])
         return s
 
+    def reset(self):
+        self.f[:] = 0
+        self.c[:] = 0
+        self.c_in[:] = 0
+        self.w_fc_exp[:] = 0
+        self.w_fc_pre[:] = 0
+        self.w_cf_exp[:] = 0
+        self.w_cf_pre[:] = 0
+
     def copy(self):
         net = Network(self.segments)
         net.f_ind = self.f_ind
