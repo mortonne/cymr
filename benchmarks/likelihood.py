@@ -25,14 +25,15 @@ class TimeLikelihood(object):
                        for n in n_recall]
 
     def time_likelihood(self):
+        net = network.Network({'item': (self.n_item, self.n_dim),
+                               'start': (1, 1)})
+        p_stop = network.p_stop_op(self.n_item, self.X1, self.X2)
         for study, recall in zip(self.study, self.recall):
-            net = network.Network({'item': (self.n_item, self.n_dim),
-                                   'start': (1, 1)})
+            net.reset()
             item_patterns = self.patterns[study, :]
             net.add_pre_weights(item_patterns, ('item', 'item'))
             net.add_pre_weights(1, ('start', 'start'))
             net.update('start', 0)
             item_list = np.arange(len(study), dtype=int)
             net.study('item', item_list, self.B, self.L, self.L)
-            p_stop = network.p_stop_op(self.n_item, self.X1, self.X2)
             p = net.p_recall('item', recall, self.B, self.T, p_stop)
