@@ -28,7 +28,7 @@ def net_pre(net, weights):
 
 @pytest.fixture()
 def net_study(net_pre):
-    net = net_pre
+    net = net_pre.copy()
     net.update('task', 0)
     B = .5
     L = 1
@@ -40,11 +40,8 @@ def net_study(net_pre):
 
 
 @pytest.fixture()
-def net_study_list(weights):
-    segments = {'item': (3, 5), 'task': (1, 1)}
-    net = network.Network(segments)
-    net.add_pre_weights(weights, ('item', 'item'))
-    net.add_pre_weights(1, ('task', 'task'))
+def net_study_list(net_pre):
+    net = net_pre.copy()
     net.update('task', 0)
     B = .5
     Lfc = 1
