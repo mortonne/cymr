@@ -92,6 +92,19 @@ class Network(object):
         else:
             raise ValueError(f'Invalid connection: {connect}')
 
+    def study(self, segment, item_list, B, Lfc, Lcf):
+        ind = self.f_ind[segment].start + item_list
+        ind = ind.astype(np.dtype('i'))
+        if not isinstance(B, np.ndarray):
+            B = np.tile(B, item_list.shape).astype(float)
+        if not isinstance(Lfc, np.ndarray):
+            Lfc = np.tile(Lfc, item_list.shape).astype(float)
+        if not isinstance(Lcf, np.ndarray):
+            Lcf = np.tile(Lcf, item_list.shape).astype(float)
+        operations.study(self.w_fc_exp, self.w_fc_pre,
+                         self.w_cf_exp, self.c, self.c_in,
+                         self.f, ind, B, Lfc, Lcf)
+
     def p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
         rec_ind = self.f_ind[segment]
         n_item = rec_ind.stop - rec_ind.start
