@@ -105,7 +105,7 @@ class Network(object):
                          self.w_cf_exp, self.c, self.c_in,
                          self.f, ind, B, Lfc, Lcf)
 
-    def p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
+    def _p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
         rec_ind = self.f_ind[segment]
         n_item = rec_ind.stop - rec_ind.start
         exclude = np.zeros(n_item, dtype=np.dtype('i'))
@@ -119,7 +119,7 @@ class Network(object):
                             exclude, amin, B, T, p_stop, support, p)
         return p
 
-    def p_recall(self, segment, recalls, B, T, p_stop, amin=0.000001):
+    def _p_recall_python(self, segment, recalls, B, T, p_stop, amin=0.000001):
         # weights to use for recall (assume fixed during recall)
         rec_ind = self.f_ind[segment]
         w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
@@ -147,4 +147,12 @@ class Network(object):
 
         # probability of the stopping event
         p[len(recalls)] = p_stop[len(recalls)]
+        return p
+
+    def p_recall(self, segment, recalls, B, T, p_stop, amin=0.000001,
+                 compiled=True):
+        if compiled:
+            p = self._p_recall_cython(segment, recalls, B, T, p_stop, amin)
+        else:
+            p = self._p_recall_python(segment, recalls, B, T, p_stop, amin)
         return p
