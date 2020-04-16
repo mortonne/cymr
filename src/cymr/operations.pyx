@@ -90,11 +90,19 @@ cpdef study(double [:, :] w_fc_exp,
             const int [:] item_list,
             double [:] B,
             double [:] Lfc,
-            double [:] Lcf):
+            double [:] Lcf,
+            const int [:] distract_list,
+            double [:] distract_B):
     cdef Py_ssize_t n = item_list.shape[0]
     for i in range(n):
+        if distract_B[i] > 0:
+            present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
+                    distract_list[i], distract_B[i], 0, 0)
         present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
                 item_list[i], B[i], Lfc[i], Lcf[i])
+    if distract_B[n] > 0:
+        present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
+                    distract_list[n], distract_B[n], 0, 0)
 
 
 @cython.boundscheck(False)
