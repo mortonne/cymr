@@ -213,7 +213,7 @@ class Network(object):
         weights : numpy.array
             Items x context array of weights.
 
-        region : tuple of (str, str)
+        region : tuple of str, str
             Combination of segments to add the weights to.
 
         slope : double, optional
