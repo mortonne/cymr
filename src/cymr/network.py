@@ -1,6 +1,8 @@
 """Represent interactions between context and item layers."""
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from cymr import operations
 
 
@@ -512,3 +514,21 @@ class Network(object):
             # integrate context associated with the item into context
             self.integrate(segment, recall, B)
         return recalls
+
+    def plot(self):
+        """Plot the current state of the network."""
+        fig = plt.figure(constrained_layout=True)
+        gs = GridSpec(3, 5, figure=fig)
+        ax = {'c': fig.add_subplot(gs[0, 1:4]),
+              'f': fig.add_subplot(gs[2, 1:4]),
+              'w_fc_pre': fig.add_subplot(gs[1, 0]),
+              'w_fc_exp': fig.add_subplot(gs[1, 1]),
+              'w_cf_exp': fig.add_subplot(gs[1, 3]),
+              'w_cf_pre': fig.add_subplot(gs[1, 4])}
+        for name, h in ax.items():
+            mat = getattr(self, name)
+            if mat.ndim == 1:
+                mat = mat[None, :]
+            h.matshow(mat)
+            h.set_axis_off()
+            h.set_title(name)
