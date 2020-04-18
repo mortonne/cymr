@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from scipy import optimize
-from psifr import fr
 import pandas as pd
 
 
