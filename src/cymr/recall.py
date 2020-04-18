@@ -91,12 +91,13 @@ class Recall(ABC):
         data = self.recall_subject(study, param, **kwargs)
         return data
 
-    def generate(self, study, group_param, subj_param):
+    def generate(self, study, group_param, subj_param=None):
         subjects = study['subject'].unique()
         data_list = []
         for subject in subjects:
             param = group_param.copy()
-            param.update(subj_param[subject])
+            if subj_param is not None:
+                param.update(subj_param[subject])
             subject_study = study.loc[study['subject'] == subject]
             subject_data = self.generate_subject(subject_study, param)
             data_list.append(subject_data)
