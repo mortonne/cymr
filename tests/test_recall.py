@@ -18,7 +18,7 @@ class TestRecall(Recall):
         return np.log(p)
 
     def generate_subject(self, study, param, **kwargs):
-        recalls_list = [[1, 2]]
+        recalls_list = [param['recalls']]
         data = recall.add_recalls(study, recalls_list)
         return data
 
@@ -93,6 +93,22 @@ def test_generate_subject(data):
     rec = TestRecall()
     study = data.loc[(data['trial_type'] == 'study') &
                      (data['subject'] == 1)]
-    sim = rec.generate_subject(study, {})
+
+    # our "model" recalls the positions indicated in the recalls parameter
+    sim = rec.generate_subject(study, {'recalls': [1, 2]})
     expected = ['absence', 'hollow', 'pupil', 'hollow', 'pupil']
+    assert sim['item'].to_list() == expected
+
+
+def test_generate(data):
+    data = data.copy()
+    rec = TestRecall()
+    study = data.loc[data['trial_type'] == 'study']
+    subj_param = {1: {'recalls': [1, 2]},
+                  2: {'recalls': [2, 0, 1]}}
+    sim = rec.generate(study, {}, subj_param)
+    expected = ['absence', 'hollow', 'pupil',
+                'hollow', 'pupil',
+                'fountain', 'piano', 'pillow',
+                'pillow', 'fountain', 'piano']
     assert sim['item'].to_list() == expected
