@@ -17,7 +17,7 @@ class TestRecall(Recall):
             p = eps
         return np.log(p)
 
-    def recall_subject(self, study, param, **kwargs):
+    def generate_subject(self, study, param, **kwargs):
         recalls_list = [[1, 2]]
         data = recall.add_recalls(study, recalls_list)
         return data
@@ -88,11 +88,11 @@ def test_fit_indiv(data):
                                atol=0.0001)
 
 
-def test_recall_subject(data):
+def test_generate_subject(data):
     data = data.copy()
     rec = TestRecall()
     study = data.loc[(data['trial_type'] == 'study') &
                      (data['subject'] == 1)]
-    sim = rec.recall_subject(study, {})
+    sim = rec.generate_subject(study, {})
     expected = ['absence', 'hollow', 'pupil', 'hollow', 'pupil']
     assert sim['item'].to_list() == expected

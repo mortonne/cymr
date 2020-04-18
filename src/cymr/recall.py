@@ -84,12 +84,8 @@ class Recall(ABC):
         return pd.DataFrame(results).T
 
     @abstractmethod
-    def recall_subject(self, study_data, param, **kwargs):
-        pass
-
     def generate_subject(self, study, param, **kwargs):
-        data = self.recall_subject(study, param, **kwargs)
-        return data
+        pass
 
     def generate(self, study, group_param, subj_param=None):
         subjects = study['subject'].unique()
