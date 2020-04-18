@@ -1,9 +1,39 @@
 """Simulate free recall experiments."""
 
 from abc import ABC, abstractmethod
+import numpy as np
 from scipy import optimize
 from psifr import fr
 import pandas as pd
+
+
+def add_recalls(study, recalls_list):
+    """Add recall sequences to a study DataFrame."""
+    lists = study['list'].unique()
+    subjects = study['subject'].unique()
+    if len(subjects) > 1:
+        raise ValueError('Unpacking multiple subjects not supported.')
+    subject = subjects[0]
+
+    # initialize recall trials DataFrame
+    n_recall = np.sum([len(r) for r in recalls_list])
+    recall = pd.DataFrame({'subject': subject,
+                           'list': np.zeros(n_recall, dtype=int),
+                           'trial_type': 'recall',
+                           'position': np.zeros(n_recall, dtype=int),
+                           'item': ''})
+
+    # set basic information (list, item, position)
+    n = 0
+    for i, seq in enumerate(recalls_list):
+        pool = study.loc[study['list'] == lists[i], 'item'].to_numpy()
+        for j, pos in enumerate(seq):
+            recall.loc[n, 'list'] = lists[i]
+            recall.loc[n, 'item'] = pool[pos]
+            recall.loc[n, 'position'] = j + 1
+            n += 1
+    data = pd.concat((study, recall), axis=0, ignore_index=True)
+    return data
 
 
 class Recall(ABC):
