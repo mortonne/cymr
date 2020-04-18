@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from cymr.recall import Recall
+from cymr import recall
 
 
 class TestRecall(Recall):
@@ -16,9 +17,10 @@ class TestRecall(Recall):
             p = eps
         return np.log(p)
 
-    def recall_subject(self, study, param):
-        return [[5, 4, 1, 2],
-                [4, 5, 3, 1, 0]]
+    def recall_subject(self, study, param, **kwargs):
+        recalls_list = [[1, 2]]
+        data = recall.add_recalls(study, recalls_list)
+        return data
 
 
 @pytest.fixture()
@@ -84,3 +86,13 @@ def test_fit_indiv(data):
     np.testing.assert_allclose(results['x'].to_numpy(), [-2, -2], atol=0.0001)
     np.testing.assert_allclose(results['logl'].to_numpy(), np.log([2, 3]),
                                atol=0.0001)
+
+
+def test_recall_subject(data):
+    data = data.copy()
+    rec = TestRecall()
+    study = data.loc[(data['trial_type'] == 'study') &
+                     (data['subject'] == 1)]
+    sim = rec.recall_subject(study, {})
+    expected = ['absence', 'hollow', 'pupil', 'hollow', 'pupil']
+    assert sim['item'].to_list() == expected
