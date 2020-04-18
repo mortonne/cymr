@@ -84,12 +84,11 @@ class Recall(ABC):
         return pd.DataFrame(results).T
 
     @abstractmethod
-    def recall_subject(self, study_data, param):
+    def recall_subject(self, study_data, param, **kwargs):
         pass
 
     def generate_subject(self, study, param, **kwargs):
-        recall = self.recall_subject(study, param)
-        data = fr.merge_lists(study, recall, **kwargs)
+        data = self.recall_subject(study, param, **kwargs)
         return data
 
     def generate(self, study, group_param, subj_param):
