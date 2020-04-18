@@ -97,5 +97,5 @@ class Recall(ABC):
             subject_study = study.loc[study['subject'] == subject]
             subject_data = self.generate_subject(subject_study, param)
             data_list.append(subject_data)
-        data = pd.concat(data_list, axis=0)
+        data = pd.concat(data_list, axis=0, ignore_index=True)
         return data
