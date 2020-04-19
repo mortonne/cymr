@@ -38,7 +38,7 @@ def add_recalls(study, recalls_list):
 class Recall(ABC):
 
     @abstractmethod
-    def likelihood_subject(self, subject_data, param):
+    def likelihood_subject(self, study, recall, param):
         pass
 
     def likelihood(self, data, group_param, subj_param=None):
@@ -49,16 +49,23 @@ class Recall(ABC):
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_data = data.loc[data['subject'] == subject]
-            subject_logl = self.likelihood_subject(subject_data, param)
+            study, recall = self.prepare_fit(subject_data)
+            subject_logl = self.likelihood_subject(study, recall, param)
             logl += subject_logl
         return logl
 
+    @abstractmethod
+    def prepare_fit(self, subject_data):
+        pass
+
     def fit_subject(self, subject_data, fixed, var_names, var_bounds, **kwargs):
+
+        study, recall = self.prepare_fit(subject_data)
 
         def eval_fit(x):
             eval_param = fixed.copy()
             eval_param.update(dict(zip(var_names, x)))
-            eval_logl = self.likelihood_subject(subject_data, eval_param)
+            eval_logl = self.likelihood_subject(study, recall, eval_param)
             return -eval_logl
 
         group_lb = [var_bounds[k][0] for k in var_names]
