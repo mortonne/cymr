@@ -22,8 +22,10 @@ setup(
     ext_modules=cythonize('src/cymr/operations.pyx'),
     install_requires=[
         'numpy',
+        'pandas',
         'cython',
-        'pytest'
+        'pytest',
+        'psifr'
     ],
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
