@@ -136,3 +136,7 @@ dmypy.json
 
 # asv
 .asv
+
+# project temp files
+jupyter/
+.profile
