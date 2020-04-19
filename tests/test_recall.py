@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from psifr import fr
-from cymr.recall import Recall
-from cymr import recall
+from cymr.fit import Recall
+from cymr import fit
 
 
 class TestRecall(Recall):
@@ -27,7 +27,7 @@ class TestRecall(Recall):
 
     def generate_subject(self, study, param, **kwargs):
         recalls_list = [param['recalls']]
-        data = recall.add_recalls(study, recalls_list)
+        data = fit.add_recalls(study, recalls_list)
         return data
 
 
