@@ -24,6 +24,7 @@ setup(
         'numpy',
         'pandas',
         'cython',
+        'joblib',
         'pytest',
         'psifr'
     ],

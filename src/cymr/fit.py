@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy import optimize
 import pandas as pd
+from joblib import Parallel, delayed
 
 
 def add_recalls(study, recalls_list):
@@ -80,15 +81,23 @@ class Recall(ABC):
         logl = -res['fun']
         return param, logl
 
-    def fit_indiv(self, data, fixed, var_names, var_bounds, **kwargs):
+    def run_fit_subject(self, data, subject, fixed, var_names, var_bounds,
+                        **kwargs):
+        subject_data = data.loc[data['subject'] == subject]
+        param, logl = self.fit_subject(subject_data, fixed, var_names,
+                                       var_bounds, **kwargs)
+        results = {**param, 'logl': logl}
+        return results
+
+    def fit_indiv(self, data, fixed, var_names, var_bounds, n_jobs=None,
+                  **kwargs):
         subjects = data['subject'].unique()
-        results = {}
-        for subject in subjects:
-            subject_data = data.loc[data['subject'] == subject]
-            param, logl = self.fit_subject(subject_data, fixed, var_names,
-                                           var_bounds, **kwargs)
-            results[subject] = {**param, 'logl': logl}
-        return pd.DataFrame(results).T
+        results = Parallel(n_jobs=n_jobs)(
+            delayed(self.run_fit_subject)(
+                data, subject, fixed,  var_names, var_bounds, **kwargs)
+            for subject in subjects)
+        d = {subject: res for subject, res in zip(subjects, results)}
+        return pd.DataFrame(d).T
 
     @abstractmethod
     def generate_subject(self, study, param, **kwargs):

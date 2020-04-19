@@ -42,6 +42,6 @@ def test_cmr_fit(data):
     fixed = {'B_rec': .8, 'L': 1, 'T': 10, 'X1': .05, 'X2': 1}
     var_names = ['B_enc']
     var_bounds = {'B_enc': (0, 1)}
-    results = model.fit_indiv(data, fixed, var_names, var_bounds)
+    results = model.fit_indiv(data, fixed, var_names, var_bounds, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.01)
