@@ -49,18 +49,18 @@ class Recall(ABC):
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_data = data.loc[data['subject'] == subject]
-            study, recall = self.prepare_fit(subject_data)
+            study, recall = self.prepare_sim(subject_data)
             subject_logl = self.likelihood_subject(study, recall, param)
             logl += subject_logl
         return logl
 
     @abstractmethod
-    def prepare_fit(self, subject_data):
+    def prepare_sim(self, subject_data):
         pass
 
     def fit_subject(self, subject_data, fixed, var_names, var_bounds, **kwargs):
 
-        study, recall = self.prepare_fit(subject_data)
+        study, recall = self.prepare_sim(subject_data)
 
         def eval_fit(x):
             eval_param = fixed.copy()
