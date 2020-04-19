@@ -3,15 +3,23 @@
 import numpy as np
 import pandas as pd
 import pytest
+from psifr import fr
 from cymr.recall import Recall
 from cymr import recall
 
 
 class TestRecall(Recall):
 
-    def likelihood_subject(self, data, param):
-        subject = data['subject'].to_numpy()[0]
-        p = subject + 1 - (param['x'] + 2) ** 2
+    def prepare_fit(self, data):
+        data_study = data.loc[data['trial_type'] == 'study']
+        data_recall = data.loc[data['trial_type'] == 'recall']
+        merged = fr.merge_lists(data_study, data_recall)
+        study = fr.split_lists(merged, 'study', ['input'])
+        recalls = fr.split_lists(merged, 'recall', ['input'])
+        return study, recalls
+
+    def likelihood_subject(self, study, recalls, param):
+        p = 2 - (param['x'] + 2) ** 2
         eps = 0.0001
         if p < eps:
             p = eps
@@ -52,7 +60,7 @@ def test_likelihood_subject(data):
     rec = TestRecall()
     param = {'x': -2}
     subject_data = data.loc[data['subject'] == 1]
-    logl = rec.likelihood_subject(subject_data, param)
+    logl = rec.likelihood_subject([], [], param)
     np.testing.assert_allclose(logl, np.log(2))
 
 
@@ -61,7 +69,7 @@ def test_likelihood(data):
     rec = TestRecall()
     param = {'x': -2}
     logl = rec.likelihood(data, param)
-    np.testing.assert_allclose(logl, np.log(2) + np.log(3))
+    np.testing.assert_allclose(logl, np.log(2) + np.log(2))
 
 
 def test_fit_subject(data):
@@ -84,7 +92,7 @@ def test_fit_indiv(data):
     var_bounds = {'x': [-10, 10]}
     results = rec.fit_indiv(data, fixed, var_names, var_bounds)
     np.testing.assert_allclose(results['x'].to_numpy(), [-2, -2], atol=0.0001)
-    np.testing.assert_allclose(results['logl'].to_numpy(), np.log([2, 3]),
+    np.testing.assert_allclose(results['logl'].to_numpy(), np.log([2, 2]),
                                atol=0.0001)
 
 
