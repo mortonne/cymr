@@ -3,6 +3,7 @@
 import numpy as np
 from psifr import fr
 from cymr.fit import Recall
+from cymr import fit
 from cymr import network
 
 
@@ -53,5 +54,20 @@ class CMR(Recall):
             logl += np.sum(np.log(p))
         return logl
 
-    def generate_subject(self, study, param, **kwargs):
-        pass
+    def generate_subject(self, study_data, param, **kwargs):
+        study = fr.split_lists(study_data, 'raw', ['position'])
+        n_item = len(study['position'][0])
+        n_list = len(study['position'])
+        net_init = self.init_network(n_item)
+        p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
+        recalls = []
+        for i in range(n_list):
+            net = net_init.copy()
+            item_list = study['position'][i].astype(int)
+            net.study('item', item_list - 1, param['B_enc'], param['L'],
+                      param['L'])
+            recall = net.generate_recall('item', param['B_rec'], param['T'],
+                                         p_stop)
+            recalls.append(recall)
+        data = fit.add_recalls(study_data, recalls)
+        return data
