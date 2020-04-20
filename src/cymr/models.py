@@ -47,6 +47,9 @@ class CMR(Recall):
             net.study('item', item_list, param['B_enc'], param['L'], param['L'])
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
                              param['T'], p_stop)
+            if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
+                logl = -10e6
+                break
             logl += np.sum(np.log(p))
         return logl
 
