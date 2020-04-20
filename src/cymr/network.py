@@ -27,6 +27,7 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
     """
     p_stop = X1 * np.exp(X2 * np.arange(n_item + 1))
     p_stop[p_stop < pmin] = pmin
+    p_stop[p_stop > (1 - pmin)] = 1 - pmin
 
     # after recalling all items, P(stop)=1 by definition
     p_stop[-1] = 1
