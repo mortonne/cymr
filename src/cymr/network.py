@@ -457,6 +457,8 @@ class Network(object):
         compiled : bool, optional
             If true, the compiled version of the function will be used.
         """
+        if T < amin:
+            T = amin
         if compiled:
             p = self._p_recall_cython(segment, recalls, B, T, p_stop, amin)
         else:
