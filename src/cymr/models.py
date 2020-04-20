@@ -17,7 +17,7 @@ class CMR(Recall):
 
         study = fr.split_lists(merged, 'study', ['input'])
         recall = fr.split_lists(merged, 'recall', ['input'])
-        for i in range(len(study)):
+        for i in range(len(study['input'])):
             study['input'][i] -= 1
             recall['input'][i] -= 1
         n = np.unique([len(items) for items in study['input']])
