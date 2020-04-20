@@ -20,6 +20,8 @@ class CMR(Recall):
         for i in range(len(study['input'])):
             study['input'][i] -= 1
             recall['input'][i] -= 1
+            study['input'][i] = study['input'][i].astype(int)
+            recall['input'][i] = recall['input'][i].astype(int)
         n = np.unique([len(items) for items in study['input']])
         if len(n) > 1:
             raise ValueError('List length must not vary.')
