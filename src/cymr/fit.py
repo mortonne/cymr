@@ -97,7 +97,9 @@ class Recall(ABC):
                 data, subject, fixed,  var_names, var_bounds, **kwargs)
             for subject in subjects)
         d = {subject: res for subject, res in zip(subjects, results)}
-        return pd.DataFrame(d).T
+        results = pd.DataFrame(d).T
+        results.index = results.index.rename('subject')
+        return results
 
     @abstractmethod
     def generate_subject(self, study, param, **kwargs):
