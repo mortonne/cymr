@@ -59,7 +59,8 @@ class Recall(ABC):
     def prepare_sim(self, subject_data):
         pass
 
-    def fit_subject(self, subject_data, fixed, var_names, var_bounds, **kwargs):
+    def fit_subject(self, subject_data, fixed, var_names, var_bounds,
+                    method='de', **kwargs):
 
         study, recall = self.prepare_sim(subject_data)
 
@@ -72,7 +73,12 @@ class Recall(ABC):
         group_lb = [var_bounds[k][0] for k in var_names]
         group_ub = [var_bounds[k][1] for k in var_names]
         bounds = optimize.Bounds(group_lb, group_ub)
-        res = optimize.differential_evolution(eval_fit, bounds, **kwargs)
+        if method == 'de':
+            res = optimize.differential_evolution(eval_fit, bounds, **kwargs)
+        elif method == 'shgo':
+            res = optimize.shgo(eval_fit, bounds, **kwargs)
+        else:
+            raise ValueError(f'Invalid method: {method}')
 
         # fitted parameters
         param = fixed.copy()
@@ -82,7 +88,7 @@ class Recall(ABC):
         return param, logl
 
     def run_fit_subject(self, data, subject, fixed, var_names, var_bounds,
-                        **kwargs):
+                        method='de', **kwargs):
         subject_data = data.loc[data['subject'] == subject]
         param, logl = self.fit_subject(subject_data, fixed, var_names,
                                        var_bounds, **kwargs)
@@ -90,11 +96,11 @@ class Recall(ABC):
         return results
 
     def fit_indiv(self, data, fixed, var_names, var_bounds, n_jobs=None,
-                  **kwargs):
+                  method='de', **kwargs):
         subjects = data['subject'].unique()
         results = Parallel(n_jobs=n_jobs)(
             delayed(self.run_fit_subject)(
-                data, subject, fixed,  var_names, var_bounds, **kwargs)
+                data, subject, fixed,  var_names, var_bounds, method, **kwargs)
             for subject in subjects)
         d = {subject: res for subject, res in zip(subjects, results)}
         results = pd.DataFrame(d).T
