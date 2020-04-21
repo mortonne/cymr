@@ -34,7 +34,7 @@ def test_cmr(data):
     model = models.CMR()
     param = {'B_enc': .5, 'B_rec': .8,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
-             'L': 1, 'T': 10, 'X1': .05, 'X2': 1}
+             'Lfc': 1, 'Lcf': 1, 'T': 10, 'X1': .05, 'X2': 1}
     logl = model.likelihood(data, param)
     np.testing.assert_allclose(logl, -5.936799964636842)
 
@@ -42,7 +42,7 @@ def test_cmr(data):
 def test_cmr_fit(data):
     model = models.CMR()
     fixed = {'B_rec': .8, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
-             'L': 1, 'T': 10, 'X1': .05, 'X2': 1}
+             'Lfc': 1, 'Lcf': 1, 'T': 10, 'X1': .05, 'X2': 1}
     var_names = ['B_enc']
     var_bounds = {'B_enc': (0, 1)}
     results = model.fit_indiv(data, fixed, var_names, var_bounds, n_jobs=2)

@@ -48,7 +48,8 @@ class CMR(Recall):
         for i in range(n_list):
             net = net_init.copy()
             item_list = study['input'][i]
-            net.study('item', item_list, param['B_enc'], param['L'], param['L'])
+            net.study('item', item_list, param['B_enc'], param['Lfc'],
+                      param['Lcf'])
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
                              param['T'], p_stop)
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
@@ -67,8 +68,8 @@ class CMR(Recall):
         for i in range(n_list):
             net = net_init.copy()
             item_list = study['position'][i].astype(int)
-            net.study('item', item_list - 1, param['B_enc'], param['L'],
-                      param['L'])
+            net.study('item', item_list - 1, param['B_enc'], param['Lfc'],
+                      param['Lcf'])
             recall = net.generate_recall('item', param['B_rec'], param['T'],
                                          p_stop)
             recalls.append(recall)
