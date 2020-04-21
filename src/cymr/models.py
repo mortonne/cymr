@@ -28,18 +28,20 @@ class CMR(Recall):
             raise ValueError('List length must not vary.')
         return study, recall
 
-    def init_network(self, n_item):
+    def init_network(self, n_item, param):
         segments = {'item': (n_item, n_item), 'start': (1, 1)}
         net = network.Network(segments)
-        net.add_pre_weights('fc', ('item', 'item'), np.eye(n_item))
-        net.add_pre_weights('cf', ('item', 'item'), np.eye(n_item))
+        net.add_pre_weights('fc', ('item', 'item'), np.eye(n_item),
+                            param['Dfc'], param['Afc'])
+        net.add_pre_weights('cf', ('item', 'item'), np.eye(n_item),
+                            param['Dcf'], param['Acf'])
         net.add_pre_weights('fc', ('start', 'start'), 1)
         net.update('start', 0)
         return net
 
     def likelihood_subject(self, study, recall, param):
         n_item = len(study['input'][0])
-        net_init = self.init_network(n_item)
+        net_init = self.init_network(n_item, param)
         n_list = len(study['input'])
         p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
         logl = 0
