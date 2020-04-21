@@ -31,8 +31,9 @@ class TimeLikelihood(object):
         for study, recall in zip(self.study, self.recall):
             net.reset()
             item_patterns = self.patterns[study, :]
-            net.add_pre_weights(item_patterns, ('item', 'item'))
-            net.add_pre_weights(1, ('start', 'start'))
+            net.add_pre_weights('fc', ('item', 'item'), item_patterns)
+            net.add_pre_weights('cf', ('item', 'item'), item_patterns)
+            net.add_pre_weights('fc', ('start', 'start'), 1)
             net.update('start', 0)
             item_list = np.arange(len(study), dtype=int)
             net.study('item', item_list, self.B, self.L, self.L)

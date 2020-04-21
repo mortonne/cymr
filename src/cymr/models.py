@@ -31,8 +31,9 @@ class CMR(Recall):
     def init_network(self, n_item):
         segments = {'item': (n_item, n_item), 'start': (1, 1)}
         net = network.Network(segments)
-        net.add_pre_weights(np.eye(n_item), ('item', 'item'))
-        net.add_pre_weights(1, ('start', 'start'))
+        net.add_pre_weights('fc', ('item', 'item'), np.eye(n_item))
+        net.add_pre_weights('cf', ('item', 'item'), np.eye(n_item))
+        net.add_pre_weights('fc', ('start', 'start'), 1)
         net.update('start', 0)
         return net
 
