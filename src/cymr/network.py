@@ -6,6 +6,34 @@ from matplotlib.gridspec import GridSpec
 from cymr import operations
 
 
+def primacy(n_item, L, P1, P2):
+    """
+    Primacy gradient in learning rate.
+
+    Parameters
+    ----------
+    n_item : int
+        Number of items in study list.
+
+    L : float
+        Base learning rate. Asymptote of gradient for later positions.
+
+    P1 : float
+        Additional learning for first item.
+
+    P2 : float
+        Decay rate for primacy gradient.
+
+    Returns
+    -------
+    rate : numpy.array
+        Learning rate for each serial position.
+    """
+    position = np.arange(n_item)
+    rate = L + (P1 * np.exp(-P2 * position))
+    return rate
+
+
 def p_stop_op(n_item, X1, X2, pmin=0.000001):
     """
     Probability of stopping based on output position.
