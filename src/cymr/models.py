@@ -62,7 +62,7 @@ class CMR(Recall):
         study = fr.split_lists(study_data, 'raw', ['position'])
         n_item = len(study['position'][0])
         n_list = len(study['position'])
-        net_init = self.init_network(n_item)
+        net_init = self.init_network(n_item, param)
         p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
         recalls = []
         for i in range(n_list):
