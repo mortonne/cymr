@@ -6,6 +6,13 @@ from matplotlib.gridspec import GridSpec
 from cymr import operations
 
 
+def expand_param(param, n):
+    """Expand a scalar parameter to array format."""
+    if not isinstance(param, np.ndarray):
+        param = np.tile(param, n).astype(float)
+    return param
+
+
 def primacy(n_item, L, P1, P2):
     """
     Primacy gradient in learning rate.
