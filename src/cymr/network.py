@@ -161,6 +161,7 @@ class Network(object):
         self.n_f = n_f
         self.n_c = n_c
         self.f = np.zeros(n_f)
+        self.f_in = np.zeros(n_f)
         self.c = np.zeros(n_c)
         self.c_in = np.zeros(n_c)
         self.w_fc_pre = np.zeros((n_f, n_c))
