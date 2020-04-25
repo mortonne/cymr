@@ -77,3 +77,21 @@ class CMR(Recall):
             recalls.append(recall)
         data = fit.add_recalls(study_data, recalls)
         return data
+
+    def record_network(self, data, param):
+        study, recall = self.prepare_sim(data)
+        n_item = len(study['input'][0])
+        net_init = self.init_network(n_item, param)
+        n_list = len(study['input'])
+        p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
+        Lfc = np.tile(param['Lfc'], n_item).astype(float)
+        Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+
+        net_state = []
+        for i in range(n_list):
+            net = net_init.copy()
+            item_list = study['input'][i].astype(int)
+            state = net.record_study('item', item_list, param['B_enc'],
+                                     Lfc, Lcf)
+            net_state.append(state)
+        return net_state
