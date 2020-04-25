@@ -76,7 +76,8 @@ class Recall(ABC):
         if method == 'de':
             res = optimize.differential_evolution(eval_fit, bounds, **kwargs)
         elif method == 'shgo':
-            res = optimize.shgo(eval_fit, bounds, **kwargs)
+            b = [(lb, ub) for lb, ub in zip(bounds.lb, bounds.ub)]
+            res = optimize.shgo(eval_fit, b, **kwargs)
         else:
             raise ValueError(f'Invalid method: {method}')
 
@@ -91,7 +92,7 @@ class Recall(ABC):
                         method='de', **kwargs):
         subject_data = data.loc[data['subject'] == subject]
         param, logl = self.fit_subject(subject_data, fixed, var_names,
-                                       var_bounds, **kwargs)
+                                       var_bounds, method, **kwargs)
         results = {**param, 'logl': logl}
         return results
 
