@@ -69,6 +69,20 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
     return p_stop
 
 
+def init_plot():
+    fig = plt.figure(constrained_layout=True)
+    gs = GridSpec(10, 5, figure=fig)
+    ax = {'c': fig.add_subplot(gs[0, 1:4]),
+          'c_in': fig.add_subplot(gs[1, 1:4]),
+          'f_in': fig.add_subplot(gs[8, 1:4]),
+          'f': fig.add_subplot(gs[9, 1:4]),
+          'w_fc_pre': fig.add_subplot(gs[2:8, 0]),
+          'w_fc_exp': fig.add_subplot(gs[2:8, 1]),
+          'w_cf_exp': fig.add_subplot(gs[2:8, 3]),
+          'w_cf_pre': fig.add_subplot(gs[2:8, 4])}
+    return fig, ax
+
+
 class Network(object):
     """
     Representation of interacting item and context layers.
@@ -560,17 +574,13 @@ class Network(object):
             self.integrate(segment, recall, B)
         return recalls
 
-    def plot(self):
+    def plot(self, ax=None):
         """Plot the current state of the network."""
-        fig = plt.figure(constrained_layout=True)
-        gs = GridSpec(3, 5, figure=fig)
-        ax = {'c': fig.add_subplot(gs[0, 1:4]),
-              'f': fig.add_subplot(gs[2, 1:4]),
-              'w_fc_pre': fig.add_subplot(gs[1, 0]),
-              'w_fc_exp': fig.add_subplot(gs[1, 1]),
-              'w_cf_exp': fig.add_subplot(gs[1, 3]),
-              'w_cf_pre': fig.add_subplot(gs[1, 4])}
+        if ax is None:
+            ax = init_plot()
         for name, h in ax.items():
+            if not hasattr(self, name):
+                continue
             mat = getattr(self, name)
             if mat.ndim == 1:
                 mat = mat[None, :]
