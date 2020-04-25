@@ -123,6 +123,7 @@ def p_recall(int start,
              double [:, :] w_cf_exp,
              const double [:, :] w_cf_pre,
              double [:] f,
+             double [:] f_in,
              double [:] c,
              double [:] c_in,
              int [:] exclude,
@@ -130,7 +131,6 @@ def p_recall(int start,
              double B,
              double T,
              const double [:] p_stop,
-             double [:] support,
              double [:] p):
     cdef Py_ssize_t n_r = recalls.shape[0]
     cdef Py_ssize_t n_c = w_cf_exp.shape[1]
@@ -143,23 +143,23 @@ def p_recall(int start,
     for i in range(n_r):
         # calculate support for each item
         for j in range(n_f):
-            support[j] = 0
+            f_in[j] = 0
             if exclude[j]:
                 continue
             for k in range(n_c):
-                support[j] += ((w_cf_exp[start + j, k] + w_cf_pre[start + j, k])
-                               * c[k])
-                if support[j] < amin:
-                    support[j] = amin
-            support[j] = exp((2 * support[j]) / T)
+                f_in[j] += ((w_cf_exp[start + j, k] + w_cf_pre[start + j, k])
+                            * c[k])
+                if f_in[j] < amin:
+                    f_in[j] = amin
+            f_in[j] = exp((2 * f_in[j]) / T)
 
         # sum of support for all items
         total = 0
         for j in range(n_f):
-            total += support[j]
+            total += f_in[j]
 
         # calculate probability of this recall
-        p[i] = (support[recalls[i]] / total) * (1 - p_stop[i])
+        p[i] = (f_in[recalls[i]] / total) * (1 - p_stop[i])
         exclude[recalls[i]] = 1
 
         # update context

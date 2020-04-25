@@ -468,12 +468,11 @@ class Network(object):
         exclude = np.zeros(n_item, dtype=np.dtype('i'))
         p = np.zeros(len(recalls) + 1)
         recalls = np.array(recalls, dtype=np.dtype('i'))
-        support = np.zeros(n_item)
         operations.p_recall(rec_ind.start, n_item, recalls,
                             self.w_fc_exp, self.w_fc_pre,
                             self.w_cf_exp, self.w_cf_pre,
-                            self.f, self.c, self.c_in,
-                            exclude, amin, B, T, p_stop, support, p)
+                            self.f, self.f_in, self.c, self.c_in,
+                            exclude, amin, B, T, p_stop, p)
         return p
 
     def _p_recall_python(self, segment, recalls, B, T, p_stop, amin=0.000001):
