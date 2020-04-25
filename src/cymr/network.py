@@ -440,6 +440,27 @@ class Network(object):
                          self.w_cf_exp, self.c, self.c_in,
                          self.f, ind, B, Lfc, Lcf, distract_ind, distract_B)
 
+    def record_study(self, segment, item_list, B, Lfc, Lcf,
+                     distract_segment=None, distract_list=None,
+                     distract_B=None):
+        n = len(item_list)
+        B = expand_param(B, n)
+        Lfc = expand_param(Lfc, n)
+        Lcf = expand_param(Lcf, n)
+        state = []
+        if distract_B is not None:
+            distract_B = expand_param(distract_B, n + 1)
+        for i in range(len(item_list)):
+            if distract_B is not None and distract_B[i] > 0:
+                self.integrate(distract_segment, distract_list[i],
+                               distract_B[i])
+            self.present(segment, item_list[i], B[i], Lfc[i], Lcf[i])
+            state.append(self.copy())
+        if distract_B is not None and distract_B[n] > 0:
+            self.integrate(distract_segment, distract_list[n], distract_B[n])
+        state.append(self.copy())
+        return state
+
     def _p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
         rec_ind = self.f_ind[segment]
         n_item = rec_ind.stop - rec_ind.start
