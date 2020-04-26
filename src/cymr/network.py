@@ -205,6 +205,7 @@ class Network(object):
         net.n_f = self.n_f
         net.n_c = self.n_c
         net.f = self.f.copy()
+        net.f_in = self.f_in.copy()
         net.c = self.c.copy()
         net.c_in = self.c_in.copy()
         net.w_fc_exp = self.w_fc_exp.copy()
