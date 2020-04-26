@@ -463,6 +463,32 @@ class Network(object):
         state.append(self.copy())
         return state
 
+    def record_recall(self, segment, recalls, B, T, amin=0.000001):
+        rec_ind = self.f_ind[segment]
+        w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
+        exclude = np.zeros(self.n_f, dtype=bool)
+        state = [self.copy()]
+        for output, recall in enumerate(recalls):
+            # project the current state of context; assume nonzero support
+            self.f_in[rec_ind] = np.dot(w_cf, self.c)
+            self.f_in[self.f_in < amin] = amin
+
+            # scale based on choice parameter, set recalled items to zero
+            self.f_in[rec_ind] = np.exp((2 * self.f_in[rec_ind]) / T)
+            self.f_in[exclude] = 0
+
+            # remove recalled item from competition
+            exclude[recall] = True
+
+            # update context
+            ind = self.f_ind[segment].start + recall
+            self.f[:] = 0
+            self.f[ind] = 1
+            state.append(self.copy())
+            self.present(segment, recall, B)
+        state.append(self.copy())
+        return state
+
     def _p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
         rec_ind = self.f_ind[segment]
         n_item = rec_ind.stop - rec_ind.start

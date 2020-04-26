@@ -93,5 +93,8 @@ class CMR(Recall):
             item_list = study['input'][i].astype(int)
             state = net.record_study('item', item_list, param['B_enc'],
                                      Lfc, Lcf)
+            rec = net.record_recall('item', recall['input'][i],
+                                    param['B_rec'], param['T'])
+            state.extend(rec)
             net_state.append(state)
         return net_state
