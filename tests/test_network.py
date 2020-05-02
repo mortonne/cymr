@@ -229,8 +229,9 @@ def test_generate(net_study):
 @pytest.fixture()
 def patterns():
     cat = np.array([[1, 0, 1, 1, 0, 1],
-                    [0, 1, 0, 0, 1, 0]])
-    patterns = {'vector': {'loc': np.eye(6), 'cat': cat.T}}
+                    [0, 1, 0, 0, 1, 0]]).T
+    patterns = {'vector': {'loc': np.eye(6), 'cat': cat},
+                'similarity': {'loc': np.eye(6), 'cat': np.dot(cat, cat.T)}}
     return patterns
 
 
@@ -262,7 +263,7 @@ def test_pattern_io(patterns):
 
 
 def test_cmr_patterns(patterns):
-    weights = {'fcf': {'loc': 1, 'cat': 2}}
+    weights = {'fcf': {'loc': 1, 'cat': 2}, 'ff': {'loc': 1, 'cat': 2}}
     scaled = network.prepare_patterns(patterns, weights)
     expected = np.array([[0.57735027, 0., 0., 0., 0., 0., 0.81649658, 0.],
                          [0., 0.57735027, 0., 0., 0., 0., 0., 0.81649658],
@@ -271,3 +272,11 @@ def test_cmr_patterns(patterns):
                          [0., 0., 0., 0., 0.57735027, 0., 0., 0.81649658],
                          [0., 0., 0., 0., 0., 0.57735027, 0.81649658, 0.]])
     np.testing.assert_allclose(scaled['fcf'], expected)
+
+    expected = np.array([[1., 0., 0.66666667, 0.66666667, 0., 0.66666667],
+                         [0., 1., 0., 0., 0.66666667, 0.],
+                         [0.66666667, 0., 1., 0.66666667, 0., 0.66666667],
+                         [0.66666667, 0., 0.66666667, 1., 0., 0.66666667],
+                         [0., 0.66666667, 0., 0., 1., 0.],
+                         [0.66666667, 0., 0.66666667, 0.66666667, 0., 1.]])
+    np.testing.assert_allclose(scaled['ff'], expected)
