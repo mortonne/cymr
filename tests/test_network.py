@@ -223,3 +223,23 @@ def test_generate(net_study):
     n_item = 3
     p_stop = network.p_stop_op(n_item, X1, X2)
     recalls = net.generate_recall('item', B, T, p_stop)
+
+
+@pytest.fixture()
+def patterns():
+    cat = np.array([[1, 0, 1, 1, 0, 1],
+                    [0, 1, 0, 0, 1, 0]])
+    patterns = {'fcf': {'loc': np.eye(6), 'cat': cat.T}}
+    return patterns
+
+
+def test_cmr_patterns(patterns):
+    weights = {'fcf': {'loc': 1, 'cat': 2}}
+    scaled = network.prepare_patterns(patterns, weights)
+    expected = np.array([[0.57735027, 0., 0., 0., 0., 0., 0.81649658, 0.],
+                         [0., 0.57735027, 0., 0., 0., 0., 0., 0.81649658],
+                         [0., 0., 0.57735027, 0., 0., 0., 0.81649658, 0.],
+                         [0., 0., 0., 0.57735027, 0., 0., 0.81649658, 0.],
+                         [0., 0., 0., 0., 0.57735027, 0., 0., 0.81649658],
+                         [0., 0., 0., 0., 0., 0.57735027, 0.81649658, 0.]])
+    np.testing.assert_allclose(scaled['fcf'], expected)
