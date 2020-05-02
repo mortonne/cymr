@@ -17,11 +17,11 @@ def save_patterns(h5_file, items, **kwargs):
         for i, item in enumerate(items):
             dset[i] = item
 
-        # regions
-        regions = list(kwargs.keys())
-        dset = f.create_dataset('regions', (len(regions),), dtype=dt)
-        for i, region in enumerate(regions):
-            dset[i] = region
+        # features
+        features = list(kwargs.keys())
+        dset = f.create_dataset('features', (len(features),), dtype=dt)
+        for i, feature in enumerate(features):
+            dset[i] = feature
 
         # patterns
         for name, vectors in kwargs.items():
@@ -33,17 +33,17 @@ def save_patterns(h5_file, items, **kwargs):
             f.create_dataset('similarity/' + name, data=sim)
 
 
-def load_patterns(h5_file, regions=None):
+def load_patterns(h5_file, features=None):
     """Load weights from an hdf5 file."""
     with h5py.File(h5_file, 'r') as f:
         patterns = {'items': f['items'][()],
                     'vector': {},
                     'similarity': {}}
 
-        if regions is None:
-            regions = f['regions'][()]
+        if features is None:
+            features = f['features'][()]
 
-        for name in regions:
+        for name in features:
             patterns['vector'][name] = f['vector/' + name][()]
             patterns['similarity'][name] = f['similarity/' + name][()]
     return patterns
@@ -56,12 +56,12 @@ def prepare_patterns(patterns, weights):
         # scale weights
         w = np.array(list(weights['fcf'].values()))
         ws = np.sqrt(w) / np.linalg.norm(np.sqrt(w), ord=2)
-        regions = list(weights['fcf'].keys())
+        features = list(weights['fcf'].keys())
 
         # apply weights and make full patterns
         fcf = []
-        for region, wr in zip(regions, ws):
-            mat = patterns['vector'][region] * wr
+        for feature, wr in zip(features, ws):
+            mat = patterns['vector'][feature] * wr
             fcf.append(mat)
         scaled['fcf'] = np.hstack(fcf)
     return scaled
