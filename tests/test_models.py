@@ -30,6 +30,14 @@ def data():
     return data
 
 
+@pytest.fixture()
+def patterns():
+    cat = np.array([[1, 0, 1, 1, 0, 1],
+                    [0, 1, 0, 0, 1, 0]])
+    patterns = {'fcf': {'loc': np.eye(6), 'cat': cat.T}}
+    return patterns
+
+
 def test_cmr(data):
     model = models.CMR()
     param = {'B_enc': .5, 'B_rec': .8,
@@ -50,3 +58,15 @@ def test_cmr_fit(data):
     results = model.fit_indiv(data, fixed, var_names, var_bounds, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.01)
+
+
+def test_cmr_patterns(patterns):
+    weights = {'fcf': {'loc': 1, 'cat': 2}}
+    scaled = models.prepare_patterns(patterns, weights)
+    expected = np.array([[0.57735027, 0., 0., 0., 0., 0., 0.81649658, 0.],
+                         [0., 0.57735027, 0., 0., 0., 0., 0., 0.81649658],
+                         [0., 0., 0.57735027, 0., 0., 0., 0.81649658, 0.],
+                         [0., 0., 0., 0.57735027, 0., 0., 0.81649658, 0.],
+                         [0., 0., 0., 0., 0.57735027, 0., 0., 0.81649658],
+                         [0., 0., 0., 0., 0., 0.57735027, 0.81649658, 0.]])
+    np.testing.assert_allclose(scaled['fcf'], expected)
