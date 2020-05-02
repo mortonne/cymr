@@ -1,9 +1,41 @@
 """Represent interactions between context and item layers."""
 
 import numpy as np
+from scipy import stats
+import h5py
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from cymr import operations
+
+
+def save_patterns(h5_file, items, **kwargs):
+    """Write patterns and similarity matrices to hdf5."""
+    with h5py.File(h5_file, 'w') as f:
+        # items
+        dt = h5py.special_dtype(vlen=str)
+        dset = f.create_dataset('items', items.shape, dtype=dt)
+        for i, item in enumerate(items):
+            dset[i] = item
+
+        # patterns
+        for name, vectors in kwargs.items():
+            # normalize so that dot product is equal to correlation
+            z = stats.zscore(vectors, axis=1) / np.sqrt(vectors.shape[1])
+            f.create_dataset('pattern/' + name, data=z)
+
+            # set pattern similarity to pairwise pattern correlation
+            sim = np.dot(z, z.T)
+            f.create_dataset('similarity/' + name, data=sim)
+
+
+def load_patterns(h5_file, regions=None):
+    """Load weights from an hdf5 file."""
+    pat = {}
+    with h5py.File(h5_file, 'r') as f:
+        items = f['items'][()]
+        for name in regions:
+            pat[name] = f['pattern/' + name][()]
+    return items, pat
 
 
 def expand_param(param, n):
