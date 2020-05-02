@@ -1,7 +1,6 @@
 """Represent interactions between context and item layers."""
 
 import numpy as np
-from scipy import stats
 import h5py
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
