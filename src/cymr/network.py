@@ -64,6 +64,18 @@ def prepare_patterns(patterns, weights):
             mat = patterns['vector'][feature] * wr
             fcf.append(mat)
         scaled['fcf'] = np.hstack(fcf)
+
+    if 'ff' in weights:
+        w = np.array(list(weights['fcf'].values()))
+        ws = w / np.linalg.norm(w, ord=1)
+        features = list(weights['ff'].keys())
+
+        # sum weights
+        w_shape = patterns['similarity'][features[0]].shape
+        scaled['ff'] = np.zeros(w_shape)
+        for feature, wr in zip(features, ws):
+            mat = patterns['similarity'][feature] * wr
+            scaled['ff'] += mat
     return scaled
 
 
