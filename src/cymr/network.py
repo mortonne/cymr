@@ -18,6 +18,12 @@ def save_patterns(h5_file, items, **kwargs):
         for i, item in enumerate(items):
             dset[i] = item
 
+        # regions
+        regions = list(kwargs.keys())
+        dset = f.create_dataset('regions', (len(regions),), dtype=dt)
+        for i, region in enumerate(regions):
+            dset[i] = region
+
         # patterns
         for name, vectors in kwargs.items():
             # normalize so that dot product is equal to correlation
