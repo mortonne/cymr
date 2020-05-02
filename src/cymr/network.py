@@ -53,7 +53,7 @@ def load_patterns(h5_file, regions=None):
 def prepare_patterns(patterns, weights):
     """Scale and concatenate item patterns and connections."""
     scaled = {'fcf': None, 'ff': None}
-    if 'fcf' in patterns:
+    if 'fcf' in weights:
         # scale weights
         w = np.array(list(weights['fcf'].values()))
         ws = np.sqrt(w) / np.linalg.norm(np.sqrt(w), ord=2)
@@ -62,7 +62,7 @@ def prepare_patterns(patterns, weights):
         # apply weights and make full patterns
         fcf = []
         for region, wr in zip(regions, ws):
-            mat = patterns['fcf'][region] * wr
+            mat = patterns['vector'][region] * wr
             fcf.append(mat)
         scaled['fcf'] = np.hstack(fcf)
     return scaled
