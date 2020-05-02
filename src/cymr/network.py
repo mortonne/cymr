@@ -26,12 +26,11 @@ def save_patterns(h5_file, items, **kwargs):
 
         # patterns
         for name, vectors in kwargs.items():
-            # normalize so that dot product is equal to correlation
-            z = stats.zscore(vectors, axis=1) / np.sqrt(vectors.shape[1])
-            f.create_dataset('pattern/' + name, data=z)
+            # save vectors
+            f.create_dataset('vector/' + name, data=vectors)
 
-            # set pattern similarity to pairwise pattern correlation
-            sim = np.dot(z, z.T)
+            # set pattern similarity to dot product
+            sim = np.dot(vectors, vectors.T)
             f.create_dataset('similarity/' + name, data=sim)
 
 
