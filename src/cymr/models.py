@@ -7,24 +7,6 @@ from cymr import fit
 from cymr import network
 
 
-def prepare_patterns(patterns, weights):
-    """Scale and concatenate item patterns and connections."""
-    scaled = {'fcf': None, 'ff': None}
-    if 'fcf' in patterns:
-        # scale weights
-        w = np.array(list(weights['fcf'].values()))
-        ws = np.sqrt(w) / np.linalg.norm(np.sqrt(w), ord=2)
-        regions = list(weights['fcf'].keys())
-
-        # apply weights and make full patterns
-        fcf = []
-        for region, wr in zip(regions, ws):
-            mat = patterns['fcf'][region] * wr
-            fcf.append(mat)
-        scaled['fcf'] = np.hstack(fcf)
-    return scaled
-
-
 class CMR(Recall):
 
     def prepare_sim(self, data):

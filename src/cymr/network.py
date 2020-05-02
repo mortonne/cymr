@@ -38,6 +38,24 @@ def load_patterns(h5_file, regions=None):
     return items, pat
 
 
+def prepare_patterns(patterns, weights):
+    """Scale and concatenate item patterns and connections."""
+    scaled = {'fcf': None, 'ff': None}
+    if 'fcf' in patterns:
+        # scale weights
+        w = np.array(list(weights['fcf'].values()))
+        ws = np.sqrt(w) / np.linalg.norm(np.sqrt(w), ord=2)
+        regions = list(weights['fcf'].keys())
+
+        # apply weights and make full patterns
+        fcf = []
+        for region, wr in zip(regions, ws):
+            mat = patterns['fcf'][region] * wr
+            fcf.append(mat)
+        scaled['fcf'] = np.hstack(fcf)
+    return scaled
+
+
 def expand_param(param, n):
     """Expand a scalar parameter to array format."""
     if not isinstance(param, np.ndarray):
