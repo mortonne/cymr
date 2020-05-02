@@ -13,6 +13,7 @@ def save_patterns(h5_file, items, **kwargs):
     with h5py.File(h5_file, 'w') as f:
         # items
         dt = h5py.special_dtype(vlen=str)
+        items = np.asarray(items)
         dset = f.create_dataset('items', items.shape, dtype=dt)
         for i, item in enumerate(items):
             dset[i] = item
