@@ -36,12 +36,18 @@ def save_patterns(h5_file, items, **kwargs):
 
 def load_patterns(h5_file, regions=None):
     """Load weights from an hdf5 file."""
-    pat = {}
     with h5py.File(h5_file, 'r') as f:
-        items = f['items'][()]
+        patterns = {'items': f['items'][()],
+                    'vector': {},
+                    'similarity': {}}
+
+        if regions is None:
+            regions = f['regions'][()]
+
         for name in regions:
-            pat[name] = f['pattern/' + name][()]
-    return items, pat
+            patterns['vector'][name] = f['vector/' + name][()]
+            patterns['similarity'][name] = f['similarity/' + name][()]
+    return patterns
 
 
 def prepare_patterns(patterns, weights):
