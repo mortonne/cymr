@@ -740,4 +740,4 @@ class Network(object):
                 mat = mat[None, :]
             h.matshow(mat)
             h.set_axis_off()
-            h.set_title(name)
+            h.set_title(name, fontsize=12)
