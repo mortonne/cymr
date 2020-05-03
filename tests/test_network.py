@@ -263,7 +263,10 @@ def test_pattern_io(patterns):
 
 
 def test_cmr_patterns(patterns):
-    weights = {'fcf': {'loc': 1, 'cat': 2}, 'ff': {'loc': 1, 'cat': 2}}
+    weights_template = {'fcf': {'loc': 'w_loc', 'cat': 'w_cat'},
+                        'ff': {'loc': 'w_loc', 'cat': 'w_cat'}}
+    params = {'w_loc': 1, 'w_cat': 2}
+    weights = network.unpack_weights(weights_template, params)
     scaled = network.prepare_patterns(patterns, weights)
     expected = np.array([[0.57735027, 0., 0., 0., 0., 0., 0.81649658, 0.],
                          [0., 0.57735027, 0., 0., 0., 0., 0., 0.81649658],
