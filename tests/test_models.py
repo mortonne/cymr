@@ -104,3 +104,19 @@ def test_dist_cmr(data):
     logl = model.likelihood(data, param, patterns=patterns,
                             weights=weights_template)
     np.testing.assert_allclose(logl, -5.936799964636842)
+
+
+def test_dist_cmr_fit(data):
+    model = models.CMR()
+    patterns = {'vector': {'loc': np.eye(6)}}
+    weights_template = {'fcf': {'loc': 'w_loc'}}
+    fixed = {'B_rec': .8, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'w_loc': 1,
+             'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
+             'T': 10, 'X1': .05, 'X2': 1}
+    var_names = ['B_enc']
+    var_bounds = {'B_enc': (0, 1)}
+    results = model.fit_indiv(data, fixed, var_names, var_bounds,
+                              patterns=patterns, weights=weights_template,
+                              n_jobs=2)
+    np.testing.assert_allclose(results['B_enc'].to_numpy(),
+                               np.array([0.72728744, 0.99883425]), atol=0.01)
