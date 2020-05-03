@@ -87,25 +87,8 @@ def init_dist_cmr(item_index, patterns):
 class CMR(Recall):
 
     def prepare_sim(self, data):
-        # prepare list data for simulation
-        if 'item_index' in data:
-            merged = fr.merge_free_recall(data, study_keys=['item_index'])
-            study_keys = ['input', 'item_index']
-        else:
-            merged = fr.merge_free_recall(data)
-            study_keys = ['input']
-        merged = merged.query('~intrusion and repeat == 0')
-
-        study = fr.split_lists(merged, 'study', study_keys)
-        recall = fr.split_lists(merged, 'recall', ['input'])
-        for i in range(len(study['input'])):
-            if 'item_index' in study_keys:
-                study['item_index'][i] = study['item_index'][i].astype(int)
-            study['input'][i] = study['input'][i].astype(int) - 1
-            recall['input'][i] = recall['input'][i].astype(int) - 1
-        n = np.unique([len(items) for items in study['input']])
-        if len(n) > 1:
-            raise ValueError('List length must not vary.')
+        study, recall = prepare_lists(data, study_keys=['input'],
+                                      recall_keys=['input'], clean=True)
         return study, recall
 
     def likelihood_subject(self, study, recall, param, patterns=None,
