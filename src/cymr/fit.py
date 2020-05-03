@@ -39,10 +39,12 @@ def add_recalls(study, recalls_list):
 class Recall(ABC):
 
     @abstractmethod
-    def likelihood_subject(self, study, recall, param):
+    def likelihood_subject(self, study, recall, param, patterns=None,
+                           weights=None):
         pass
 
-    def likelihood(self, data, group_param, subj_param=None):
+    def likelihood(self, data, group_param, subj_param=None, patterns=None,
+                   weights=None):
         subjects = data['subject'].unique()
         logl = 0
         for subject in subjects:
@@ -51,7 +53,9 @@ class Recall(ABC):
                 param.update(subj_param[subject])
             subject_data = data.loc[data['subject'] == subject]
             study, recall = self.prepare_sim(subject_data)
-            subject_logl = self.likelihood_subject(study, recall, param)
+            subject_logl = self.likelihood_subject(study, recall, param,
+                                                   patterns=patterns,
+                                                   weights=weights)
             logl += subject_logl
         return logl
 
