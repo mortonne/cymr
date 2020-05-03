@@ -99,22 +99,11 @@ class CMR(Recall):
         Lfc = np.tile(param['Lfc'], n_item).astype(float)
         Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
 
-        if patterns is None or weights is None:
-            net_init = init_loc_cmr(n_item, param)
-            scaled = None
-        else:
-            net_init = None
-            weights_param = network.unpack_weights(weights, param)
-            scaled = network.prepare_patterns(patterns, weights_param)
+        net_init = init_loc_cmr(n_item, param)
         logl = 0
         for i in range(n_list):
-            if net_init is not None:
-                net = net_init.copy()
-            else:
-                net = init_dist_cmr(study['item_index'][i], scaled)
-
-            item_list = study['input'][i]
-            net.study('item', item_list, param['B_enc'], Lfc, Lcf)
+            net = net_init.copy()
+            net.study('item', study['input'][i], param['B_enc'], Lfc, Lcf)
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
                              param['T'], p_stop)
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
@@ -123,19 +112,20 @@ class CMR(Recall):
             logl += np.sum(np.log(p))
         return logl
 
-    def generate_subject(self, study_data, param, **kwargs):
-        study = fr.split_lists(study_data, 'raw', ['position'])
+    def generate_subject(self, study_data, param, patterns=None, weights=None,
+                         **kwargs):
+        study = prepare_study(study_data, study_keys=['position'])
         n_item = len(study['position'][0])
         n_list = len(study['position'])
-        net_init = init_loc_cmr(n_item, param)
         p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
         Lfc = np.tile(param['Lfc'], n_item).astype(float)
         Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+
         recalls = []
+        net_init = init_loc_cmr(n_item, param)
         for i in range(n_list):
             net = net_init.copy()
-            item_list = study['position'][i].astype(int)
-            net.study('item', item_list - 1, param['B_enc'], Lfc, Lcf)
+            net.study('item', study['position'][i], param['B_enc'], Lfc, Lcf)
             recall = net.generate_recall('item', param['B_rec'], param['T'],
                                          p_stop)
             recalls.append(recall)
