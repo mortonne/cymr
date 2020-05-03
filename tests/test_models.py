@@ -100,6 +100,12 @@ def test_init_dist_cmr(patterns):
                           0.0000, 0.0000, 1.0000]])
     np.testing.assert_allclose(net.w_fc_pre, expected, atol=0.0001)
 
+    expected = np.array([[1.0000, 0.0000, 0.6667, 0.0000],
+                         [0.0000, 1.0000, 0.0000, 0.0000],
+                         [0.6667, 0.0000, 1.0000, 0.0000],
+                         [0.0000, 0.0000, 0.0000, 0.0000]])
+    np.testing.assert_allclose(net.w_ff_pre, expected, atol=0.0001)
+
 
 def test_dist_cmr(data):
     """Test localist CMR using the distributed framework."""
