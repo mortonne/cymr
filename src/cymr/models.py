@@ -61,14 +61,25 @@ class CMR(Recall):
     def likelihood_subject(self, study, recall, param, patterns=None,
                            weights=None):
         n_item = len(study['input'][0])
-        net_init = init_loc_cmr(n_item, param)
         n_list = len(study['input'])
         p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
         Lfc = np.tile(param['Lfc'], n_item).astype(float)
         Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+
+        if patterns is None or weights is None:
+            net_init = init_loc_cmr(n_item, param)
+            scaled = None
+        else:
+            net_init = None
+            weights_param = network.unpack_weights(weights, param)
+            scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         for i in range(n_list):
-            net = net_init.copy()
+            if net_init is not None:
+                net = net_init.copy()
+            else:
+                net = init_dist_cmr(study['item_index'][i], scaled)
+
             item_list = study['input'][i]
             net.study('item', item_list, param['B_enc'], Lfc, Lcf)
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
