@@ -31,15 +31,23 @@ def data():
     return data
 
 
-def test_prepare_cmr_sim(data):
-    model = models.CMR()
-    study, recall = model.prepare_sim(data)
+def test_prepare_lists(data):
+    study, recall = models.prepare_lists(data)
     np.testing.assert_array_equal(study['input'][0], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['input'][1], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['item_index'][0], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['item_index'][1], np.array([3, 4, 5]))
     np.testing.assert_array_equal(recall['input'][0], np.array([1, 2]))
     np.testing.assert_array_equal(recall['input'][1], np.array([2, 0]))
+
+
+def test_prepare_study(data):
+    study_data = data.loc[data['trial_type'] == 'study'].copy()
+    study = models.prepare_study(study_data)
+    np.testing.assert_array_equal(study['position'][0], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(study['position'][1], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(study['item_index'][0], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(study['item_index'][1], np.array([3, 4, 5]))
 
 
 def test_cmr(data):
