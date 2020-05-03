@@ -160,7 +160,8 @@ class CMRDistributed(Recall):
         data = fit.add_recalls(study_data, recalls)
         return data
 
-    def record_network(self, data, param, patterns=None, weights=None):
+    def record_network(self, data, param, patterns=None, weights=None,
+                       remove_blank=False):
         study, recall = self.prepare_sim(data)
         n_item = len(study['input'][0])
         list_param = prepare_list_param(n_item, param)
@@ -170,6 +171,9 @@ class CMRDistributed(Recall):
         weights_param = network.unpack_weights(weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
         for i in range(n_list):
+            if remove_blank:
+                include = np.any(scaled['fcf'][study['item_index'][i]] != 0, 0)
+                scaled['fcf'] = scaled['fcf'][:, include]
             net = init_dist_cmr(study['item_index'][i], scaled)
             item_list = study['input'][i].astype(int)
             state = net.record_study('item', item_list, param['B_enc'],
