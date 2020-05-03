@@ -64,14 +64,14 @@ class Recall(ABC):
         pass
 
     def fit_subject(self, subject_data, fixed, var_names, var_bounds,
-                    method='de', **kwargs):
-
+                    patterns=None, weights=None, method='de', **kwargs):
         study, recall = self.prepare_sim(subject_data)
 
         def eval_fit(x):
             eval_param = fixed.copy()
             eval_param.update(dict(zip(var_names, x)))
-            eval_logl = self.likelihood_subject(study, recall, eval_param)
+            eval_logl = self.likelihood_subject(study, recall, eval_param,
+                                                patterns, weights)
             return -eval_logl
 
         group_lb = [var_bounds[k][0] for k in var_names]
@@ -93,19 +93,21 @@ class Recall(ABC):
         return param, logl
 
     def run_fit_subject(self, data, subject, fixed, var_names, var_bounds,
-                        method='de', **kwargs):
+                        patterns=None, weights=None, method='de', **kwargs):
         subject_data = data.loc[data['subject'] == subject]
         param, logl = self.fit_subject(subject_data, fixed, var_names,
-                                       var_bounds, method, **kwargs)
+                                       var_bounds, patterns, weights,
+                                       method, **kwargs)
         results = {**param, 'logl': logl}
         return results
 
-    def fit_indiv(self, data, fixed, var_names, var_bounds, n_jobs=None,
-                  method='de', **kwargs):
+    def fit_indiv(self, data, fixed, var_names, var_bounds, patterns=None,
+                  weights=None, n_jobs=None, method='de', **kwargs):
         subjects = data['subject'].unique()
         results = Parallel(n_jobs=n_jobs)(
             delayed(self.run_fit_subject)(
-                data, subject, fixed,  var_names, var_bounds, method, **kwargs)
+                data, subject, fixed,  var_names, var_bounds, patterns,
+                weights, method, **kwargs)
             for subject in subjects)
         d = {subject: res for subject, res in zip(subjects, results)}
         results = pd.DataFrame(d).T
