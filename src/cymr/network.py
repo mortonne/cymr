@@ -707,6 +707,10 @@ class Network(object):
 
             # project the current state of context; assume nonzero support
             support = np.dot(w_cf, self.c)
+            if i > 0:
+                item_cue = (self.w_ff_pre[:, recalls[i - 1]] +
+                            self.w_ff_exp[:, recalls[i - 1]])
+                support += item_cue
             support[support < amin] = amin
 
             # scale based on choice parameter, set recalled items to zero
