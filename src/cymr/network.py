@@ -304,8 +304,8 @@ class Network(object):
         net.w_fc_pre = self.w_fc_pre.copy()
         net.w_cf_exp = self.w_cf_exp.copy()
         net.w_cf_pre = self.w_cf_pre.copy()
-        net.w_ff_exp = self.w_cf_exp.copy()
-        net.w_ff_pre = self.w_cf_pre.copy()
+        net.w_ff_exp = self.w_ff_exp.copy()
+        net.w_ff_pre = self.w_ff_pre.copy()
         return net
 
     def get_slices(self, region):
