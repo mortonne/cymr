@@ -38,18 +38,21 @@ class CMR(Recall):
 
     def prepare_sim(self, data):
         # prepare list data for simulation
-        data_study = data.loc[data['trial_type'] == 'study']
-        data_recall = data.loc[data['trial_type'] == 'recall']
-        merged = fr.merge_lists(data_study, data_recall)
+        if 'item_index' in data:
+            merged = fr.merge_free_recall(data, study_keys=['item_index'])
+            study_keys = ['input', 'item_index']
+        else:
+            merged = fr.merge_free_recall(data)
+            study_keys = ['input']
         merged = merged.query('~intrusion and repeat == 0')
 
-        study = fr.split_lists(merged, 'study', ['input'])
+        study = fr.split_lists(merged, 'study', study_keys)
         recall = fr.split_lists(merged, 'recall', ['input'])
         for i in range(len(study['input'])):
-            study['input'][i] -= 1
-            recall['input'][i] -= 1
-            study['input'][i] = study['input'][i].astype(int)
-            recall['input'][i] = recall['input'][i].astype(int)
+            if 'item_index' in study_keys:
+                study['item_index'][i] = study['item_index'][i].astype(int)
+            study['input'][i] = study['input'][i].astype(int) - 1
+            recall['input'][i] = recall['input'][i].astype(int) - 1
         n = np.unique([len(items) for items in study['input']])
         if len(n) > 1:
             raise ValueError('List length must not vary.')
