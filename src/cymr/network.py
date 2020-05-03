@@ -219,6 +219,11 @@ class Network(object):
 
     w_cf_exp : numpy.array
         Weights learned during the experiment connect c to f.
+    w_ff_pre : numpy.array
+        Pre-experimental weights connecting f to f.
+
+    w_ff_exp : numpy.array
+        Weights learned during the experiment connecting f to f.
     """
     def __init__(self, segments):
         n_f = 0
@@ -248,6 +253,8 @@ class Network(object):
         self.w_fc_exp = np.zeros((n_f, n_c))
         self.w_cf_pre = np.zeros((n_f, n_c))
         self.w_cf_exp = np.zeros((n_f, n_c))
+        self.w_ff_pre = np.zeros((n_f, n_f))
+        self.w_ff_exp = np.zeros((n_f, n_f))
 
     def __repr__(self):
         np.set_printoptions(precision=4, floatmode='fixed', sign=' ')
@@ -257,7 +264,10 @@ class Network(object):
         s_fc_exp = 'W exp [fc]:\n' + self.w_fc_exp.__str__()
         s_cf_pre = 'W pre [cf]:\n' + self.w_cf_pre.__str__()
         s_cf_exp = 'W exp [cf]:\n' + self.w_cf_exp.__str__()
-        s = '\n\n'.join([s_f, s_c, s_fc_pre, s_fc_exp, s_cf_pre, s_cf_exp])
+        s_ff_pre = 'W pre [ff]:\n' + self.w_cf_pre.__str__()
+        s_ff_exp = 'W exp [ff]:\n' + self.w_cf_exp.__str__()
+        s = '\n\n'.join([s_f, s_c, s_fc_pre, s_fc_exp, s_cf_pre, s_cf_exp,
+                         s_ff_pre, s_ff_exp])
         return s
 
     def reset(self):
@@ -269,6 +279,8 @@ class Network(object):
         self.w_fc_pre[:] = 0
         self.w_cf_exp[:] = 0
         self.w_cf_pre[:] = 0
+        self.w_ff_exp[:] = 0
+        self.w_ff_pre[:] = 0
 
     def copy(self):
         """
@@ -292,6 +304,8 @@ class Network(object):
         net.w_fc_pre = self.w_fc_pre.copy()
         net.w_cf_exp = self.w_cf_exp.copy()
         net.w_cf_pre = self.w_cf_pre.copy()
+        net.w_ff_exp = self.w_cf_exp.copy()
+        net.w_ff_pre = self.w_cf_pre.copy()
         return net
 
     def get_slices(self, region):
@@ -365,6 +379,8 @@ class Network(object):
             self.w_fc_pre[f_ind, c_ind] = scaled
         elif connect == 'cf':
             self.w_cf_pre[f_ind, c_ind] = scaled
+        elif connect == 'ff':
+            self.w_ff_pre[f_ind, f_ind] = scaled
         else:
             raise ValueError(f'Invalid connection type: {connect}')
 
