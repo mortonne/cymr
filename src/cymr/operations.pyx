@@ -144,26 +144,27 @@ def p_recall(int start,
 
     for i in range(n_r):
         # calculate support for each item
+        total = 0
         for j in range(n_f):
             f_in[j] = 0
             if exclude[j]:
                 continue
+
+            # support from context cuing
             for k in range(n_c):
                 f_in[j] += ((w_cf_exp[start + j, k] + w_cf_pre[start + j, k])
                             * c[k])
-                if f_in[j] < amin:
-                    f_in[j] = amin
 
             if i > 0:
-                # add support from the previously recalled item
+                # support from the previously recalled item
                 f_in[j] += (w_ff_exp[start + recalls[i - 1], start + j] +
                             w_ff_exp[start + recalls[i - 1], start + j])
 
-            f_in[j] = exp((2 * f_in[j]) / T)
+            # ensure minimal support for each item
+            if f_in[j] < amin:
+                f_in[j] = amin
 
-        # sum of support for all items
-        total = 0
-        for j in range(n_f):
+            f_in[j] = exp((2 * f_in[j]) / T)
             total += f_in[j]
 
         # calculate probability of this recall
