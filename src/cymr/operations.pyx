@@ -122,6 +122,8 @@ def p_recall(int start,
              const double [:, :] w_fc_pre,
              double [:, :] w_cf_exp,
              const double [:, :] w_cf_pre,
+             double [:, :] w_ff_exp,
+             const double [:, :] w_ff_pre,
              double [:] f,
              double [:] f_in,
              double [:] c,
@@ -151,6 +153,12 @@ def p_recall(int start,
                             * c[k])
                 if f_in[j] < amin:
                     f_in[j] = amin
+
+            if i > 0:
+                # add support from the previously recalled item
+                f_in[j] += (w_ff_exp[start + recalls[i - 1], start + j] +
+                            w_ff_exp[start + recalls[i - 1], start + j])
+
             f_in[j] = exp((2 * f_in[j]) / T)
 
         # sum of support for all items

@@ -594,6 +594,7 @@ class Network(object):
         operations.p_recall(rec_ind.start, n_item, recalls,
                             self.w_fc_exp, self.w_fc_pre,
                             self.w_cf_exp, self.w_cf_pre,
+                            self.w_ff_exp, self.w_ff_pre,
                             self.f, self.f_in, self.c, self.c_in,
                             exclude, amin, B, T, p_stop, p)
         return p
