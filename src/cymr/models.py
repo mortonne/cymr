@@ -104,17 +104,15 @@ class CMR(Recall):
                            weights=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
-        Lfc = np.tile(param['Lfc'], n_item).astype(float)
-        Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
-
+        list_param = prepare_list_param(n_item, param)
         net_init = init_loc_cmr(n_item, param)
         logl = 0
         for i in range(n_list):
             net = net_init.copy()
-            net.study('item', study['input'][i], param['B_enc'], Lfc, Lcf)
+            net.study('item', study['input'][i], param['B_enc'],
+                      list_param['Lfc'], list_param['Lcf'])
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
-                             param['T'], p_stop)
+                             param['T'], list_param['p_stop'])
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
@@ -126,17 +124,16 @@ class CMR(Recall):
         study = prepare_study(study_data, study_keys=['position'])
         n_item = len(study['position'][0])
         n_list = len(study['position'])
-        p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
-        Lfc = np.tile(param['Lfc'], n_item).astype(float)
-        Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+        list_param = prepare_list_param(n_item, param)
 
         recalls = []
         net_init = init_loc_cmr(n_item, param)
         for i in range(n_list):
             net = net_init.copy()
-            net.study('item', study['position'][i], param['B_enc'], Lfc, Lcf)
+            net.study('item', study['input'][i], param['B_enc'],
+                      list_param['Lfc'], list_param['Lcf'])
             recall = net.generate_recall('item', param['B_rec'], param['T'],
-                                         p_stop)
+                                         list_param['p_stop'])
             recalls.append(recall)
         data = fit.add_recalls(study_data, recalls)
         return data
@@ -144,18 +141,16 @@ class CMR(Recall):
     def record_network(self, data, param):
         study, recall = self.prepare_sim(data)
         n_item = len(study['input'][0])
+        list_param = prepare_list_param(n_item, param)
         net_init = init_loc_cmr(n_item, param)
         n_list = len(study['input'])
-        p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
-        Lfc = np.tile(param['Lfc'], n_item).astype(float)
-        Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
 
         net_state = []
         for i in range(n_list):
             net = net_init.copy()
             item_list = study['input'][i].astype(int)
             state = net.record_study('item', item_list, param['B_enc'],
-                                     Lfc, Lcf)
+                                     list_param['Lfc'], list_param['Lcf'])
             rec = net.record_recall('item', recall['input'][i],
                                     param['B_rec'], param['T'])
             state.extend(rec)
@@ -174,18 +169,17 @@ class CMRDistributed(Recall):
                            weights=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
-        Lfc = np.tile(param['Lfc'], n_item).astype(float)
-        Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+        list_param = prepare_list_param(n_item, param)
 
         weights_param = network.unpack_weights(weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         for i in range(n_list):
             net = init_dist_cmr(study['item_index'][i], scaled)
-            net.study('item', study['input'][i], param['B_enc'], Lfc, Lcf)
+            net.study('item', study['input'][i], param['B_enc'],
+                      list_param['Lfc'], list_param['Lcf'])
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
-                             param['T'], p_stop)
+                             param['T'], list_param['p_stop'])
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
@@ -197,18 +191,17 @@ class CMRDistributed(Recall):
         study = prepare_study(study_data, study_keys=['position', 'item_index'])
         n_item = len(study['position'][0])
         n_list = len(study['position'])
-        p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
-        Lfc = np.tile(param['Lfc'], n_item).astype(float)
-        Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+        list_param = prepare_list_param(n_item, param)
 
         weights_param = network.unpack_weights(weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
         recalls = []
         for i in range(n_list):
             net = init_dist_cmr(study['item_index'][i], scaled)
-            net.study('item', study['position'][i], param['B_enc'], Lfc, Lcf)
+            net.study('item', study['input'][i], param['B_enc'],
+                      list_param['Lfc'], list_param['Lcf'])
             recall = net.generate_recall('item', param['B_rec'], param['T'],
-                                         p_stop)
+                                         list_param['p_stop'])
             recalls.append(recall)
         data = fit.add_recalls(study_data, recalls)
         return data
