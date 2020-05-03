@@ -18,7 +18,8 @@ class TestRecall(Recall):
         recalls = fr.split_lists(merged, 'recall', ['input'])
         return study, recalls
 
-    def likelihood_subject(self, study, recalls, param):
+    def likelihood_subject(self, study, recalls, param, weights=None,
+                           patterns=None):
         p = 2 - (param['x'] + 2) ** 2
         eps = 0.0001
         if p < eps:
