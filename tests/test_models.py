@@ -13,7 +13,7 @@ def data():
         {'subject': [1, 1, 1, 1, 1, 1,
                      2, 2, 2, 2, 2, 2],
          'list': [1, 1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1, 1],
+                  2, 2, 2, 2, 2, 2],
          'trial_type': ['study', 'study', 'study',
                         'recall', 'recall', 'recall',
                         'study', 'study', 'study',
@@ -29,6 +29,17 @@ def data():
          'task': [1, 2, 1, 2, 1, np.nan,
                   1, 2, 1, 1, 1, 1]})
     return data
+
+
+def test_prepare_cmr_sim(data):
+    model = models.CMR()
+    study, recall = model.prepare_sim(data)
+    np.testing.assert_array_equal(study['input'][0], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(study['input'][1], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(study['item_index'][0], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(study['item_index'][1], np.array([3, 4, 5]))
+    np.testing.assert_array_equal(recall['input'][0], np.array([1, 2]))
+    np.testing.assert_array_equal(recall['input'][1], np.array([2, 0]))
 
 
 def test_cmr(data):
