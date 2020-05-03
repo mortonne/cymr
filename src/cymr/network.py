@@ -567,6 +567,10 @@ class Network(object):
         for output, recall in enumerate(recalls):
             # project the current state of context; assume nonzero support
             self.f_in[rec_ind] = np.dot(w_cf, self.c)
+            if output > 0:
+                item_cue = (self.w_ff_pre[rec_ind, recalls[output - 1]] +
+                            self.w_ff_exp[rec_ind, recalls[output - 1]])
+                self.f_in[rec_ind] += item_cue
             self.f_in[self.f_in < amin] = amin
 
             # scale based on choice parameter, set recalled items to zero
