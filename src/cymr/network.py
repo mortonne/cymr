@@ -264,8 +264,8 @@ class Network(object):
         s_fc_exp = 'W exp [fc]:\n' + self.w_fc_exp.__str__()
         s_cf_pre = 'W pre [cf]:\n' + self.w_cf_pre.__str__()
         s_cf_exp = 'W exp [cf]:\n' + self.w_cf_exp.__str__()
-        s_ff_pre = 'W pre [ff]:\n' + self.w_cf_pre.__str__()
-        s_ff_exp = 'W exp [ff]:\n' + self.w_cf_exp.__str__()
+        s_ff_pre = 'W pre [ff]:\n' + self.w_ff_pre.__str__()
+        s_ff_exp = 'W exp [ff]:\n' + self.w_ff_exp.__str__()
         s = '\n\n'.join([s_f, s_c, s_fc_pre, s_fc_exp, s_cf_pre, s_cf_exp,
                          s_ff_pre, s_ff_exp])
         return s
