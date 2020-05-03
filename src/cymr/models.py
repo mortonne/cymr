@@ -7,6 +7,20 @@ from cymr import fit
 from cymr import network
 
 
+def init_dist_cmr(item_index, patterns):
+    """Initialize distributed CMR for one list."""
+    n_c = patterns['fcf'].shape[1]
+    n_f = len(item_index)
+    segments = {'item': (n_f, n_c), 'start': (1, 1)}
+    net = network.Network(segments)
+    list_patterns = patterns['fcf'][item_index]
+    net.add_pre_weights('fc', ('item', 'item'), list_patterns)
+    net.add_pre_weights('cf', ('item', 'item'), list_patterns)
+    net.add_pre_weights('fc', ('start', 'start'), 1)
+    net.update('start', 0)
+    return net
+
+
 class CMR(Recall):
 
     def prepare_sim(self, data):
