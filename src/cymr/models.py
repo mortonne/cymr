@@ -7,6 +7,56 @@ from cymr import fit
 from cymr import network
 
 
+def prepare_lists(data, study_keys=None, recall_keys=None, clean=True):
+    """Prepare study and recall data for simulation."""
+    if study_keys is None:
+        study_keys = ['input', 'item_index']
+
+    if recall_keys is None:
+        recall_keys = ['input']
+
+    s_keys = study_keys.copy()
+    s_keys.remove('input')
+    r_keys = recall_keys.copy()
+    r_keys.remove('input')
+    merged = fr.merge_free_recall(data, study_keys=s_keys, recall_keys=r_keys)
+    if clean:
+        merged = merged.query('~intrusion and repeat == 0')
+
+    study = fr.split_lists(merged, 'study', study_keys)
+    recall = fr.split_lists(merged, 'recall', recall_keys)
+
+    for i in range(len(study['input'])):
+        if 'input' in study_keys:
+            study['input'][i] = study['input'][i].astype(int) - 1
+        if 'item_index' in study_keys:
+            study['item_index'][i] = study['item_index'][i].astype(int)
+
+        if 'input' in recall_keys:
+            recall['input'][i] = recall['input'][i].astype(int) - 1
+        if 'item_index' in recall_keys:
+            recall['item_index'][i] = recall['item_index'][i].astype(int)
+
+    n = np.unique([len(items) for items in study['input']])
+    if len(n) > 1:
+        raise ValueError('List length must not vary.')
+    return study, recall
+
+
+def prepare_study(study_data, study_keys=None):
+    """Prepare study phase data for simulation."""
+    if study_keys is None:
+        study_keys = ['position', 'item_index']
+
+    study = fr.split_lists(study_data, 'raw', study_keys)
+    for i in range(len(study['position'])):
+        if 'position' in study_keys:
+            study['position'][i] = study['position'][i].astype(int) - 1
+        if 'item_index' in study_keys:
+            study['item_index'][i] = study['item_index'][i].astype(int)
+    return study
+
+
 def init_loc_cmr(n_item, param):
     """Initialize localist CMR for one list."""
     segments = {'item': (n_item, n_item), 'start': (1, 1)}
