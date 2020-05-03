@@ -29,6 +29,9 @@ def init_dist_cmr(item_index, patterns):
     net.add_pre_weights('fc', ('item', 'item'), list_patterns)
     net.add_pre_weights('cf', ('item', 'item'), list_patterns)
     net.add_pre_weights('fc', ('start', 'start'), 1)
+    if 'ff' in patterns and patterns['ff'] is not None:
+        mat = patterns['ff'][np.ix_(item_index, item_index)]
+        net.add_pre_weights('ff', ('item', 'item'), mat)
     net.update('start', 0)
     return net
 
