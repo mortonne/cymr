@@ -108,14 +108,14 @@ def test_dist_cmr(data):
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
 
-    model = models.CMR()
+    model = models.CMRDistributed()
     logl = model.likelihood(data, param, patterns=patterns,
                             weights=weights_template)
     np.testing.assert_allclose(logl, -5.936799964636842)
 
 
 def test_dist_cmr_fit(data):
-    model = models.CMR()
+    model = models.CMRDistributed()
     patterns = {'vector': {'loc': np.eye(6)}}
     weights_template = {'fcf': {'loc': 'w_loc'}}
     fixed = {'B_rec': .8, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'w_loc': 1,
