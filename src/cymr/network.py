@@ -149,8 +149,8 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
     return p_stop
 
 
-def init_plot():
-    fig = plt.figure(constrained_layout=True)
+def init_plot(**kwargs):
+    fig = plt.figure(constrained_layout=True, **kwargs)
     gs = GridSpec(10, 5, figure=fig)
     ax = {'c': fig.add_subplot(gs[0, 1:4]),
           'c_in': fig.add_subplot(gs[1, 1:4]),
@@ -158,6 +158,7 @@ def init_plot():
           'f': fig.add_subplot(gs[9, 1:4]),
           'w_fc_pre': fig.add_subplot(gs[2:8, 0]),
           'w_fc_exp': fig.add_subplot(gs[2:8, 1]),
+          'w_ff_pre': fig.add_subplot(gs[2:8, 2]),
           'w_cf_exp': fig.add_subplot(gs[2:8, 3]),
           'w_cf_pre': fig.add_subplot(gs[2:8, 4])}
     return fig, ax
