@@ -90,3 +90,17 @@ def test_init_dist_cmr(patterns):
                          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
                           0.0000, 0.0000, 1.0000]])
     np.testing.assert_allclose(net.w_fc_pre, expected, atol=0.0001)
+
+
+def test_dist_cmr(data):
+    """Test localist CMR using the distributed framework."""
+    patterns = {'vector': {'loc': np.eye(6)}}
+    weights_template = {'fcf': {'loc': 'w_loc'}}
+    param = {'B_enc': .5, 'B_rec': .8, 'w_loc': 1,
+             'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
+             'T': 10, 'X1': .05, 'X2': 1}
+
+    model = models.CMR()
+    logl = model.likelihood(data, param, patterns=patterns,
+                            weights=weights_template)
+    np.testing.assert_allclose(logl, -5.936799964636842)
