@@ -79,6 +79,13 @@ def prepare_patterns(patterns, weights):
     return scaled
 
 
+def unpack_weights(weight_template, weight_param):
+    """Apply parameter values to a weight template."""
+    weights = {f: {k: weight_param[v] for k, v in w.items()}
+               for f, w in weight_template.items()}
+    return weights
+
+
 def expand_param(param, n):
     """Expand a scalar parameter to array format."""
     if not isinstance(param, np.ndarray):
