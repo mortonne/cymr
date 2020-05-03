@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from cymr import fit
 from cymr import models
 from cymr import network
 
@@ -32,7 +33,7 @@ def data():
 
 
 def test_prepare_lists(data):
-    study, recall = models.prepare_lists(data)
+    study, recall = fit.prepare_lists(data)
     np.testing.assert_array_equal(study['input'][0], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['input'][1], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['item_index'][0], np.array([0, 1, 2]))
@@ -43,7 +44,7 @@ def test_prepare_lists(data):
 
 def test_prepare_study(data):
     study_data = data.loc[data['trial_type'] == 'study'].copy()
-    study = models.prepare_study(study_data)
+    study = fit.prepare_study(study_data)
     np.testing.assert_array_equal(study['position'][0], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['position'][1], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['item_index'][0], np.array([0, 1, 2]))
