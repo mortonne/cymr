@@ -85,11 +85,11 @@ def patterns():
 def test_init_dist_cmr(patterns):
     weights_template = {'fcf': {'loc': 'w_loc', 'cat': 'w_cat'},
                         'ff': {'loc': 'w_loc', 'cat': 'w_cat'}}
-    params = {'w_loc': 1, 'w_cat': 2}
-    weights = network.unpack_weights(weights_template, params)
+    param = {'w_loc': 1, 'w_cat': 2, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1}
+    weights = network.unpack_weights(weights_template, param)
     scaled = network.prepare_patterns(patterns, weights)
     item_index = np.arange(3)
-    net = models.init_dist_cmr(item_index, scaled)
+    net = models.init_dist_cmr(item_index, scaled, param)
     expected = np.array([[0.5774, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
                           0.8165, 0.0000, 0.0000],
                          [0.0000, 0.5774, 0.0000, 0.0000, 0.0000, 0.0000,
@@ -112,6 +112,7 @@ def test_dist_cmr(data):
     patterns = {'vector': {'loc': np.eye(6)}}
     weights_template = {'fcf': {'loc': 'w_loc'}}
     param = {'B_enc': .5, 'B_rec': .8, 'w_loc': 1,
+             'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
 
