@@ -26,6 +26,8 @@ setup(
         'cython',
         'joblib',
         'pytest',
+        'h5py',
+        'matplotlib',
         'psifr'
     ],
     classifiers=[
