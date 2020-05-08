@@ -113,6 +113,48 @@ class CMR(Recall):
 
 
 class CMRDistributed(Recall):
+    """
+    Context Maintenance and Retrieval-Distributed model.
+
+    Model Parameters
+    ----------------
+    Afc : float
+        Intercept of pre-experimental item-context weights.
+
+    Acf : float
+        Intercept of pre-experimental context-item weights.
+
+    Dfc : float
+        Slope of pre-experimental item-context weights.
+
+    Dcf : float
+        Slope of pre-experimental context-item weights.
+
+    Lfc : float
+        Learning rate of item-context weights.
+
+    Lcf : float
+        Learning rate of context-item weights.
+
+    P1 : float
+        Additional context-item learning for first item.
+
+    P2 : float
+        Decay rate for primacy learning rate gradient.
+
+    B_enc : float
+        Integration rate during encoding.
+
+    B_rec : float
+        Integration rate during recall.
+
+    X1 : float
+        Probability of not recalling any items.
+
+    X2 : float
+        Shape parameter of exponential function increasing stop
+        probability by output position.
+    """
 
     def prepare_sim(self, data):
         study, recall = fit.prepare_lists(
