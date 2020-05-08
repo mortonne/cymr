@@ -19,15 +19,17 @@ def init_loc_cmr(n_item, param):
     return net
 
 
-def init_dist_cmr(item_index, patterns):
+def init_dist_cmr(item_index, patterns, param):
     """Initialize distributed CMR for one list."""
     n_c = patterns['fcf'].shape[1]
     n_f = len(item_index)
     segments = {'item': (n_f, n_c), 'start': (1, 1)}
     net = network.Network(segments)
     list_patterns = patterns['fcf'][item_index]
-    net.add_pre_weights('fc', ('item', 'item'), list_patterns)
-    net.add_pre_weights('cf', ('item', 'item'), list_patterns)
+    net.add_pre_weights('fc', ('item', 'item'), list_patterns,
+                        param['Dfc'], param['Afc'])
+    net.add_pre_weights('cf', ('item', 'item'), list_patterns,
+                        param['Dcf'], param['Acf'])
     net.add_pre_weights('fc', ('start', 'start'), 1)
     if 'ff' in patterns and patterns['ff'] is not None:
         mat = patterns['ff'][np.ix_(item_index, item_index)]
@@ -128,7 +130,7 @@ class CMRDistributed(Recall):
         scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         for i in range(n_list):
-            net = init_dist_cmr(study['item_index'][i], scaled)
+            net = init_dist_cmr(study['item_index'][i], scaled, param)
             net.study('item', study['input'][i], param['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
@@ -151,7 +153,7 @@ class CMRDistributed(Recall):
         scaled = network.prepare_patterns(patterns, weights_param)
         recalls = []
         for i in range(n_list):
-            net = init_dist_cmr(study['item_index'][i], scaled)
+            net = init_dist_cmr(study['item_index'][i], scaled, param)
             net.study('item', study['input'][i], param['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
             recall = net.generate_recall('item', param['B_rec'], param['T'],
@@ -174,7 +176,7 @@ class CMRDistributed(Recall):
             if remove_blank:
                 include = np.any(scaled['fcf'][study['item_index'][i]] != 0, 0)
                 scaled['fcf'] = scaled['fcf'][:, include]
-            net = init_dist_cmr(study['item_index'][i], scaled)
+            net = init_dist_cmr(study['item_index'][i], scaled, param)
             item_list = study['input'][i].astype(int)
             state = net.record_study('item', item_list, param['B_enc'],
                                      list_param['Lfc'], list_param['Lcf'])
