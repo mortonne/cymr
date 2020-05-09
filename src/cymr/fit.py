@@ -34,10 +34,10 @@ def prepare_lists(data, study_keys=None, recall_keys=None, clean=True):
 
     Returns
     -------
-    study : dict of (str, list of numpy.array)
+    study : dict of (str: list of numpy.array)
         Study columns in list format.
 
-    recall : dict of (str, list of numpy.array)
+    recall : dict of (str: list of numpy.array)
         Recall columns in list format.
     """
     if study_keys is None:
@@ -88,7 +88,7 @@ def prepare_study(study_data, study_keys=None):
 
     Returns
     -------
-    study : dict of (str, numpy.array)
+    study : dict of (str: numpy.array)
         Study columns in split list format.
     """
     if study_keys is None:
