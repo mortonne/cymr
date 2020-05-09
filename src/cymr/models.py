@@ -152,6 +152,9 @@ class CMRDistributed(Recall):
     B_enc : float
         Integration rate during encoding.
 
+    B_start : float
+        Integration rate of start context reinstatement.
+
     B_rec : float
         Integration rate during recall.
 
@@ -182,6 +185,7 @@ class CMRDistributed(Recall):
             net = init_dist_cmr(study['item_index'][i], scaled, param)
             net.study('item', study['input'][i], param['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
+            net.integrate('start', 0, param['B_start'])
             p = net.p_recall('item', recall['input'][i], param['B_rec'],
                              param['T'], list_param['p_stop'])
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
@@ -205,6 +209,7 @@ class CMRDistributed(Recall):
             net = init_dist_cmr(study['item_index'][i], scaled, param)
             net.study('item', study['input'][i], param['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
+            net.integrate('start', 0, param['B_start'])
             recall = net.generate_recall('item', param['B_rec'], param['T'],
                                          list_param['p_stop'])
             recalls.append(recall)
@@ -229,6 +234,7 @@ class CMRDistributed(Recall):
             item_list = study['input'][i].astype(int)
             state = net.record_study('item', item_list, param['B_enc'],
                                      list_param['Lfc'], list_param['Lcf'])
+            net.integrate('start', 0, param['B_start'])
             rec = net.record_recall('item', recall['input'][i],
                                     param['B_rec'], param['T'])
             state.extend(rec)
