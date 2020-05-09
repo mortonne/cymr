@@ -88,14 +88,44 @@ def add_recalls(study, recalls_list):
 
 
 class Recall(ABC):
+    """
+    Base class for evaluating a model of free recall.
+
+    Common Parameters
+    -----------------
+    study : pandas.DataFrame
+        Study list information.
+
+    recall : pandas.DataFrame
+        Recall period information for each list.
+
+    param : dict
+        Model parameter values.
+
+    patterns : dict
+        May include keys: 'vector' and/or 'similarity'. Vectors are
+        used to set distributed model representations. Similarity
+        matrices are used to set item connections. Vector and
+        similarity values are dicts of (feature: array) specifying
+        an array for one or more named features, with an
+        [items x units] array for vector representations, or
+        [items x items] for similarity matrices.
+
+    weights : dict
+        Keys indicate which model connections to apply weighting
+        to. Values are dicts of (feature: w), where w is the scale
+        to apply to a given feature.
+    """
 
     @abstractmethod
     def likelihood_subject(self, study, recall, param, patterns=None,
                            weights=None):
+        """Log likelihood of data for one subject based on a given model."""
         pass
 
     def likelihood(self, data, group_param, subj_param=None, patterns=None,
                    weights=None):
+        """Log likelihood summed over all subjects."""
         subjects = data['subject'].unique()
         logl = 0
         for subject in subjects:
@@ -112,10 +142,12 @@ class Recall(ABC):
 
     @abstractmethod
     def prepare_sim(self, subject_data):
+        """Prepare data for simulation."""
         pass
 
     def fit_subject(self, subject_data, fixed, var_names, var_bounds,
                     patterns=None, weights=None, method='de', **kwargs):
+        """Fit a model to data for one subject."""
         study, recall = self.prepare_sim(subject_data)
 
         def eval_fit(x):
@@ -145,6 +177,7 @@ class Recall(ABC):
 
     def run_fit_subject(self, data, subject, fixed, var_names, var_bounds,
                         patterns=None, weights=None, method='de', **kwargs):
+        """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
         param, logl = self.fit_subject(subject_data, fixed, var_names,
                                        var_bounds, patterns, weights,
@@ -154,6 +187,7 @@ class Recall(ABC):
 
     def fit_indiv(self, data, fixed, var_names, var_bounds, patterns=None,
                   weights=None, n_jobs=None, method='de', **kwargs):
+        """Fit parameters to individual subjects."""
         subjects = data['subject'].unique()
         results = Parallel(n_jobs=n_jobs)(
             delayed(self.run_fit_subject)(
@@ -167,9 +201,11 @@ class Recall(ABC):
 
     @abstractmethod
     def generate_subject(self, study, param, **kwargs):
+        """Generate simulated data for one subject."""
         pass
 
     def generate(self, study, group_param, subj_param=None):
+        """Generate simulated data for all subjects."""
         subjects = study['subject'].unique()
         data_list = []
         for subject in subjects:
