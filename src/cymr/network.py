@@ -8,7 +8,20 @@ from cymr import operations
 
 
 def save_patterns(h5_file, items, **kwargs):
-    """Write patterns and similarity matrices to hdf5."""
+    """
+    Write patterns and similarity matrices to hdf5.
+
+    Parameters
+    ----------
+    h5_file : str
+        Path to hdf5 file to save patterns in.
+
+    items : list of str
+        Item strings corresponding to the patterns.
+
+    Additional keyword arguments set named feature vectors. Feature
+    vector arrays must have shape [items x units].
+    """
     with h5py.File(h5_file, 'w') as f:
         # items
         dt = h5py.special_dtype(vlen=str)
@@ -34,7 +47,24 @@ def save_patterns(h5_file, items, **kwargs):
 
 
 def load_patterns(h5_file, features=None):
-    """Load weights from an hdf5 file."""
+    """
+    Load weights from an hdf5 file.
+
+    Parameters
+    ----------
+    h5_file : str
+        Path to file saved with `save_patterns`.
+
+    features : list of str, optional
+        Names of features to load. Default is to load all features.
+
+    Returns
+    -------
+    patterns : dict of (str: dict of (str: numpy.array))
+        Loaded patterns. The "vector" field contains vector patterns.
+        The "similarity" field contains pairwise similarity matrices.
+        Each type of pattern contains a field for each loaded feature.
+    """
     with h5py.File(h5_file, 'r') as f:
         patterns = {'items': f['items'][()],
                     'vector': {},
