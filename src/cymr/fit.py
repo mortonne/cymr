@@ -9,7 +9,37 @@ from psifr import fr
 
 
 def prepare_lists(data, study_keys=None, recall_keys=None, clean=True):
-    """Prepare study and recall data for simulation."""
+    """
+    Prepare study and recall data for simulation.
+
+    Return data information split by list. This format is similar to
+    frdata structs used in EMBAM.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Free recall data in Psifr format.
+
+    study_keys : list of str, optional
+        Columns to export for study list data. Default is:
+        ['input', 'item_index']. Input position is assumed to be
+        one-indexed.
+
+    recall_keys : list of str, optional
+        Columns to export for recall list data. Default is: ['input'].
+        Input position is assumed to be one-indexed.
+
+    clean : bool, optional
+        If true, repeats and intrusions will be removed.
+
+    Returns
+    -------
+    study : dict of (str, list of numpy.array)
+        Study columns in list format.
+
+    recall : dict of (str, list of numpy.array)
+        Recall columns in list format.
+    """
     if study_keys is None:
         study_keys = ['input', 'item_index']
 
@@ -45,7 +75,22 @@ def prepare_lists(data, study_keys=None, recall_keys=None, clean=True):
 
 
 def prepare_study(study_data, study_keys=None):
-    """Prepare study phase data for simulation."""
+    """
+    Prepare study phase data for simulation.
+
+    Parameters
+    ----------
+    study_data : pandas.DataFrame
+        Study list data. Position is assumed to be one-indexed.
+
+    study_keys : list of str
+        Columns to export to split list format.
+
+    Returns
+    -------
+    study : dict of (str, numpy.array)
+        Study columns in split list format.
+    """
     if study_keys is None:
         study_keys = ['position', 'item_index']
 
@@ -59,7 +104,23 @@ def prepare_study(study_data, study_keys=None):
 
 
 def add_recalls(study, recalls_list):
-    """Add recall sequences to a study DataFrame."""
+    """
+    Add recall sequences to a study DataFrame.
+
+    Parameters
+    ----------
+    study : pandas.DataFrame
+        Study list data.
+
+    recalls_list : list of list of int
+        Recall sequence for each list in output order. Each entry is
+        the index of the recalled item in the list.
+
+    Returns
+    -------
+    data : pandas.DataFrame
+        Complete free recall DataFrame suitable for analysis.
+    """
     lists = study['list'].unique()
     subjects = study['subject'].unique()
     if len(subjects) > 1:
