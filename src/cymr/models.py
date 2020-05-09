@@ -33,7 +33,8 @@ def init_dist_cmr(item_index, patterns, param):
     net.add_pre_weights('fc', ('start', 'start'), 1)
     if 'ff' in patterns and patterns['ff'] is not None:
         mat = patterns['ff'][np.ix_(item_index, item_index)]
-        net.add_pre_weights('ff', ('item', 'item'), mat)
+        net.add_pre_weights('ff', ('item', 'item'), mat,
+                            param['Dff'], param['Aff'])
     net.update('start', 0)
     return net
 
@@ -124,11 +125,17 @@ class CMRDistributed(Recall):
     Acf : float
         Intercept of pre-experimental context-item weights.
 
+    Aff : float
+        Intercept of pre-experimental item-item weights.
+
     Dfc : float
         Slope of pre-experimental item-context weights.
 
     Dcf : float
         Slope of pre-experimental context-item weights.
+
+    Dff : float
+        Slope of pre-experimental item-item weights.
 
     Lfc : float
         Learning rate of item-context weights.
