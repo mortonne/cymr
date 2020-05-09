@@ -85,7 +85,8 @@ def patterns():
 def test_init_dist_cmr(patterns):
     weights_template = {'fcf': {'loc': 'w_loc', 'cat': 'w_cat'},
                         'ff': {'loc': 'w_loc', 'cat': 'w_cat'}}
-    param = {'w_loc': 1, 'w_cat': 2, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1}
+    param = {'w_loc': 1, 'w_cat': 2,
+             'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'Aff': 0, 'Dff': 1}
     weights = network.unpack_weights(weights_template, param)
     scaled = network.prepare_patterns(patterns, weights)
     item_index = np.arange(3)
@@ -112,7 +113,7 @@ def test_dist_cmr(data):
     patterns = {'vector': {'loc': np.eye(6)}}
     weights_template = {'fcf': {'loc': 'w_loc'}}
     param = {'B_enc': .5, 'B_rec': .8, 'w_loc': 1,
-             'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1,
+             'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
 
@@ -126,7 +127,8 @@ def test_dist_cmr_fit(data):
     model = models.CMRDistributed()
     patterns = {'vector': {'loc': np.eye(6)}}
     weights_template = {'fcf': {'loc': 'w_loc'}}
-    fixed = {'B_rec': .8, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'w_loc': 1,
+    fixed = {'B_rec': .8, 'w_loc': 1,
+             'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
     var_names = ['B_enc']
