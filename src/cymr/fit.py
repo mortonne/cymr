@@ -157,8 +157,8 @@ class Parameters(object):
     fixed : dict of (str, float)
         Values of fixed parameters.
 
-    variable : dict of (str, tuple)
-        Bounds of each variable parameter.
+    free : dict of (str, tuple)
+        Bounds of each free parameter.
 
     dependent : dict of (str, callable)
         Functions to define dependent parameters based the other
@@ -167,11 +167,11 @@ class Parameters(object):
 
     def __init__(self):
         self.fixed = {}
-        self.variable = {}
+        self.free = {}
         self.dependent = {}
 
     def __repr__(self):
-        names = ['fixed', 'variable', 'dependent']
+        names = ['fixed', 'free', 'dependent']
         parts = {}
         for name in names:
             obj = getattr(self, name)
@@ -183,8 +183,8 @@ class Parameters(object):
     def add_fixed(self, *args, **kwargs):
         self.fixed.update(*args, **kwargs)
 
-    def add_variable(self, *args, **kwargs):
-        self.variable.update(*args, **kwargs)
+    def add_free(self, *args, **kwargs):
+        self.free.update(*args, **kwargs)
 
     def add_dependent(self, *args, **kwargs):
         self.dependent.update(*args, **kwargs)
@@ -248,11 +248,11 @@ class Recall(ABC):
         """Prepare data for simulation."""
         pass
 
-    def fit_subject(self, subject_data, fixed, variable, dependent=None,
+    def fit_subject(self, subject_data, fixed, free, dependent=None,
                     patterns=None, weights=None, method='de', **kwargs):
         """Fit a model to data for one subject."""
         study, recall = self.prepare_sim(subject_data)
-        var_names = list(variable.keys())
+        var_names = list(free.keys())
 
         def eval_fit(x):
             eval_param = fixed.copy()
@@ -265,8 +265,8 @@ class Recall(ABC):
                                                 patterns, weights)
             return -eval_logl
 
-        group_lb = [variable[k][0] for k in var_names]
-        group_ub = [variable[k][1] for k in var_names]
+        group_lb = [free[k][0] for k in var_names]
+        group_ub = [free[k][1] for k in var_names]
         bounds = optimize.Bounds(group_lb, group_ub)
         if method == 'de':
             res = optimize.differential_evolution(eval_fit, bounds, **kwargs)
@@ -283,23 +283,23 @@ class Recall(ABC):
         logl = -res['fun']
         return param, logl
 
-    def run_fit_subject(self, data, subject, fixed, variable, dependent,
+    def run_fit_subject(self, data, subject, fixed, free, dependent,
                         patterns=None, weights=None, method='de', **kwargs):
         """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
-        param, logl = self.fit_subject(subject_data, fixed, variable,
+        param, logl = self.fit_subject(subject_data, fixed, free,
                                        dependent, patterns, weights,
                                        method, **kwargs)
         results = {**param, 'logl': logl}
         return results
 
-    def fit_indiv(self, data, fixed, variable, dependent=None, patterns=None,
+    def fit_indiv(self, data, fixed, free, dependent=None, patterns=None,
                   weights=None, n_jobs=None, method='de', **kwargs):
         """Fit parameters to individual subjects."""
         subjects = data['subject'].unique()
         results = Parallel(n_jobs=n_jobs)(
             delayed(self.run_fit_subject)(
-                data, subject, fixed,  variable, dependent, patterns,
+                data, subject, fixed,  free, dependent, patterns,
                 weights, method, **kwargs)
             for subject in subjects)
         d = {subject: res for subject, res in zip(subjects, results)}

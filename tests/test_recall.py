@@ -77,9 +77,9 @@ def test_fit_subject(data):
     data = data.copy()
     rec = TestRecall()
     fixed = {'y': 1}
-    variable = {'x': [-10, 10]}
+    free = {'x': [-10, 10]}
     subject_data = data.loc[data['subject'] == 1]
-    param, logl = rec.fit_subject(subject_data, fixed, variable)
+    param, logl = rec.fit_subject(subject_data, fixed, free)
     np.testing.assert_allclose(param['x'], -2, atol=0.00001)
     np.testing.assert_allclose(logl, np.log(2))
 
@@ -88,8 +88,8 @@ def test_fit_indiv(data):
     data = data.copy()
     rec = TestRecall()
     fixed = {'y': 1}
-    variable = {'x': [-10, 10]}
-    results = rec.fit_indiv(data, fixed, variable)
+    free = {'x': [-10, 10]}
+    results = rec.fit_indiv(data, fixed, free)
     np.testing.assert_allclose(results['x'].to_numpy(), [-2, -2], atol=0.0001)
     np.testing.assert_allclose(results['logl'].to_numpy(), np.log([2, 2]),
                                atol=0.0001)

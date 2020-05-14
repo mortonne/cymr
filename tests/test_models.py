@@ -66,8 +66,8 @@ def test_cmr_fit(data):
     fixed = {'B_rec': .8, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    variable = {'B_enc': (0, 1)}
-    results = model.fit_indiv(data, fixed, variable, n_jobs=2)
+    free = {'B_enc': (0, 1)}
+    results = model.fit_indiv(data, fixed, free, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.01)
 
@@ -130,8 +130,8 @@ def test_dist_cmr_fit(data):
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    variable = {'B_enc': (0, 1)}
-    results = model.fit_indiv(data, fixed, variable,
+    free = {'B_enc': (0, 1)}
+    results = model.fit_indiv(data, fixed, free,
                               patterns=patterns, weights=weights_template,
                               n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
