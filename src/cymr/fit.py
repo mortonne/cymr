@@ -248,20 +248,25 @@ class Recall(ABC):
         """Prepare data for simulation."""
         pass
 
-    def fit_subject(self, subject_data, fixed, var_names, var_bounds,
+    def fit_subject(self, subject_data, fixed, variable, dependent=None,
                     patterns=None, weights=None, method='de', **kwargs):
         """Fit a model to data for one subject."""
         study, recall = self.prepare_sim(subject_data)
+        var_names = list(variable.keys())
 
         def eval_fit(x):
             eval_param = fixed.copy()
             eval_param.update(dict(zip(var_names, x)))
+            if dependent is not None:
+                independent_param = eval_param.copy()
+                for name, func in dependent.items():
+                    eval_param[name] = func(independent_param)
             eval_logl = self.likelihood_subject(study, recall, eval_param,
                                                 patterns, weights)
             return -eval_logl
 
-        group_lb = [var_bounds[k][0] for k in var_names]
-        group_ub = [var_bounds[k][1] for k in var_names]
+        group_lb = [variable[k][0] for k in var_names]
+        group_ub = [variable[k][1] for k in var_names]
         bounds = optimize.Bounds(group_lb, group_ub)
         if method == 'de':
             res = optimize.differential_evolution(eval_fit, bounds, **kwargs)
@@ -278,23 +283,23 @@ class Recall(ABC):
         logl = -res['fun']
         return param, logl
 
-    def run_fit_subject(self, data, subject, fixed, var_names, var_bounds,
+    def run_fit_subject(self, data, subject, fixed, variable, dependent,
                         patterns=None, weights=None, method='de', **kwargs):
         """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
-        param, logl = self.fit_subject(subject_data, fixed, var_names,
-                                       var_bounds, patterns, weights,
+        param, logl = self.fit_subject(subject_data, fixed, variable,
+                                       dependent, patterns, weights,
                                        method, **kwargs)
         results = {**param, 'logl': logl}
         return results
 
-    def fit_indiv(self, data, fixed, var_names, var_bounds, patterns=None,
+    def fit_indiv(self, data, fixed, variable, dependent=None, patterns=None,
                   weights=None, n_jobs=None, method='de', **kwargs):
         """Fit parameters to individual subjects."""
         subjects = data['subject'].unique()
         results = Parallel(n_jobs=n_jobs)(
             delayed(self.run_fit_subject)(
-                data, subject, fixed,  var_names, var_bounds, patterns,
+                data, subject, fixed,  variable, dependent, patterns,
                 weights, method, **kwargs)
             for subject in subjects)
         d = {subject: res for subject, res in zip(subjects, results)}
