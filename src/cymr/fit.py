@@ -148,6 +148,48 @@ def add_recalls(study, recalls_list):
     return data
 
 
+class Parameters(object):
+    """
+    Class to manage model parameters.
+
+    Attributes
+    ----------
+    fixed : dict of (str, float)
+        Values of fixed parameters.
+
+    variable : dict of (str, tuple)
+        Bounds of each variable parameter.
+
+    dependent : dict of (str, callable)
+        Functions to define dependent parameters based the other
+        parameters.
+    """
+
+    def __init__(self):
+        self.fixed = {}
+        self.variable = {}
+        self.dependent = {}
+
+    def __repr__(self):
+        names = ['fixed', 'variable', 'dependent']
+        parts = {}
+        for name in names:
+            obj = getattr(self, name)
+            fields = [f'{key}: {value}' for key, value in obj.items()]
+            parts[name] = '\n'.join(fields)
+        s = '\n\n'.join([f'{name}:\n{f}' for name, f in parts.items()])
+        return s
+
+    def add_fixed(self, *args, **kwargs):
+        self.fixed.update(*args, **kwargs)
+
+    def add_variable(self, *args, **kwargs):
+        self.variable.update(*args, **kwargs)
+
+    def add_dependent(self, *args, **kwargs):
+        self.dependent.update(*args, **kwargs)
+
+
 class Recall(ABC):
     """
     Base class for evaluating a model of free recall.
