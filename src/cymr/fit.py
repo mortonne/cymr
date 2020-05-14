@@ -322,11 +322,13 @@ class Recall(ABC):
         return results
 
     @abstractmethod
-    def generate_subject(self, study, param, **kwargs):
+    def generate_subject(self, study, param, patterns=None, weights=None,
+                         **kwargs):
         """Generate simulated data for one subject."""
         pass
 
-    def generate(self, study, group_param, subj_param=None):
+    def generate(self, study, group_param, subj_param=None, patterns=None,
+                 weights=None):
         """Generate simulated data for all subjects."""
         subjects = study['subject'].unique()
         data_list = []
@@ -335,7 +337,8 @@ class Recall(ABC):
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_study = study.loc[study['subject'] == subject]
-            subject_data = self.generate_subject(subject_study, param)
+            subject_data = self.generate_subject(subject_study, param,
+                                                 patterns, weights)
             data_list.append(subject_data)
         data = pd.concat(data_list, axis=0, ignore_index=True)
         return data
