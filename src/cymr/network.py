@@ -750,7 +750,13 @@ class Network(object):
 
             # select item for recall proportionate to support
             p_recall = strength / np.sum(strength)
-            recall = np.random.choice(item_ind, p=p_recall)
+            if np.any(np.isnan(p_recall)):
+                n = np.count_nonzero(~exclude)
+                p_recall[:] = 1 / n
+                p_recall[exclude] = 0
+                recall = np.random.choice(item_ind, p=p_recall)
+            else:
+                recall = np.random.choice(item_ind, p=p_recall)
             recalls.append(recall)
             exclude[recall] = 1
 
