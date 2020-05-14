@@ -154,24 +154,28 @@ class Parameters(object):
 
     Attributes
     ----------
-    fixed : dict of (str, float)
+    fixed : dict of (str: float)
         Values of fixed parameters.
 
-    free : dict of (str, tuple)
+    free : dict of (str: tuple)
         Bounds of each free parameter.
 
-    dependent : dict of (str, callable)
+    dependent : dict of (str: callable)
         Functions to define dependent parameters based the other
         parameters.
+
+    weights : dict of (str: dict of (str: str))
+        Weights template to set network connections.
     """
 
     def __init__(self):
         self.fixed = {}
         self.free = {}
         self.dependent = {}
+        self.weights = {}
 
     def __repr__(self):
-        names = ['fixed', 'free', 'dependent']
+        names = ['fixed', 'free', 'dependent', 'weights']
         parts = {}
         for name in names:
             obj = getattr(self, name)
@@ -188,6 +192,12 @@ class Parameters(object):
 
     def add_dependent(self, *args, **kwargs):
         self.dependent.update(*args, **kwargs)
+
+    def add_weights(self, connect, *args, **kwargs):
+        if connect in self.weights:
+            self.weights[connect].update(*args, **kwargs)
+        else:
+            self.weights[connect] = dict(*args, **kwargs)
 
 
 class Recall(ABC):
