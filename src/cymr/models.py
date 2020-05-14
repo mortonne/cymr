@@ -207,7 +207,7 @@ class CMRDistributed(Recall):
         recalls = []
         for i in range(n_list):
             net = init_dist_cmr(study['item_index'][i], scaled, param)
-            net.study('item', study['input'][i], param['B_enc'],
+            net.study('item', study['position'][i], param['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
             net.integrate('start', 0, param['B_start'])
             recall = net.generate_recall('item', param['B_rec'], param['T'],
