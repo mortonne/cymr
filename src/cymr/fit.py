@@ -289,6 +289,10 @@ class Recall(ABC):
         # fitted parameters
         param = fixed.copy()
         param.update(dict(zip(var_names, res['x'])))
+        if dependent is not None:
+            independent_param = param.copy()
+            for name, func in dependent.items():
+                param[name] = func(independent_param)
 
         logl = -res['fun']
         return param, logl
