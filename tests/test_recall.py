@@ -26,7 +26,8 @@ class TestRecall(Recall):
             p = eps
         return np.log(p)
 
-    def generate_subject(self, study, param, **kwargs):
+    def generate_subject(self, study, param, patterns=None, weights=None,
+                         **kwargs):
         recalls_list = [param['recalls']]
         data = fit.add_recalls(study, recalls_list)
         return data
@@ -113,7 +114,7 @@ def test_generate(data):
     study = data.loc[data['trial_type'] == 'study']
     subj_param = {1: {'recalls': [1, 2]},
                   2: {'recalls': [2, 0, 1]}}
-    sim = rec.generate(study, {}, subj_param)
+    sim = rec.generate(study, {}, subj_param=subj_param)
     expected = ['absence', 'hollow', 'pupil',
                 'hollow', 'pupil',
                 'fountain', 'piano', 'pillow',
