@@ -69,7 +69,7 @@ def test_cmr_fit(data):
     free = {'B_enc': (0, 1)}
     results = model.fit_indiv(data, fixed, free, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
-                               np.array([0.72728744, 0.99883425]), atol=0.01)
+                               np.array([0.72728744, 0.99883425]), atol=0.02)
 
 
 @pytest.fixture()
