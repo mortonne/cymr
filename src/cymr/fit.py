@@ -412,7 +412,7 @@ class Recall(ABC):
         return results
 
     def fit_indiv(self, data, fixed, free, dependent=None, patterns=None,
-                  weights=None, n_jobs=None, method='de', **kwargs):
+                  weights=None, n_jobs=None, method='de', n_rep=1, **kwargs):
         """
         Fit parameters to individual subjects.
 
@@ -443,6 +443,9 @@ class Recall(ABC):
         method : str, optional
             Search method for fitting the parameters.
 
+        n_rep : int, optional
+            Number of times to repeat each search.
+
         kwargs
             Additional keyword arguments for the search method.
 
@@ -452,15 +455,20 @@ class Recall(ABC):
             Best-fitting parameters and log likelihood for each subject.
         """
         subjects = data['subject'].unique()
-        results = Parallel(n_jobs=n_jobs)(
-            delayed(self._run_fit_subject)(
-                data, subject, fixed,  free, dependent, patterns,
-                weights, method, **kwargs)
-            for subject in subjects)
-        d = {subject: res for subject, res in zip(subjects, results)}
-        results = pd.DataFrame(d).T
-        results.index = results.index.rename('subject')
-        return results
+        all_results = []
+        for i in range(n_rep):
+            results = Parallel(n_jobs=n_jobs)(
+                delayed(self._run_fit_subject)(
+                    data, subject, fixed,  free, dependent, patterns,
+                    weights, method, **kwargs)
+                for subject in subjects)
+            d = {subject: res for subject, res in zip(subjects, results)}
+            results = pd.DataFrame(d).T
+            results.index = results.index.rename('subject')
+            results.loc[:, 'rep'] = i
+            all_results.append(results)
+        df = pd.concat(all_results, axis=0, ignore_index=True)
+        return df
 
     @abstractmethod
     def generate_subject(self, study, param, patterns=None, weights=None,
