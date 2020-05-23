@@ -3,7 +3,6 @@ scipy
 pandas
 cython
 joblib
-pytest
 h5py
 matplotlib
 git+https://github.com/mortonne/psifr

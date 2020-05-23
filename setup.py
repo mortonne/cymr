@@ -21,7 +21,8 @@ setup(
     package_dir={'': 'src'},
     ext_modules=cythonize('src/cymr/operations.pyx'),
     extras_require={
-        'docs': ['sphinx', 'sphinx-bootstrap-theme', 'ipython']
+        'docs': ['sphinx', 'sphinx-bootstrap-theme', 'ipython'],
+        'test': ['pytest', 'codecov', 'pytest-cov'],
     },
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
