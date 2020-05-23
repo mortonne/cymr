@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.8"
+install:
+  - pip install -r requirements.txt .[test]
+  - python setup.py develop
+script:
+  - pytest --cov-report term --cov=cymr
+after_success:
+  - codecov
