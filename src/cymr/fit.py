@@ -268,9 +268,9 @@ class Recall(ABC):
             eval_param = fixed.copy()
             eval_param.update(dict(zip(var_names, x)))
             if dependent is not None:
-                independent_param = eval_param.copy()
-                for name, func in dependent.items():
-                    eval_param[name] = func(independent_param)
+                indep_param = eval_param.copy()
+                for var, f in dependent.items():
+                    eval_param[var] = f(indep_param)
             eval_logl = self.likelihood_subject(study, recall, eval_param,
                                                 patterns, weights)
             return -eval_logl
