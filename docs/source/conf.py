@@ -72,6 +72,7 @@ html_theme_options = {
     # an arbitrary url.
     'navbar_links': [
         ("Install", "usage/installation"),
+        ("API Reference", "api/overview"),
         ("GitHub", "https://github.com/mortonne/cymr", True)
     ],
 

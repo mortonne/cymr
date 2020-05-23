@@ -14,3 +14,4 @@ using Cython to speed execution.
    :maxdepth: 2
 
    /usage/installation
+   /api/overview
