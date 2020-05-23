@@ -297,8 +297,8 @@ class Recall(ABC):
         logl = -res['fun']
         return param, logl
 
-    def run_fit_subject(self, data, subject, fixed, free, dependent,
-                        patterns=None, weights=None, method='de', **kwargs):
+    def _run_fit_subject(self, data, subject, fixed, free, dependent,
+                         patterns=None, weights=None, method='de', **kwargs):
         """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
         param, logl = self.fit_subject(subject_data, fixed, free,
@@ -312,7 +312,7 @@ class Recall(ABC):
         """Fit parameters to individual subjects."""
         subjects = data['subject'].unique()
         results = Parallel(n_jobs=n_jobs)(
-            delayed(self.run_fit_subject)(
+            delayed(self._run_fit_subject)(
                 data, subject, fixed,  free, dependent, patterns,
                 weights, method, **kwargs)
             for subject in subjects)
