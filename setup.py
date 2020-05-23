@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages
 from Cython.Build import cythonize
 
 
@@ -20,16 +20,9 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     ext_modules=cythonize('src/cymr/operations.pyx'),
-    install_requires=[
-        'numpy',
-        'pandas',
-        'cython',
-        'joblib',
-        'pytest',
-        'h5py',
-        'matplotlib',
-        'psifr'
-    ],
+    extras_require={
+        'docs': ['sphinx', 'sphinx-bootstrap-theme', 'ipython']
+    },
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 3.8',
