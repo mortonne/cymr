@@ -233,12 +233,60 @@ class Recall(ABC):
     @abstractmethod
     def likelihood_subject(self, study, recall, param, patterns=None,
                            weights=None):
-        """Log likelihood of data for one subject based on a given model."""
+        """
+        Log likelihood of data for one subject based on a given model.
+
+        Parameters
+        ----------
+        study : dict of (str: list of numpy.array)
+            Information about the study phase in list format.
+
+        recall : dict of (str: list of numpy.array)
+            Information about recalled items in list format.
+
+        param : dict of (str: float)
+            Model parameter values.
+
+        patterns : dict of (str: dict of (str: numpy.array))
+            Patterns to use in the model.
+
+        weights : dict of (str: dict of (str: float))
+            Weights to apply to model feature patterns.
+
+        Returns
+        -------
+        logl : float
+            Total log likelihood of data for this subject.
+        """
         pass
 
     def likelihood(self, data, group_param, subj_param=None, patterns=None,
                    weights=None):
-        """Log likelihood summed over all subjects."""
+        """
+        Log likelihood summed over all subjects.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            Data to fit. Must include a 'subject' column.
+
+        group_param : dict of (str: float)
+            Values of parameters that apply to all subjects.
+
+        subj_param : dict of (str: dict of (str: float))
+            Parameters that vary by subject, indexed by subject.
+
+        patterns : dict of (str: dict of (str: numpy.array))
+            Patterns to use in the model.
+
+        weights : dict of (str: dict of (str: float))
+            Weights to apply to model feature patterns.
+
+        Returns
+        -------
+        logl : float
+            Log likelihood summed over all subjects.
+        """
         subjects = data['subject'].unique()
         logl = 0
         for subject in subjects:
@@ -255,12 +303,68 @@ class Recall(ABC):
 
     @abstractmethod
     def prepare_sim(self, subject_data):
-        """Prepare data for simulation."""
+        """
+        Prepare data for simulation.
+
+        Exporting data in DataFrame format to list format for
+        simulation takes time, so this is only done once before running
+        a parameter search.
+
+        Parameters
+        ----------
+        subject_data : pandas.DataFrame
+            Data for one subject.
+
+        Returns
+        -------
+        study : dict of (str: list of numpy.array)
+            Information about the study phase in list format.
+
+        recall : dict of (str: list of numpy.array)
+            Information about recalled items in list format.
+        """
         pass
 
     def fit_subject(self, subject_data, fixed, free, dependent=None,
                     patterns=None, weights=None, method='de', **kwargs):
-        """Fit a model to data for one subject."""
+        """
+        Fit a model to data for one subject.
+
+        Parameters
+        ----------
+        subject_data : pandas.DataFrame
+            Data for one subject.
+
+        fixed : dict of (str: float)
+            Values of fixed parameters.
+
+        free : dict of (str: (float, float))
+            Allowed range of free parameters.
+
+        dependent : dict of (str: callable), optional
+            Callables to set dependent parameters.
+
+        patterns : dict of (str: dict of (str: numpy.array))
+            Patterns to use in the model.
+
+        weights : dict of (str: dict of (str: float))
+            Weights to apply to model feature patterns.
+
+        method : str, optional
+            Search method for fitting the parameters.
+
+        kwargs
+            Additional keyword arguments for the search method.
+
+        Returns
+        -------
+        param : dict of (str: float)
+            Best-fitting parameters, including fixed, free, and
+            dependent parameters.
+
+        logl : float
+            Log likelihood for the best-fitting parameters.
+        """
         study, recall = self.prepare_sim(subject_data)
         var_names = list(free.keys())
 
@@ -309,7 +413,44 @@ class Recall(ABC):
 
     def fit_indiv(self, data, fixed, free, dependent=None, patterns=None,
                   weights=None, n_jobs=None, method='de', **kwargs):
-        """Fit parameters to individual subjects."""
+        """
+        Fit parameters to individual subjects.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            Data for one or more subjects.
+
+        fixed : dict of (str: float)
+            Values of fixed parameters.
+
+        free : dict of (str: (float, float))
+            Allowed range of free parameters.
+
+        dependent : dict of (str: callable), optional
+            Callables to set dependent parameters.
+
+        patterns : dict of (str: dict of (str: numpy.array)), optional
+            Patterns to use in the model.
+
+        weights : dict of (str: dict of (str: float)), optional
+            Weights to apply to model feature patterns.
+
+        n_jobs : int, optional
+            Number of processes to use for fitting subjects in
+            parallel.
+
+        method : str, optional
+            Search method for fitting the parameters.
+
+        kwargs
+            Additional keyword arguments for the search method.
+
+        Returns
+        -------
+        results : pandas.DataFrame
+            Best-fitting parameters and log likelihood for each subject.
+        """
         subjects = data['subject'].unique()
         results = Parallel(n_jobs=n_jobs)(
             delayed(self._run_fit_subject)(
@@ -324,12 +465,52 @@ class Recall(ABC):
     @abstractmethod
     def generate_subject(self, study, param, patterns=None, weights=None,
                          **kwargs):
-        """Generate simulated data for one subject."""
+        """
+        Generate simulated data for one subject.
+
+        Parameters
+        ----------
+        study : dict of (str: list of numpy.array)
+            Information about the study phase in list format.
+
+        param : dict of (str: float)
+            Model parameter values.
+
+        patterns : dict of (str: dict of (str: numpy.array)), optional
+            Patterns to use in the model.
+
+        weights : dict of (str: dict of (str: float)), optional
+            Weights to apply to model feature patterns.
+        """
         pass
 
     def generate(self, study, group_param, subj_param=None, patterns=None,
                  weights=None):
-        """Generate simulated data for all subjects."""
+        """
+        Generate simulated data for all subjects.
+
+        Parameters
+        ----------
+        study : dict of (str: list of numpy.array)
+            Information about the study phase in list format.
+
+        group_param : dict of (str: float)
+            Values of parameters that apply to all subjects.
+
+        subj_param : dict of (str: dict of (str: float))
+            Parameters that vary by subject, indexed by subject.
+
+        patterns : dict of (str: dict of (str: numpy.array))
+            Patterns to use in the model.
+
+        weights : dict of (str: dict of (str: float))
+            Weights to apply to model feature patterns.
+
+        Returns
+        -------
+        data : pandas.DataFrame
+            Simulated data for each subject.
+        """
         subjects = study['subject'].unique()
         data_list = []
         for subject in subjects:
