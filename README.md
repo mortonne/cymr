@@ -1,6 +1,9 @@
 # cymr
 Experimental implementation of the CMR model using Cython.
 
+See the [website](https://cymr.readthedocs.io/en/latest/) for full
+documentation.
+
 ## Installation
 
 ```bash
