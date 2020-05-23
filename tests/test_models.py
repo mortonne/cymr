@@ -135,4 +135,4 @@ def test_dist_cmr_fit(data):
                               patterns=patterns, weights=weights_template,
                               n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
-                               np.array([0.72728744, 0.99883425]), atol=0.01)
+                               np.array([0.72728744, 0.99883425]), atol=0.02)
