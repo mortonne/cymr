@@ -152,14 +152,14 @@ def add_recalls(study, recalls_list):
 def get_best_results(results):
     """Get best results from a repeated search."""
     df = []
-    subjects = results.index.unique()
+    subjects = results.index.get_level_values('subject').unique()
     for subject in subjects:
-        res = results.loc[results.index == subject].reset_index()
-        logl = res['logl'].to_numpy()
-        ind = np.argmax(logl)
-        df.append(res.iloc[[ind]])
+        res = results.loc[subject].reset_index()
+        subject_best = res.loc[[res['logl'].argmax()]]
+        df.append(subject_best)
     best = pd.concat(df, axis=0)
-    best = best.set_index('subject')
+    best.index = subjects
+    best.index.rename('subject', inplace=True)
     return best
 
 
@@ -495,20 +495,19 @@ class Recall(ABC):
             parameters (:code:`k`) for each subject.
         """
         subjects = data['subject'].unique()
-        all_results = []
-        for i in range(n_rep):
-            results = Parallel(n_jobs=n_jobs)(
-                delayed(self._run_fit_subject)(
-                    data, subject, fixed, free, dependent, patterns,
-                    weights, method, **kwargs)
-                for subject in subjects)
-            d = {subject: res for subject, res in zip(subjects, results)}
-            results = pd.DataFrame(d).T.astype({'n': int, 'k': int})
-            results.index.rename('subject', inplace=True)
-            results.loc[:, 'rep'] = i
-            all_results.append(results)
-        df = pd.concat(all_results, axis=0)
-        return df
+        full_subjects = np.repeat(subjects, n_rep)
+        full_reps = np.tile(np.arange(n_rep), len(subjects))
+        full_results = Parallel(n_jobs=n_jobs)(
+            delayed(self._run_fit_subject)(
+                data, subject, fixed, free, dependent, patterns,
+                weights, method, **kwargs
+            ) for subject in full_subjects
+        )
+        d = {(subject, rep): res for subject, rep, res in
+             zip(full_subjects, full_reps, full_results)}
+        results = pd.DataFrame(d).T
+        results.index.rename(['subject', 'rep'], inplace=True)
+        return results
 
     @abstractmethod
     def generate_subject(self, study, param, patterns=None, weights=None,
