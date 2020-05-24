@@ -489,11 +489,11 @@ class Recall(ABC):
                     weights, method, **kwargs)
                 for subject in subjects)
             d = {subject: res for subject, res in zip(subjects, results)}
-            results = pd.DataFrame(d).T
-            results.index = results.index.rename('subject')
+            results = pd.DataFrame(d).T.astype({'n': int, 'k': int})
+            results.index.rename('subject', inplace=True)
             results.loc[:, 'rep'] = i
             all_results.append(results)
-        df = pd.concat(all_results, axis=0, ignore_index=True)
+        df = pd.concat(all_results, axis=0)
         return df
 
     @abstractmethod
