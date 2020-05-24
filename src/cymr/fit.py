@@ -257,6 +257,9 @@ class Recall(ABC):
         -------
         logl : float
             Total log likelihood of data for this subject.
+
+        n : int
+            Number of evaluated data points.
         """
         pass
 
@@ -286,20 +289,24 @@ class Recall(ABC):
         -------
         logl : float
             Log likelihood summed over all subjects.
+
+        n : int
+            Number of evaluated data points.
         """
         subjects = data['subject'].unique()
         logl = 0
+        n = 0
         for subject in subjects:
             param = group_param.copy()
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_data = data.loc[data['subject'] == subject]
             study, recall = self.prepare_sim(subject_data)
-            subject_logl = self.likelihood_subject(study, recall, param,
-                                                   patterns=patterns,
-                                                   weights=weights)
+            subject_logl, subject_n = self.likelihood_subject(
+                study, recall, param, patterns=patterns, weights=weights)
             logl += subject_logl
-        return logl
+            n += subject_n
+        return logl, n
 
     @abstractmethod
     def prepare_sim(self, subject_data):
@@ -375,8 +382,8 @@ class Recall(ABC):
                 indep_param = eval_param.copy()
                 for var, f in dependent.items():
                     eval_param[var] = f(indep_param)
-            eval_logl = self.likelihood_subject(study, recall, eval_param,
-                                                patterns, weights)
+            eval_logl, _ = self.likelihood_subject(study, recall, eval_param,
+                                                   patterns, weights)
             return -eval_logl
 
         group_lb = [free[k][0] for k in var_names]
@@ -398,17 +405,21 @@ class Recall(ABC):
             for name, func in dependent.items():
                 param[name] = func(independent_param)
 
-        logl = -res['fun']
-        return param, logl
+        # evaluate fitted parameters, get number of fitted points
+        logl, n = self.likelihood_subject(study, recall, param,
+                                          patterns, weights)
+        k = len(free)
+        assert logl == -res['fun']
+        return param, logl, n, k
 
     def _run_fit_subject(self, data, subject, fixed, free, dependent,
                          patterns=None, weights=None, method='de', **kwargs):
         """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
-        param, logl = self.fit_subject(subject_data, fixed, free,
-                                       dependent, patterns, weights,
-                                       method, **kwargs)
-        results = {**param, 'logl': logl}
+        param, logl, n, k = self.fit_subject(
+            subject_data, fixed, free, dependent, patterns, weights,
+            method, **kwargs)
+        results = {**param, 'logl': logl, 'n': n, 'k': k}
         return results
 
     def fit_indiv(self, data, fixed, free, dependent=None, patterns=None,
