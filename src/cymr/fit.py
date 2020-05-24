@@ -348,8 +348,8 @@ class Recall(ABC):
         free : dict of (str: (float, float))
             Allowed range of free parameters.
 
-        dependent : dict of (str: callable), optional
-            Callables to set dependent parameters.
+        dependent : dict of (str: str), optional
+            Expressions to evaluate to set dependent parameters.
 
         patterns : dict of (str: dict of (str: numpy.array))
             Patterns to use in the model.
@@ -386,8 +386,8 @@ class Recall(ABC):
             eval_param.update(dict(zip(var_names, x)))
             if dependent is not None:
                 indep_param = eval_param.copy()
-                for var, f in dependent.items():
-                    eval_param[var] = f(indep_param)
+                for var, expr in dependent.items():
+                    eval_param[var] = eval(expr, None, indep_param)
             eval_logl, _ = self.likelihood_subject(study, recall, eval_param,
                                                    patterns, weights)
             return -eval_logl
@@ -408,8 +408,8 @@ class Recall(ABC):
         param.update(dict(zip(var_names, res['x'])))
         if dependent is not None:
             independent_param = param.copy()
-            for name, func in dependent.items():
-                param[name] = func(independent_param)
+            for name, expression in dependent.items():
+                param[name] = eval(expression, None, independent_param)
 
         # evaluate fitted parameters, get number of fitted points
         logl, n = self.likelihood_subject(study, recall, param,
@@ -444,8 +444,8 @@ class Recall(ABC):
         free : dict of (str: (float, float))
             Allowed range of free parameters.
 
-        dependent : dict of (str: callable), optional
-            Callables to set dependent parameters.
+        dependent : dict of (str: str), optional
+            Expressions to evaluate to set dependent parameters.
 
         patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
