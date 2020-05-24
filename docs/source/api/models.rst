@@ -1,5 +1,6 @@
 Models
 ======
 
-.. automodule:: cymr.models
+.. autoclass:: cymr.models.CMRDistributed
     :members:
+    :inherited-members:
