@@ -85,8 +85,9 @@ def patterns():
 
 def test_init_dist_cmr(patterns):
     weights_template = {'fcf': {'loc': 'w_loc', 'cat': 'w_cat'},
-                        'ff': {'loc': 'w_loc', 'cat': 'w_cat'}}
-    param = {'w_loc': 1, 'w_cat': 2,
+                        'ff': {'loc': 's_loc', 'cat': 's_cat'}}
+    param = {'w_loc': 1, 'w_cat': np.sqrt(2),
+             's_loc': 1, 's_cat': 2,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'Aff': 0, 'Dff': 1}
     weights = network.unpack_weights(weights_template, param)
     scaled = network.prepare_patterns(patterns, weights)
