@@ -96,7 +96,7 @@ def prepare_patterns(patterns, weights):
         scaled['fcf'] = np.hstack(fcf)
 
     if 'ff' in weights:
-        w = np.array(list(weights['fcf'].values()))
+        w = np.array(list(weights['ff'].values()))
         ws = w / np.linalg.norm(w, ord=1)
         features = list(weights['ff'].keys())
 
