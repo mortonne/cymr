@@ -146,6 +146,7 @@ def add_recalls(study, recalls_list):
             recall.loc[n, 'position'] = j + 1
             n += 1
     data = pd.concat((study, recall), axis=0, ignore_index=True)
+    data = data.sort_values(['list', 'trial_type'], ascending=[True, False])
     return data
 
 
