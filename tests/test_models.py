@@ -57,8 +57,9 @@ def test_cmr(data):
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    logl = model.likelihood(data, param)
+    logl, n = model.likelihood(data, param)
     np.testing.assert_allclose(logl, -5.936799964636842)
+    assert n == 6
 
 
 def test_cmr_fit(data):
@@ -70,6 +71,7 @@ def test_cmr_fit(data):
     results = model.fit_indiv(data, fixed, free, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.02)
+    np.testing.assert_array_equal(results['n'].to_numpy(), [3, 3])
 
 
 @pytest.fixture()
@@ -117,8 +119,8 @@ def test_dist_cmr(data):
              'T': 10, 'X1': .05, 'X2': 1}
 
     model = models.CMRDistributed()
-    logl = model.likelihood(data, param, patterns=patterns,
-                            weights=weights_template)
+    logl, n = model.likelihood(data, param, patterns=patterns,
+                               weights=weights_template)
     np.testing.assert_allclose(logl, -5.936799964636842)
 
 

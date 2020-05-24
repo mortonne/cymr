@@ -24,7 +24,8 @@ class TestRecall(Recall):
         eps = 0.0001
         if p < eps:
             p = eps
-        return np.log(p)
+        n = 1
+        return np.log(p), n
 
     def generate_subject(self, study, param, patterns=None, weights=None,
                          **kwargs):
@@ -62,7 +63,7 @@ def test_likelihood_subject(data):
     rec = TestRecall()
     param = {'x': -2}
     subject_data = data.loc[data['subject'] == 1]
-    logl = rec.likelihood_subject([], [], param)
+    logl, n = rec.likelihood_subject([], [], param)
     np.testing.assert_allclose(logl, np.log(2))
 
 
@@ -70,7 +71,7 @@ def test_likelihood(data):
     data = data.copy()
     rec = TestRecall()
     param = {'x': -2}
-    logl = rec.likelihood(data, param)
+    logl, n = rec.likelihood(data, param)
     np.testing.assert_allclose(logl, np.log(2) + np.log(2))
 
 
@@ -80,9 +81,10 @@ def test_fit_subject(data):
     fixed = {'y': 1}
     free = {'x': [-10, 10]}
     subject_data = data.loc[data['subject'] == 1]
-    param, logl = rec.fit_subject(subject_data, fixed, free)
+    param, logl, n, k = rec.fit_subject(subject_data, fixed, free)
     np.testing.assert_allclose(param['x'], -2, atol=0.00001)
     np.testing.assert_allclose(logl, np.log(2))
+    assert k == 1
 
 
 def test_fit_indiv(data):
@@ -94,6 +96,7 @@ def test_fit_indiv(data):
     np.testing.assert_allclose(results['x'].to_numpy(), [-2, -2], atol=0.0001)
     np.testing.assert_allclose(results['logl'].to_numpy(), np.log([2, 2]),
                                atol=0.0001)
+    np.testing.assert_array_equal(results['k'].to_numpy(), [1, 1])
 
 
 def test_generate_subject(data):
