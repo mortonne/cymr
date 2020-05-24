@@ -160,8 +160,8 @@ class Parameters(object):
     free : dict of (str: tuple)
         Bounds of each free parameter.
 
-    dependent : dict of (str: callable)
-        Functions to define dependent parameters based the other
+    dependent : dict of (str: str)
+        Expressions to define dependent parameters based the other
         parameters.
 
     weights : dict of (str: dict of (str: str))
