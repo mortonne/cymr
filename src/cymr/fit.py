@@ -1,6 +1,7 @@
 """Simulate free recall experiments."""
 
 from abc import ABC, abstractmethod
+import json
 import numpy as np
 from scipy import optimize
 import pandas as pd
@@ -198,6 +199,12 @@ class Parameters(object):
             self.weights[connect].update(*args, **kwargs)
         else:
             self.weights[connect] = dict(*args, **kwargs)
+
+    def to_json(self, json_file):
+        data = {'fixed': self.fixed, 'free': self.free,
+                'dependent': self.dependent, 'weights': self.weights}
+        with open(json_file, 'w') as f:
+            json.dump(data, f, indent=4)
 
 
 class Recall(ABC):
