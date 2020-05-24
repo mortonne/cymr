@@ -469,9 +469,9 @@ class Recall(ABC):
         Returns
         -------
         results : pandas.DataFrame
-            Best-fitting parameters, log likelihood (logl), number of
-            data points (n), and number of free parameters (k) for each
-            subject.
+            Best-fitting parameters, log likelihood (:code:`logl`),
+            number of data points (:code:`n`), and number of free
+            parameters (:code:`k`) for each subject.
         """
         subjects = data['subject'].unique()
         all_results = []
