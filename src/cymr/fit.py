@@ -371,6 +371,12 @@ class Recall(ABC):
 
         logl : float
             Log likelihood for the best-fitting parameters.
+
+        n : int
+            Number of data points evaluated.
+
+        k : int
+            Number of free parameters.
         """
         study, recall = self.prepare_sim(subject_data)
         var_names = list(free.keys())
@@ -463,7 +469,9 @@ class Recall(ABC):
         Returns
         -------
         results : pandas.DataFrame
-            Best-fitting parameters and log likelihood for each subject.
+            Best-fitting parameters, log likelihood (logl), number of
+            data points (n), and number of free parameters (k) for each
+            subject.
         """
         subjects = data['subject'].unique()
         all_results = []
