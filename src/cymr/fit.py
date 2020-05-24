@@ -149,6 +149,20 @@ def add_recalls(study, recalls_list):
     return data
 
 
+def get_best_results(results):
+    """Get best results from a repeated search."""
+    df = []
+    subjects = results.index.unique()
+    for subject in subjects:
+        res = results.loc[results.index == subject].reset_index()
+        logl = res['logl'].to_numpy()
+        ind = np.argmax(logl)
+        df.append(res.iloc[[ind]])
+    best = pd.concat(df, axis=0)
+    best = best.set_index('subject')
+    return best
+
+
 class Parameters(object):
     """
     Class to manage model parameters.
