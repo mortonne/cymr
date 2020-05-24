@@ -85,7 +85,7 @@ def prepare_patterns(patterns, weights):
     if 'fcf' in weights:
         # scale weights
         w = np.array(list(weights['fcf'].values()))
-        ws = np.sqrt(w) / np.linalg.norm(np.sqrt(w), ord=2)
+        ws = w / np.linalg.norm(w, ord=2)
         features = list(weights['fcf'].keys())
 
         # apply weights and make full patterns
