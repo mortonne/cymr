@@ -478,7 +478,7 @@ class Recall(ABC):
         for i in range(n_rep):
             results = Parallel(n_jobs=n_jobs)(
                 delayed(self._run_fit_subject)(
-                    data, subject, fixed,  free, dependent, patterns,
+                    data, subject, fixed, free, dependent, patterns,
                     weights, method, **kwargs)
                 for subject in subjects)
             d = {subject: res for subject, res in zip(subjects, results)}
