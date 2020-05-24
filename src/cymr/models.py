@@ -62,6 +62,7 @@ class CMR(Recall):
         list_param = prepare_list_param(n_item, param)
         net_init = init_loc_cmr(n_item, param)
         logl = 0
+        n = 0
         for i in range(n_list):
             net = net_init.copy()
             net.study('item', study['input'][i], param['B_enc'],
@@ -72,7 +73,8 @@ class CMR(Recall):
                 logl = -10e6
                 break
             logl += np.sum(np.log(p))
-        return logl
+            n += p.size
+        return logl, n
 
     def generate_subject(self, study_data, param, patterns=None, weights=None,
                          **kwargs):
@@ -181,6 +183,7 @@ class CMRDistributed(Recall):
         weights_param = network.unpack_weights(weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
+        n = 0
         for i in range(n_list):
             net = init_dist_cmr(study['item_index'][i], scaled, param)
             net.study('item', study['input'][i], param['B_enc'],
@@ -192,7 +195,8 @@ class CMRDistributed(Recall):
                 logl = -10e6
                 break
             logl += np.sum(np.log(p))
-        return logl
+            n += p.size
+        return logl, n
 
     def generate_subject(self, study_data, param, patterns=None, weights=None,
                          **kwargs):
