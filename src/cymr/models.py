@@ -119,8 +119,8 @@ class CMRDistributed(Recall):
     """
     Context Maintenance and Retrieval-Distributed model.
 
-    Model Parameters
-    ----------------
+    **Model Parameter Definitions**
+
     Afc : float
         Intercept of pre-experimental item-context weights.
 
@@ -166,6 +166,51 @@ class CMRDistributed(Recall):
     X2 : float
         Shape parameter of exponential function increasing stop
         probability by output position.
+
+    **Search Parameters**
+
+    All parameters listed above must be defined to evaluate a model.
+    In the context of fitting a model using a parameter search,
+    parameters may be fixed (i.e., not searched over), free (included
+    in the search), or dependent (derived from the other parameters).
+
+    fixed : dict of (str: float)
+        Values of fixed parameters.
+        Example: :code:`{'Lfc': .8, 'Lcf': .5}`
+
+    free : dict of (str: (float, float))
+        Allowed range of free parameters.
+        Example: :code:`{'B_enc': (0, 1)}`
+
+    dependent : dict of (str: str), optional
+        Expressions to evaluate to set dependent parameters.
+        Example: :code:`{'Dfc': '1 - Lfc', 'Dcf': '1 - Lcf'}`
+
+    **Model Patterns**
+
+    Patterns are used to define connections between the item and
+    context layers and direct connections between items. Connections
+    may be orthonormal as in many published variants of CMR, or they
+    may be distributed, overlapping patterns.
+
+    patterns : dict
+        May include keys: :code:`'vector'` and/or :code:`'similarity'`.
+        Vectors are used to set distributed model representations.
+        Similarity matrices are used to set item connections. Vector
+        and similarity values are dicts of (feature: array) specifying
+        an array for one or more named features, with an
+        [items x units] array for vector representations, or
+        [items x items] for similarity matrices.
+        Example: :code:`{'vector': {'loc': np.eye(24)}}`
+
+    weights : dict
+        Keys indicate which model connections to apply weighting
+        to. These may include :code:`'fcf'` (applied to
+        :math:`M^{FC}_{pre}` and :math:`M^{CF}_{pre}`) and
+        :code:`'ff'` (applied to :math:`M^{FF}_{pre}`). Values are
+        dicts of (feature: w), where :code:`w` is the name of the
+        parameter indicating the scale to apply to a given feature.
+        Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
     """
 
     def prepare_sim(self, data):
