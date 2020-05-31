@@ -35,6 +35,7 @@ cpdef integrate(double [:, :] w_fc_exp,
                 double B):
     cdef Py_ssize_t n_f = f.shape[0]
     cdef Py_ssize_t n_c = c.shape[0]
+    cdef int i
 
     # set item unit
     for i in range(n_f):
