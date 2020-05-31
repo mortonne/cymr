@@ -158,7 +158,7 @@ def p_recall(int start,
             if i > 0:
                 # support from the previously recalled item
                 f_in[j] += (w_ff_exp[start + recalls[i - 1], start + j] +
-                            w_ff_exp[start + recalls[i - 1], start + j])
+                            w_ff_pre[start + recalls[i - 1], start + j])
 
             # ensure minimal support for each item
             if f_in[j] < amin:
