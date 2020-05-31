@@ -775,5 +775,6 @@ class Network(object):
             if mat.ndim == 1:
                 mat = mat[None, :]
             h.matshow(mat)
+            h.set_aspect('auto')
             h.set_axis_off()
             h.set_title(name, fontsize=12)
