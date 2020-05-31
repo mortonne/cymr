@@ -19,7 +19,8 @@ setup(
     url='http://github.com/mortonne/cymr',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    ext_modules=cythonize('src/cymr/operations.pyx'),
+    ext_modules=cythonize(['src/cymr/operations.pyx',
+                           'src/cymr/lba.pyx']),
     extras_require={
         'docs': ['sphinx', 'sphinx-bootstrap-theme', 'ipython'],
         'test': ['pytest', 'codecov', 'pytest-cov'],
