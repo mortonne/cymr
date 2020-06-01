@@ -116,9 +116,49 @@ cpdef study(double [:, :] w_fc_exp,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cpdef cue_item(int n,
+               int n_f,
+               const double [:, :] w_cf_pre,
+               double [:, :] w_cf_exp,
+               const double [:, :] w_ff_pre,
+               double [:, :] w_ff_exp,
+               double [:] f_in,
+               double [:] c,
+               int [:] exclude,
+               int [:] recalls,
+               int output,
+               double amin,
+               double T):
+    cdef Py_ssize_t n_c = w_cf_exp.shape[1]
+    cdef int i
+    cdef int j
+
+    for i in range(n_f):
+        f_in[n + i] = 0
+        if exclude[i]:
+            continue
+
+        # support from context cuing
+        for j in range(n_c):
+            f_in[n + i] += ((w_cf_exp[n + i, j] + w_cf_pre[n + i, j]) * c[j])
+
+        if output > 0:
+            # support from the previously recalled item
+            f_in[n + i] += (w_ff_exp[n + recalls[output - 1], n + i] +
+                            w_ff_pre[n + recalls[output - 1], n + i])
+
+        # ensure minimal support for each item
+        if f_in[n + i] < amin:
+            f_in[n + i] = amin
+
+        f_in[n + i] = exp((2 * f_in[n + i]) / T)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def p_recall(int start,
              int n_f,
-             const int [:] recalls,
+             int [:] recalls,
              double [:, :] w_fc_exp,
              const double [:, :] w_fc_pre,
              double [:, :] w_cf_exp,
@@ -145,31 +185,15 @@ def p_recall(int start,
 
     for i in range(n_r):
         # calculate support for each item
+        cue_item(start, n_f, w_cf_pre, w_cf_exp, w_ff_pre, w_ff_exp,
+                 f_in, c, exclude, recalls, i, amin, T)
+
         total = 0
         for j in range(n_f):
-            f_in[j] = 0
-            if exclude[j]:
-                continue
-
-            # support from context cuing
-            for k in range(n_c):
-                f_in[j] += ((w_cf_exp[start + j, k] + w_cf_pre[start + j, k])
-                            * c[k])
-
-            if i > 0:
-                # support from the previously recalled item
-                f_in[j] += (w_ff_exp[start + recalls[i - 1], start + j] +
-                            w_ff_pre[start + recalls[i - 1], start + j])
-
-            # ensure minimal support for each item
-            if f_in[j] < amin:
-                f_in[j] = amin
-
-            f_in[j] = exp((2 * f_in[j]) / T)
-            total += f_in[j]
+            total += f_in[start + j]
 
         # calculate probability of this recall
-        p[i] = (f_in[recalls[i]] / total) * (1 - p_stop[i])
+        p[i] = (f_in[start + recalls[i]] / total) * (1 - p_stop[i])
         exclude[recalls[i]] = 1
 
         # update context
