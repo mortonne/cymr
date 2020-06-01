@@ -164,6 +164,19 @@ def get_best_results(results):
     return best
 
 
+def sample_parameters(sampler):
+    """Randomly sample parameters."""
+    param = {}
+    for name, value in sampler.items():
+        if callable(value):
+            param[name] = value()
+        elif isinstance(value, tuple):
+            param[name] = value[0] + np.random.rand() * value[1]
+        else:
+            param[name] = value
+    return param
+
+
 class Parameters(object):
     """
     Class to manage model parameters.
