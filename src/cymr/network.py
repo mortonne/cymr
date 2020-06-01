@@ -725,31 +725,26 @@ class Network(object):
         """
         # weights to use for recall (assume fixed during recall)
         rec_ind = self.f_ind[segment]
-        w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
+        n_item = self.n_f_segment[segment]
 
         recalls = []
-        exclude = np.zeros(w_cf.shape[0], dtype=bool)
-        n_item = self.n_f_segment[segment]
+        exclude = np.zeros(n_item, dtype=np.dtype('i'))
         item_ind = np.arange(n_item)
         for i in range(n_item):
             # stop recall with some probability
             if np.random.rand() < p_stop[i]:
                 break
 
-            # project the current state of context; assume nonzero support
-            support = np.dot(w_cf, self.c)
-            if i > 0:
-                item_cue = (self.w_ff_pre[rec_ind, recalls[i - 1]] +
-                            self.w_ff_exp[rec_ind, recalls[i - 1]])
-                support += item_cue
-            support[support < amin] = amin
-
-            # scale based on choice parameter, set recalled items to zero
-            strength = np.exp((2 * support) / T)
-            strength[exclude] = 0
+            # calculate item support
+            operations.cue_item(
+                rec_ind.start, n_item, self.w_cf_pre, self.w_cf_exp,
+                self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
+                np.asarray(recalls, dtype=np.dtype('i')), i, amin, T
+            )
 
             # select item for recall proportionate to support
-            p_recall = strength / np.sum(strength)
+            support = self.f_in[rec_ind]
+            p_recall = support / np.sum(support)
             if np.any(np.isnan(p_recall)):
                 n = np.count_nonzero(~exclude)
                 p_recall[:] = 1 / n
