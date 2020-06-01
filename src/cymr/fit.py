@@ -584,3 +584,45 @@ class Recall(ABC):
             data_list.append(subject_data)
         data = pd.concat(data_list, axis=0, ignore_index=True)
         return data
+
+    def _run_parameter_recovery(self, study, fixed, free,
+                                dependent=None, patterns=None, weights=None,
+                                method='de', **kwargs):
+        """Run a parameter recovery test."""
+        # generate parameters
+        param = fixed.copy()
+        sampled = sample_parameters(free)
+        param.update(sampled)
+        if dependent is not None:
+            independent_param = param.copy()
+            for name, expression in dependent.items():
+                param[name] = eval(expression, None, independent_param)
+
+        # generate simulated data
+        sim = self.generate_subject(study, param, patterns=patterns,
+                                    weights=weights)
+
+        # fit the simulated data
+        fitted_param, logl, n, k = self.fit_subject(
+            sim, fixed, free, dependent=dependent, patterns=patterns,
+            weights=weights, method=method, **kwargs
+        )
+
+        # store results
+        df_sim = pd.DataFrame(param, index=['sim'])
+        df_fit = pd.DataFrame(fitted_param, index=['fit'])
+        df_sample = pd.concat((df_sim, df_fit), axis=0)
+        return df_sample
+
+    def parameter_recovery(self, study, n_sample, fixed, free,
+                           dependent=None, patterns=None, weights=None,
+                           method='de', n_jobs=None, **kwargs):
+        """Run multiple iterations of parameter recovery."""
+        results_list = Parallel(n_jobs=n_jobs)(
+            delayed(self._run_parameter_recovery)(
+                study, fixed, free, dependent, patterns,
+                weights, method, **kwargs
+            ) for i in range(n_sample)
+        )
+        results = pd.concat(results_list, axis=0, keys=np.arange(n_sample))
+        return results
