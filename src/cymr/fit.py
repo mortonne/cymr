@@ -555,7 +555,7 @@ class Recall(ABC):
         pass
 
     def generate(self, study, group_param, subj_param=None, patterns=None,
-                 weights=None):
+                 weights=None, n_rep=1):
         """
         Generate simulated data for all subjects.
 
@@ -576,6 +576,9 @@ class Recall(ABC):
         weights : dict of (str: dict of (str: float))
             Weights to apply to model feature patterns.
 
+        n_rep : int
+            Number of times to repeat the simulation for each subject.
+
         Returns
         -------
         data : pandas.DataFrame
@@ -588,9 +591,11 @@ class Recall(ABC):
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_study = study.loc[study['subject'] == subject]
-            subject_data = self.generate_subject(subject_study, param,
-                                                 patterns, weights)
-            data_list.append(subject_data)
+            for i in range(n_rep):
+                subject_data = self.generate_subject(subject_study, param,
+                                                     patterns, weights)
+                subject_data['list'] = subject_data['list'] * (i + 1)
+                data_list.append(subject_data)
         data = pd.concat(data_list, axis=0, ignore_index=True)
         return data
 
