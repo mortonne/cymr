@@ -640,3 +640,20 @@ class Recall(ABC):
         )
         results = pd.concat(results_list, axis=0, keys=np.arange(n_sample))
         return results
+
+    def parameter_sweep(self, study, fixed, param_names, param_sweeps,
+                        dependent=None, patterns=None, weights=None, n_rep=1):
+        """Simulate data with varying parameters."""
+        index = pd.MultiIndex.from_product(param_sweeps, names=param_names)
+        df_list = []
+        for idx in index:
+            param = fixed.copy()
+            param.update(dict(zip(param_names, idx)))
+            param = set_dependent(param, dependent)
+            sim = self.generate(study, param, None, patterns=patterns,
+                                weights=weights, n_rep=n_rep)
+            df_list.append(sim)
+        results = pd.concat(df_list, axis=0, keys=index)
+        results = results.droplevel(len(param_sweeps))
+        results.index.rename(param_names, inplace=True)
+        return results
