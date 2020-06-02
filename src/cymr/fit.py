@@ -585,10 +585,11 @@ class Recall(ABC):
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_study = study.loc[study['subject'] == subject]
+            max_list = subject_study['list'].max()
             for i in range(n_rep):
                 subject_data = self.generate_subject(subject_study, param,
                                                      patterns, weights)
-                subject_data['list'] = subject_data['list'] * (i + 1)
+                subject_data['list'] = i * max_list + subject_data['list']
                 data_list.append(subject_data)
         data = pd.concat(data_list, axis=0, ignore_index=True)
         return data
