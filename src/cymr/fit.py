@@ -164,6 +164,15 @@ def get_best_results(results):
     return best
 
 
+def set_dependent(param, dependent=None):
+    updated = param.copy()
+    if dependent is not None:
+        independent_param = param.copy()
+        for name, expression in dependent.items():
+            updated[name] = eval(expression, None, independent_param)
+    return updated
+
+
 def sample_parameters(sampler):
     """Randomly sample parameters."""
     param = {}
