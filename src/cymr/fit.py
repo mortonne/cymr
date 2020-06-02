@@ -596,7 +596,7 @@ class Recall(ABC):
 
     def _run_parameter_recovery(self, study, fixed, free,
                                 dependent=None, patterns=None, weights=None,
-                                method='de', **kwargs):
+                                method='de', n_rep=1, **kwargs):
         """Run a parameter recovery test."""
         # generate parameters
         param = fixed.copy()
@@ -605,8 +605,8 @@ class Recall(ABC):
         param = set_dependent(param, dependent)
 
         # generate simulated data
-        sim = self.generate_subject(study, param, patterns=patterns,
-                                    weights=weights)
+        sim = self.generate(study, param, patterns=patterns,
+                            weights=weights, n_rep=n_rep)
 
         # fit the simulated data
         fitted_param, logl, n, k = self.fit_subject(
@@ -622,12 +622,12 @@ class Recall(ABC):
 
     def parameter_recovery(self, study, n_sample, fixed, free,
                            dependent=None, patterns=None, weights=None,
-                           method='de', n_jobs=None, **kwargs):
+                           method='de', n_rep=1, n_jobs=None, **kwargs):
         """Run multiple iterations of parameter recovery."""
         results_list = Parallel(n_jobs=n_jobs)(
             delayed(self._run_parameter_recovery)(
                 study, fixed, free, dependent, patterns,
-                weights, method, **kwargs
+                weights, method, n_rep, **kwargs
             ) for i in range(n_sample)
         )
         results = pd.concat(results_list, axis=0, keys=np.arange(n_sample))
