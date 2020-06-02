@@ -746,9 +746,9 @@ class Network(object):
             support = self.f_in[rec_ind]
             p_recall = support / np.sum(support)
             if np.any(np.isnan(p_recall)):
-                n = np.count_nonzero(~exclude)
-                p_recall[:] = 1 / n
-                p_recall[exclude] = 0
+                n = np.count_nonzero(exclude == 0)
+                p_recall[exclude == 0] = 1 / n
+                p_recall[exclude == 1] = 0
                 recall = np.random.choice(item_ind, p=p_recall)
             else:
                 recall = np.random.choice(item_ind, p=p_recall)
