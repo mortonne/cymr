@@ -428,10 +428,7 @@ class Recall(ABC):
         def eval_fit(x):
             eval_param = fixed.copy()
             eval_param.update(dict(zip(var_names, x)))
-            if dependent is not None:
-                indep_param = eval_param.copy()
-                for var, expr in dependent.items():
-                    eval_param[var] = eval(expr, None, indep_param)
+            eval_param = set_dependent(eval_param, dependent)
             eval_logl, _ = self.likelihood_subject(study, recall, eval_param,
                                                    patterns, weights)
             return -eval_logl
@@ -450,10 +447,7 @@ class Recall(ABC):
         # fitted parameters
         param = fixed.copy()
         param.update(dict(zip(var_names, res['x'])))
-        if dependent is not None:
-            independent_param = param.copy()
-            for name, expression in dependent.items():
-                param[name] = eval(expression, None, independent_param)
+        param = set_dependent(param, dependent)
 
         # evaluate fitted parameters, get number of fitted points
         logl, n = self.likelihood_subject(study, recall, param,
@@ -607,10 +601,7 @@ class Recall(ABC):
         param = fixed.copy()
         sampled = sample_parameters(free)
         param.update(sampled)
-        if dependent is not None:
-            independent_param = param.copy()
-            for name, expression in dependent.items():
-                param[name] = eval(expression, None, independent_param)
+        param = set_dependent(param, dependent)
 
         # generate simulated data
         sim = self.generate_subject(study, param, patterns=patterns,
