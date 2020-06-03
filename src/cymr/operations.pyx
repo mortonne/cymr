@@ -126,9 +126,7 @@ cpdef cue_item(int n,
                double [:] c,
                int [:] exclude,
                int [:] recalls,
-               int output,
-               double amin,
-               double T):
+               int output):
     cdef Py_ssize_t n_c = w_cf_exp.shape[1]
     cdef int i
     cdef int j
@@ -147,10 +145,25 @@ cpdef cue_item(int n,
             f_in[n + i] += (w_ff_exp[n + recalls[output - 1], n + i] +
                             w_ff_pre[n + recalls[output - 1], n + i])
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef apply_softmax(int n,
+                    int n_f,
+                    double [:] f_in,
+                    int [:] exclude,
+                    double amin,
+                    double T):
+    cdef int i
+    for i in range(n_f):
+        if exclude[i]:
+            continue
+
         # ensure minimal support for each item
         if f_in[n + i] < amin:
             f_in[n + i] = amin
 
+        # apply softmax
         f_in[n + i] = exp((2 * f_in[n + i]) / T)
 
 
@@ -186,7 +199,8 @@ def p_recall(int start,
     for i in range(n_r):
         # calculate support for each item
         cue_item(start, n_f, w_cf_pre, w_cf_exp, w_ff_pre, w_ff_exp,
-                 f_in, c, exclude, recalls, i, amin, T)
+                 f_in, c, exclude, recalls, i)
+        apply_softmax(start, n_f, f_in, exclude, amin, T)
 
         total = 0
         for j in range(n_f):

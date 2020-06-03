@@ -754,8 +754,10 @@ class Network(object):
             operations.cue_item(
                 rec_ind.start, n_item, self.w_cf_pre, self.w_cf_exp,
                 self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
-                np.asarray(recalls, dtype=np.dtype('i')), i, amin, T
+                np.asarray(recalls, dtype=np.dtype('i')), i
             )
+            operations.apply_softmax(rec_ind.start, n_item, self.f_in,
+                                     exclude, amin, T)
 
             # select item for recall proportionate to support
             support = self.f_in[rec_ind]
