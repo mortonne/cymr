@@ -776,6 +776,41 @@ class Network(object):
             self.integrate(segment, recall, B)
         return recalls
 
+    def generate_recall_lba(self, segment, time_limit, B, A, b, s, tau):
+        """Generate timed free recall using the LBA model."""
+        rec_ind = self.f_ind[segment]
+        n_item = self.n_f_segment[segment]
+
+        recalls = []
+        times = []
+        exclude = np.zeros(n_item, dtype=np.dtype('i'))
+        t = 0
+        for i in range(n_item):
+            if t >= time_limit:
+                break
+
+            # calculate item support
+            operations.cue_item(
+                rec_ind.start, n_item, self.w_cf_pre, self.w_cf_exp,
+                self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
+                np.asarray(recalls, dtype=np.dtype('i')), i
+            )
+            support = self.f_in[rec_ind]
+
+            # simulate response competition
+            recall, irt = sample_response_lba(A, b, support, s, tau)
+            t += irt
+
+            if t <= time_limit:
+                # if response happened in time, count it
+                recalls.append(recall)
+                times.append(t)
+                exclude[recall] = 1
+
+                # integrate context associated with the item into context
+                self.integrate(segment, recall, B)
+        return recalls, times
+
     def plot(self, ax=None):
         """Plot the current state of the network."""
         if ax is None:
