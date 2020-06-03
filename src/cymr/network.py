@@ -1,6 +1,7 @@
 """Represent interactions between context and item layers."""
 
 import numpy as np
+from scipy import stats
 import h5py
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -177,6 +178,20 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
     # after recalling all items, P(stop)=1 by definition
     p_stop[-1] = 1
     return p_stop
+
+
+def sample_response_lba(A, b, v, s, tau):
+    """Sample a response and response time."""
+    while True:
+        k = stats.uniform.rvs(0, scale=A)
+        d = stats.norm.rvs(loc=v, scale=s)
+        t = tau + (b - k) / d
+        if np.any(d > 0):
+            break
+    t[d <= 0] = np.nan
+    response = np.nanargmin(t)
+    rt = np.nanmin(t)
+    return response, rt
 
 
 def init_plot(**kwargs):
