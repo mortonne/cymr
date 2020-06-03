@@ -226,6 +226,18 @@ def test_generate(net_study):
     recalls = net.generate_recall('item', B, T, p_stop)
 
 
+def test_generate_lba(net_study):
+    net = net_study.copy()
+    B = .8
+    time_limit = 90
+    A = 4
+    b = 8
+    s = 1
+    tau = 0
+    recalls, times = net.generate_recall_lba('item', time_limit, B,
+                                             A, b, s, tau)
+
+
 @pytest.fixture()
 def patterns():
     cat = np.array([[1, 0, 1, 1, 0, 1],
