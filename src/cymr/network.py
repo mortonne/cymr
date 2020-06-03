@@ -191,7 +191,7 @@ def sample_response_lba(A, b, v, s, tau):
     t[d <= 0] = np.nan
     response = np.nanargmin(t)
     rt = np.nanmin(t)
-    return response, rt
+    return int(response), rt
 
 
 def init_plot(**kwargs):
