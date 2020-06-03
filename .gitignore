@@ -140,3 +140,4 @@ dmypy.json
 # project temp files
 jupyter/
 .profile
+src/cymr/*.html
