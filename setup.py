@@ -22,7 +22,7 @@ setup(
     ext_modules=cythonize(['src/cymr/operations.pyx',
                            'src/cymr/lba.pyx']),
     extras_require={
-        'docs': ['sphinx', 'sphinx-bootstrap-theme', 'ipython'],
+        'docs': ['sphinx', 'pydata-sphinx-theme', 'ipython'],
         'test': ['pytest', 'codecov', 'pytest-cov'],
     },
     classifiers=[
