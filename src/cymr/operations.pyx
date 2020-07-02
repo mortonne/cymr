@@ -184,7 +184,7 @@ def p_recall(int start,
              double [:] c_in,
              int [:] exclude,
              double amin,
-             double B,
+             double [:] B,
              double T,
              const double [:] p_stop,
              double [:] p):
@@ -212,5 +212,5 @@ def p_recall(int start,
 
         # update context
         if i < (n_r - 1):
-            integrate(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B)
+            integrate(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B[i])
     p[n_r] = p_stop[n_r]

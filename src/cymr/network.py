@@ -636,6 +636,8 @@ class Network(object):
         return state
 
     def _p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
+        if not isinstance(B, np.ndarray):
+            B = np.tile(B, len(recalls)).astype(float)
         rec_ind = self.f_ind[segment]
         n_item = rec_ind.stop - rec_ind.start
         exclude = np.zeros(n_item, dtype=np.dtype('i'))
