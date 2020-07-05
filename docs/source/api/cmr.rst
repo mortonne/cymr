@@ -1,6 +1,36 @@
 CMR
 ===
 
-.. autoclass:: cymr.cmr.CMRDistributed
-    :members:
-    :inherited-members:
+.. currentmodule:: cymr.cmr
+
+Dynamic Parameters
+~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+    :toctree: api/
+
+    primacy
+    p_stop_op
+    prepare_list_param
+
+Model Initialization
+~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+    :toctree: api/
+
+    init_loc_cmr
+    init_dist_cmr
+
+Model Framework
+~~~~~~~~~~~~~~~
+
+.. autosummary::
+    :toctree: api/
+
+    CMRDistributed
+    CMRDistributed.fit_indiv
+    CMRDistributed.generate
+    CMRDistributed.record_network
+    CMRDistributed.parameter_sweep
+    CMRDistributed.parameter_recovery
