@@ -102,7 +102,7 @@ that the search converges.
     results = model.fit_indiv(data, par.fixed, par.free,
                               dependent=par.dependent, tol=0.1,
                               patterns=patterns, weights=par.weights)
-    results
+    results[['B_enc', 'logl', 'n', 'k']]
 
 The results give the complete set of parameters, including fixed
 parameters, optimized free parameters, and dependent parameters. It
