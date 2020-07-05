@@ -21,7 +21,7 @@ copyright = '2020, Neal Morton'
 author = 'Neal Morton'
 
 # The full version, including alpha/beta/rc tags
-release = 'v0.5.0'
+release = 'v0.6.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -36,6 +36,8 @@ extensions = [
     'IPython.sphinxext.ipython_directive',
     'sphinx.ext.napoleon'
 ]
+
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
