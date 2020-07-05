@@ -1,6 +1,8 @@
 """Test speed of likelihood calculation."""
 
 import numpy as np
+
+from cymr import cmr
 from cymr import network
 
 
@@ -27,7 +29,7 @@ class TimeLikelihood(object):
     def time_likelihood(self):
         net = network.Network({'item': (self.n_item, self.n_dim),
                                'start': (1, 1)})
-        p_stop = network.p_stop_op(self.n_item, self.X1, self.X2)
+        p_stop = cmr.p_stop_op(self.n_item, self.X1, self.X2)
         for study, recall in zip(self.study, self.recall):
             net.reset()
             item_patterns = self.patterns[study, :]

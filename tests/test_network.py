@@ -4,6 +4,8 @@ import os
 from itertools import permutations
 import pytest
 import numpy as np
+
+from cymr import cmr
 from cymr import network
 
 
@@ -182,7 +184,7 @@ def test_recall(net_study):
     T = 10
     X1 = .05
     X2 = 1
-    p_stop = network.p_stop_op(len(recalls), X1, X2)
+    p_stop = cmr.p_stop_op(len(recalls), X1, X2)
     p = net.p_recall('item', recalls, B, T, p_stop)
     expected = np.array([0.8335545, 0.0760874, 0.6305471, 1.])
     np.testing.assert_allclose(p, expected, atol=.0000001)
@@ -202,7 +204,7 @@ def test_sequences(net_study):
     T = 10
     X1 = .05
     X2 = 1
-    p_stop = network.p_stop_op(n_item, X1, X2)
+    p_stop = cmr.p_stop_op(n_item, X1, X2)
     p = np.empty((len(sequences), n_item + 1))
     p[:] = np.nan
     for i, recalls in enumerate(sequences):
@@ -222,7 +224,7 @@ def test_generate(net_study):
     X1 = .05
     X2 = 1
     n_item = 3
-    p_stop = network.p_stop_op(n_item, X1, X2)
+    p_stop = cmr.p_stop_op(n_item, X1, X2)
     recalls = net.generate_recall('item', B, T, p_stop)
 
 
