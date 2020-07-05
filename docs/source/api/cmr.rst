@@ -1,5 +1,5 @@
-Models
-======
+CMR
+===
 
 .. autoclass:: cymr.cmr.CMRDistributed
     :members:

@@ -141,3 +141,4 @@ dmypy.json
 jupyter/
 .profile
 src/cymr/*.html
+docs/source/api/api
