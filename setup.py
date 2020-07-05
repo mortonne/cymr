@@ -25,6 +25,9 @@ setup(
         'docs': ['sphinx', 'pydata-sphinx-theme', 'ipython'],
         'test': ['pytest', 'codecov', 'pytest-cov'],
     },
+    package_data={
+        'cymr': ['data/*.csv']
+    },
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 3.8',
