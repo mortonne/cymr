@@ -20,11 +20,10 @@ Fitting a model
 
 First, load some sample data to fit:
 
-.. ipython::
+.. ipython:: python
 
-    In [1]: from cymr import fit
-
-    In [1]: data = fit.sample_data('Morton2013_mixed').query('subject <= 3')
+    from cymr import fit
+    data = fit.sample_data('Morton2013_mixed').query('subject <= 3')
 
 Search Definition
 ~~~~~~~~~~~~~~~~~
@@ -48,17 +47,14 @@ We can organize these things by creating a Parameters object. To speed
 things up, we'll fix almost all parameters and just fit one,
 :math:`\beta_\mathrm{enc}`.
 
-.. ipython::
+.. ipython:: python
 
-    In [1]: par = fit.Parameters()
-
-    In [1]: par.add_fixed(Afc=0, Acf=0, Aff=0, Dff=1, T=0.1,
-       ...:               Lfc=0.15, Lcf=0.15, P1=0.2, P2=2,
-       ...:               B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25)
-
-    In [1]: par.add_free(B_enc=(0, 1))
-
-    In [1]: par.add_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
+    par = fit.Parameters()
+    par.add_fixed(Afc=0, Acf=0, Aff=0, Dff=1, T=0.1,
+                  Lfc=0.15, Lcf=0.15, P1=0.2, P2=2,
+                  B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25)
+    par.add_free(B_enc=(0, 1))
+    par.add_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
 
 Patterns and Weights
 ~~~~~~~~~~~~~~~~~~~~
@@ -68,11 +64,10 @@ define pre-experimental weights for the network. For this example, we'll define
 localist patterns, which are distinct for each presented item. They can be
 represented by an identity matrix with one entry for each item.
 
-.. ipython::
+.. ipython:: python
 
-    In [1]: n_items = 768
-
-    In [1]: loc_patterns = np.eye(n_items)
+    n_items = 768
+    loc_patterns = np.eye(n_items)
 
 To indicate where the patterns should be used in the network, they are
 specified as :code:`vector` (for the :math:`\mathrm{M}^{FC}` and/or
@@ -80,19 +75,18 @@ specified as :code:`vector` (for the :math:`\mathrm{M}^{FC}` and/or
 (for the :math:`\mathrm{M}^{FF}` matrix). We also label each pattern
 with a name; here, we'll refer to the localist patterns as :code:`'loc'`.
 
-.. ipython::
+.. ipython:: python
 
-    In [1]: patterns = {'vector': {'loc': loc_patterns}}
+    patterns = {'vector': {'loc': loc_patterns}}
 
 Patterns may include multiple components that may be weighted differently.
 Weight parameters are used to set the weighting of each component. Here,
 we only have one component, which will have a fixed weight of 1.
 
-.. ipython::
+.. ipython:: python
 
-    In [1]: par.add_weights('fcf', {'loc': 'w_loc'})
-
-    In [1]: par.add_fixed(w_loc=1)
+    par.add_weights('fcf', {'loc': 'w_loc'})
+    par.add_fixed(w_loc=1)
 
 Parameter Search
 ~~~~~~~~~~~~~~~~
@@ -101,17 +95,14 @@ Finally, we can run the search. For speed, we'll set the tolerance to
 be pretty high (0.1); normally this should be much lower to ensure
 that the search converges.
 
-.. ipython::
+.. ipython:: python
 
-    In [1]: from cymr import cmr
-
-    In [1]: model = cmr.CMRDistributed()
-
-    In [1]: results = model.fit_indiv(data, par.fixed, par.free,
-       ...:                           dependent=par.dependent, tol=0.1,
-       ...:                           patterns=patterns, weights=par.weights)
-
-    In [1]: results
+    from cymr import cmr
+    model = cmr.CMRDistributed()
+    results = model.fit_indiv(data, par.fixed, par.free,
+                              dependent=par.dependent, tol=0.1,
+                              patterns=patterns, weights=par.weights)
+    results
 
 The results give the complete set of parameters, including fixed
 parameters, optimized free parameters, and dependent parameters. It
