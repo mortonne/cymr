@@ -47,6 +47,16 @@ def prepare_list_param(n_item, param):
     list_param = {'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop}
     return list_param
 
+def update_dynamic_parameters(events, param, phase, list):
+    """Assumes presence of 'dynamic' dict on the param structure, and presence of
+    dict within param['dynamic'][phase] containing key:val of param_name:data_column_name
+    Uses the values in the data column to make a dynamic array for that parameter."""
+    # TODO: test for other elements in the list at param['dynamic'][phase][pname] specifying a dependent parameter requiring an eval statement
+    for pname in param['dynamic'][phase].keys():
+        # 0th element has string naming column in events
+        colname = param['dynamic'][phase][pname][0]
+        param[pname] = np.array(events[colname][list])
+    return param
 
 class CMR(Recall):
 
@@ -213,10 +223,23 @@ class CMRDistributed(Recall):
         Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
     """
 
-    def prepare_sim(self, data):
+    def prepare_sim(self, data, param):
+        # check for 'dynamic' field on param
+        # this tells you where the dynamic param values are stored on the data struct
+        study_key_names = ['input', 'item_index']
+        recall_key_names = ['input']
+        if 'dynamic' in param:
+            if 'study' in param['dynamic']:
+                for pname in param['dynamic']['study'].keys():
+                    datacol = param['dynamic']['study'][pname]
+                    study_key_names = study_key_names + datacol
+            if 'recall' in param['dynamic']:
+                for pname in param['dynamic']['recall'].keys():
+                    datacol = param['dynamic']['recall'][pname]
+                    recall_key_names = recall_key_names + datacol
         study, recall = fit.prepare_lists(
-            data, study_keys=['input', 'item_index'],
-            recall_keys=['input'], clean=True)
+            data, study_keys=study_key_names,
+            recall_keys=recall_key_names, clean=True)
         return study, recall
 
     def likelihood_subject(self, study, recall, param, patterns=None,
@@ -231,11 +254,19 @@ class CMRDistributed(Recall):
         n = 0
         for i in range(n_list):
             net = init_dist_cmr(study['item_index'][i], scaled, param)
-            net.study('item', study['input'][i], param['B_enc'],
+            sparam = param.copy()
+            if 'dynamic' in param:
+                if 'study' in param['dynamic']:
+                    sparam = update_dynamic_parameters(study, param, 'study', i)
+            net.study('item', study['input'][i], sparam['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
             net.integrate('start', 0, param['B_start'])
-            p = net.p_recall('item', recall['input'][i], param['B_rec'],
-                             param['T'], list_param['p_stop'])
+            rparam = param.copy()
+            if 'dynamic' in param:
+                if 'recall' in param['dynamic']:
+                    rparam = update_dynamic_parameters(recall, param, 'recall', i)
+            p = net.p_recall('item', recall['input'][i], rparam['B_rec'],
+                             rparam['T'], list_param['p_stop'])
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
