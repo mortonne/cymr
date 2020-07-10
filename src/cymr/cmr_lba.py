@@ -41,7 +41,7 @@ def add_recalls(study, recalls_list, recalls_times):
     return data
 
 class CMRLBA(CMRDistributed):
-
+    """CMR Distributed with Linear Ballistic Accumulators."""
     def prepare_sim(self, data, param):
         # 'dynamic' field on param
         # tells you where the dynamic param values are stored on the data struct
@@ -120,7 +120,7 @@ class CMRLBA(CMRDistributed):
         return logl, n
 
     def p_recall_lba(self, net, segment, recalls, rts, recall_time_limit, B, T, A, b, s, tau):
-        """Recall data struct must contain and rt"""
+        """Recall data struct must contain rt information for recall events."""
         amin = 0.000001
         # weights to use for recall (assume fixed during recall)
         rec_ind = net.f_ind[segment]
@@ -143,6 +143,7 @@ class CMRLBA(CMRDistributed):
             )
             support = net.f_in[rec_ind]
 
+            # TODO: allow some kind of non-linear scaling of support
             # scale based on choice parameter, set recalled items to zero
             #strength = np.exp((2 * support) / T)
             #strength[exclude] = 0
