@@ -47,14 +47,14 @@ def prepare_list_param(n_item, param):
     list_param = {'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop}
     return list_param
 
-def update_dynamic_parameters(events, param, phase, list):
+def update_dynamic_parameters(events, param, trial_type, list):
     """Assumes presence of 'dynamic' dict on the param structure, and presence of
-    dict within param['dynamic'][phase] containing key:val of param_name:data_column_name
+    dict within param['dynamic'][trial_type] containing key:val of param_name:data_column_name
     Uses the values in the data column to make a dynamic array for that parameter."""
-    # TODO: test for other elements in the list at param['dynamic'][phase][pname] specifying a dependent parameter requiring an eval statement
-    for pname in param['dynamic'][phase].keys():
+    # TODO: add support for evaluation string
+    for pname in param['dynamic'][trial_type].keys():
         # 0th element has string naming column in events
-        colname = param['dynamic'][phase][pname][0]
+        colname = param['dynamic'][phase][trial_type][0]
         param[pname] = np.array(events[colname][list])
     return param
 
