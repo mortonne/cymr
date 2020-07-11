@@ -380,7 +380,7 @@ class Recall(ABC):
         pass
 
     def likelihood(self, data, group_param, subj_param=None, patterns=None,
-                   weights=None):
+                   weights=None, data_keys=None):
         """
         Log likelihood summed over all subjects.
 
@@ -401,6 +401,9 @@ class Recall(ABC):
         weights : dict of (str: dict of (str: float))
             Weights to apply to model feature patterns.
 
+        data_keys : dict of (str: list of str)
+            Fields to include in study and recall data.
+
         Returns
         -------
         logl : float
@@ -417,7 +420,10 @@ class Recall(ABC):
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_data = data.loc[data['subject'] == subject]
-            study, recall = self.prepare_sim(subject_data, param)
+            study, recall = self.prepare_sim(
+                subject_data, study_keys=data_keys['study'],
+                recall_keys=data_keys['recall']
+            )
             subject_logl, subject_n = self.likelihood_subject(
                 study, recall, param, patterns=patterns, weights=weights)
             logl += subject_logl
