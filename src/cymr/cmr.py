@@ -118,7 +118,7 @@ def update_dynamic_parameters(events, param, trial_type, list):
 
 class CMR(Recall):
 
-    def prepare_sim(self, data, search_param=None):
+    def prepare_sim(self, data, study_keys=None, recall_keys=None):
         study, recall = fit.prepare_lists(data, study_keys=['input'],
                                           recall_keys=['input'], clean=True)
         return study, recall
@@ -281,23 +281,21 @@ class CMRDistributed(Recall):
         Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
     """
 
-    def prepare_sim(self, data, search_param=None):
-        # check for 'dynamic' field on param
-        # this tells you where the dynamic param values are stored on the data struct
-        study_key_names = ['input', 'item_index']
-        recall_key_names = ['input']
-        if 'dynamic' in param:
-            if 'study' in param['dynamic']:
-                for pname in param['dynamic']['study'].keys():
-                    datacol = param['dynamic']['study'][pname]
-                    study_key_names = study_key_names + datacol
-            if 'recall' in param['dynamic']:
-                for pname in param['dynamic']['recall'].keys():
-                    datacol = param['dynamic']['recall'][pname]
-                    recall_key_names = recall_key_names + datacol
+    def prepare_sim(self, data, study_keys=None, recall_keys=None):
+        study_base = ['input', 'item_index']
+        if study_keys is None:
+            study_keys = study_base
+        else:
+            study_keys += study_base
+        recall_base = ['input']
+        if recall_keys is None:
+            recall_keys = recall_base
+        else:
+            recall_keys += recall_base
+
         study, recall = fit.prepare_lists(
-            data, study_keys=study_key_names,
-            recall_keys=recall_key_names, clean=True)
+            data, study_keys=study_keys, recall_keys=recall_keys, clean=True
+        )
         return study, recall
 
     def likelihood_subject(self, study, recall, param, patterns=None,
