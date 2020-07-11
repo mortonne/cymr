@@ -9,6 +9,7 @@ from cymr import cmr
 from cymr.cmr import CMRDistributed
 from cymr import lba
 
+
 def add_recalls(study, recalls_list, recalls_times):
     """Doc"""
     lists = study['list'].unique()
@@ -39,6 +40,7 @@ def add_recalls(study, recalls_list, recalls_times):
     data = pd.concat((study, recall), axis=0, ignore_index=True)
     data = data.sort_values(['list', 'trial_type'], ascending=[True, False])
     return data
+
 
 class CMRLBA(CMRDistributed):
     """CMR Distributed with Linear Ballistic Accumulators."""
