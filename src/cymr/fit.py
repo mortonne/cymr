@@ -165,6 +165,23 @@ def get_best_results(results):
 
 
 def set_dependent(param, dependent=None):
+    """
+    Set values of dependent parameters.
+
+    Parameters
+    ----------
+    param : dict of (str: float)
+        Parameter values.
+
+    dependent : dict of (str: str)
+        For each dependent parameter, an expression defining that
+        parameter in terms of other parameter values.
+
+    Returns
+    -------
+    updated : dict of (str: float)
+        Updated parameter values.
+    """
     updated = param.copy()
     if dependent is not None:
         independent_param = param.copy()
