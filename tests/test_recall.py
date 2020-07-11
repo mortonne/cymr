@@ -10,7 +10,7 @@ from cymr import fit
 
 class TestRecall(Recall):
 
-    def prepare_sim(self, data):
+    def prepare_sim(self, data, search_param=None):
         data_study = data.loc[data['trial_type'] == 'study']
         data_recall = data.loc[data['trial_type'] == 'recall']
         merged = fr.merge_lists(data_study, data_recall)
