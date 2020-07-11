@@ -62,7 +62,7 @@ def update_dynamic_parameters(events, param, trial_type, list):
 
 class CMR(Recall):
 
-    def prepare_sim(self, data):
+    def prepare_sim(self, data, search_param=None):
         study, recall = fit.prepare_lists(data, study_keys=['input'],
                                           recall_keys=['input'], clean=True)
         return study, recall
@@ -225,7 +225,7 @@ class CMRDistributed(Recall):
         Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
     """
 
-    def prepare_sim(self, data, param):
+    def prepare_sim(self, data, search_param=None):
         # check for 'dynamic' field on param
         # this tells you where the dynamic param values are stored on the data struct
         study_key_names = ['input', 'item_index']
