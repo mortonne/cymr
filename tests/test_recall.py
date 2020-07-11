@@ -101,10 +101,11 @@ def test_likelihood(data):
 def test_fit_subject(data):
     data = data.copy()
     rec = TestRecall()
-    fixed = {'y': 1}
-    free = {'x': [-10, 10]}
+    param_def = parameters.Parameters()
+    param_def.add_fixed(y=1)
+    param_def.add_free(x=[-10, 10])
     subject_data = data.loc[data['subject'] == 1]
-    param, logl, n, k = rec.fit_subject(subject_data, fixed, free)
+    param, logl, n, k = rec.fit_subject(subject_data, param_def)
     np.testing.assert_allclose(param['x'], -2, atol=0.00001)
     np.testing.assert_allclose(logl, np.log(2))
     assert k == 1
@@ -113,9 +114,10 @@ def test_fit_subject(data):
 def test_fit_indiv(data):
     data = data.copy()
     rec = TestRecall()
-    fixed = {'y': 1}
-    free = {'x': [-10, 10]}
-    results = rec.fit_indiv(data, fixed, free)
+    param_def = parameters.Parameters()
+    param_def.add_fixed(y=1)
+    param_def.add_free(x=[-10, 10])
+    results = rec.fit_indiv(data, param_def)
     np.testing.assert_allclose(results['x'].to_numpy(), [-2, -2], atol=0.0001)
     np.testing.assert_allclose(results['logl'].to_numpy(), np.log([2, 2]),
                                atol=0.0001)

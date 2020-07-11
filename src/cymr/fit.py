@@ -320,8 +320,8 @@ class Recall(ABC):
         """
         pass
 
-    def fit_subject(self, subject_data, fixed, free, dependent=None,
-                    patterns=None, weights=None, method='de', **kwargs):
+    def fit_subject(self, subject_data, param_def, patterns=None,
+                    method='de', **kwargs):
         """
         Fit a model to data for one subject.
 
@@ -330,20 +330,11 @@ class Recall(ABC):
         subject_data : pandas.DataFrame
             Data for one subject.
 
-        fixed : dict of (str: float)
-            Values of fixed parameters.
+        param_def : cymr.parameters.Parameters
+            Parameter definitions.
 
-        free : dict of (str: (float, float))
-            Allowed range of free parameters.
-
-        dependent : dict of (str: str), optional
-            Expressions to evaluate to set dependent parameters.
-
-        patterns : dict of (str: dict of (str: numpy.array))
+        patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
-
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
 
         method : str, optional
             Search method for fitting the parameters.
@@ -367,18 +358,21 @@ class Recall(ABC):
             Number of free parameters.
         """
         study, recall = self.prepare_sim(subject_data)
-        var_names = list(free.keys())
+        var_names = list(param_def.free.keys())
 
         def eval_fit(x):
-            eval_param = fixed.copy()
+            eval_param = param_def.fixed.copy()
             eval_param.update(dict(zip(var_names, x)))
-            eval_param = parameters.set_dependent(eval_param, dependent)
-            eval_logl, _ = self.likelihood_subject(study, recall, eval_param,
-                                                   patterns, weights)
+            eval_param = parameters.set_dependent(
+                eval_param, param_def.dependent
+            )
+            eval_logl, _ = self.likelihood_subject(
+                study, recall, eval_param, patterns, param_def.weights
+            )
             return -eval_logl
 
-        group_lb = [free[k][0] for k in var_names]
-        group_ub = [free[k][1] for k in var_names]
+        group_lb = [param_def.free[k][0] for k in var_names]
+        group_ub = [param_def.free[k][1] for k in var_names]
         bounds = optimize.Bounds(group_lb, group_ub)
         if method == 'de':
             res = optimize.differential_evolution(eval_fit, bounds, **kwargs)
@@ -389,29 +383,29 @@ class Recall(ABC):
             raise ValueError(f'Invalid method: {method}')
 
         # fitted parameters
-        param = fixed.copy()
+        param = param_def.fixed.copy()
         param.update(dict(zip(var_names, res['x'])))
-        param = parameters.set_dependent(param, dependent)
+        param = parameters.set_dependent(param, param_def.dependent)
 
         # evaluate fitted parameters, get number of fitted points
         logl, n = self.likelihood_subject(study, recall, param,
-                                          patterns, weights)
-        k = len(free)
+                                          patterns, param_def.weights)
+        k = len(param_def.free)
         assert logl == -res['fun']
         return param, logl, n, k
 
-    def _run_fit_subject(self, data, subject, fixed, free, dependent,
-                         patterns=None, weights=None, method='de', **kwargs):
+    def _run_fit_subject(self, data, subject, param_def,
+                         patterns=None, method='de', **kwargs):
         """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
         param, logl, n, k = self.fit_subject(
-            subject_data, fixed, free, dependent, patterns, weights,
-            method, **kwargs)
+            subject_data, param_def, patterns, method, **kwargs
+        )
         results = {**param, 'logl': logl, 'n': n, 'k': k}
         return results
 
-    def fit_indiv(self, data, fixed, free, dependent=None, patterns=None,
-                  weights=None, n_jobs=None, method='de', n_rep=1, **kwargs):
+    def fit_indiv(self, data, param_def, patterns=None,
+                  n_jobs=None, method='de', n_rep=1, **kwargs):
         """
         Fit parameters to individual subjects.
 
@@ -420,20 +414,11 @@ class Recall(ABC):
         data : pandas.DataFrame
             Data for one or more subjects.
 
-        fixed : dict of (str: float)
-            Values of fixed parameters.
-
-        free : dict of (str: (float, float))
-            Allowed range of free parameters.
-
-        dependent : dict of (str: str), optional
-            Expressions to evaluate to set dependent parameters.
+        param_def : cymr.parameters.Parameters
+            Parameter definitions.
 
         patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
-
-        weights : dict of (str: dict of (str: float)), optional
-            Weights to apply to model feature patterns.
 
         n_jobs : int, optional
             Number of processes to use for fitting subjects in
@@ -460,8 +445,7 @@ class Recall(ABC):
         full_reps = np.tile(np.arange(n_rep), len(subjects))
         full_results = Parallel(n_jobs=n_jobs)(
             delayed(self._run_fit_subject)(
-                data, subject, fixed, free, dependent, patterns,
-                weights, method, **kwargs
+                data, subject, param_def, patterns, method, **kwargs
             ) for subject in full_subjects
         )
         d = {(subject, rep): res for subject, rep, res in
