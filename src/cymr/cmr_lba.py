@@ -5,8 +5,8 @@ import pandas as pd
 from cymr import operations
 from cymr import fit
 from cymr import network
-from cymr import models
-from cymr.models import CMRDistributed
+from cymr import cmr
+from cymr.cmr import CMRDistributed
 from cymr import lba
 
 def add_recalls(study, recalls_list, recalls_times):
@@ -67,7 +67,7 @@ class CMRLBA(CMRDistributed):
                                   study_keys=['position', 'item_index'])
         n_item = len(study['position'][0])
         n_list = len(study['position'])
-        list_param = models.prepare_list_param(n_item, param)
+        list_param = cmr.prepare_list_param(n_item, param)
 
         weights_param = network.unpack_weights(weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
@@ -75,7 +75,7 @@ class CMRLBA(CMRDistributed):
         rts = []
         recall_time_limit = param['recall_time_limit']
         for i in range(n_list):
-            net = models.init_dist_cmr(study['item_index'][i], scaled, param)
+            net = cmr.init_dist_cmr(study['item_index'][i], scaled, param)
             net.study('item', study['position'][i], param['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
             net.integrate('start', 0, param['B_start'])
@@ -91,25 +91,25 @@ class CMRLBA(CMRDistributed):
                            weights=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        list_param = models.prepare_list_param(n_item, param)
+        list_param = cmr.prepare_list_param(n_item, param)
 
         weights_param = network.unpack_weights(weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         n = 0
         for i in range(n_list):
-            net = models.init_dist_cmr(study['item_index'][i], scaled, param)
+            net = cmr.init_dist_cmr(study['item_index'][i], scaled, param)
             sparam = param.copy()
             if 'dynamic' in param:
                 if 'study' in param['dynamic']:
-                    sparam = update_dynamic_parameters(study, param, 'study', i)
+                    sparam = cmr.update_dynamic_parameters(study, param, 'study', i)
             net.study('item', study['input'][i], sparam['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
             net.integrate('start', 0, param['B_start'])
             rparam = param.copy()
             if 'dynamic' in param:
                 if 'recall' in param['dynamic']:
-                    rparam = update_dynamic_parameters(recall, param, 'recall', i)
+                    rparam = cmr.update_dynamic_parameters(recall, param, 'recall', i)
             p = self.p_recall_lba(net, 'item', recall['input'][i], recall['rt'][i], param['recall_time_limit'],
                              rparam['B_rec'], param['T'], param['A'], param['b'], param['s'], param['tau'])
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
