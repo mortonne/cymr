@@ -277,10 +277,13 @@ class Recall(ABC):
             if subj_param is not None:
                 param.update(subj_param[subject])
             subject_data = data.loc[data['subject'] == subject]
-            study, recall = self.prepare_sim(
-                subject_data, study_keys=data_keys['study'],
-                recall_keys=data_keys['recall']
-            )
+            if data_keys is not None:
+                study, recall = self.prepare_sim(
+                    subject_data, study_keys=data_keys['study'],
+                    recall_keys=data_keys['recall']
+                )
+            else:
+                study, recall = self.prepare_sim(subject_data)
             subject_logl, subject_n = self.likelihood_subject(
                 study, recall, param, patterns=patterns, weights=weights)
             logl += subject_logl
