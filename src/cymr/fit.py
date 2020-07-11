@@ -370,7 +370,7 @@ class Recall(ABC):
         return logl, n
 
     @abstractmethod
-    def prepare_sim(self, subject_data):
+    def prepare_sim(self, subject_data, search_param=None):
         """
         Prepare data for simulation.
 
@@ -382,6 +382,9 @@ class Recall(ABC):
         ----------
         subject_data : pandas.DataFrame
             Data for one subject.
+
+        search_param : cymr.fit.Parameters, optional
+            Search parameters. Used to prepare dynamic parameters.
 
         Returns
         -------
