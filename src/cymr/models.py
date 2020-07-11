@@ -47,6 +47,7 @@ def prepare_list_param(n_item, param):
     list_param = {'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop}
     return list_param
 
+
 def update_dynamic_parameters(events, param, trial_type, list):
     """Assumes presence of 'dynamic' dict on the param structure, and presence of
     dict within param['dynamic'][trial_type] containing key:val of param_name:data_column_name
@@ -57,6 +58,7 @@ def update_dynamic_parameters(events, param, trial_type, list):
         colname = param['dynamic'][phase][trial_type][0]
         param[pname] = np.array(events[colname][list])
     return param
+
 
 class CMR(Recall):
 
