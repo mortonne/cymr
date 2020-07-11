@@ -1,5 +1,6 @@
 """Simulate free recall experiments."""
 
+from pkg_resources import resource_filename
 from abc import ABC, abstractmethod
 import json
 import numpy as np
@@ -7,6 +8,13 @@ from scipy import optimize
 import pandas as pd
 from joblib import Parallel, delayed
 from psifr import fr
+
+
+def sample_data(study):
+    """Read sample data."""
+    data_file = resource_filename('cymr', f'data/{study}.csv')
+    df = pd.read_csv(data_file)
+    return df
 
 
 def prepare_lists(data, study_keys=None, recall_keys=None, clean=True):

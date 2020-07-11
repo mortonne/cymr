@@ -9,7 +9,7 @@ def readme():
 
 setup(
     name='cymr',
-    version='0.5.0',
+    version='0.6.0',
     description='CMR implemented using Cython.',
     long_description=readme(),
     long_description_content_type="text/markdown",
@@ -24,6 +24,9 @@ setup(
     extras_require={
         'docs': ['sphinx', 'pydata-sphinx-theme', 'ipython'],
         'test': ['pytest', 'codecov', 'pytest-cov'],
+    },
+    package_data={
+        'cymr': ['data/*.csv']
     },
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',

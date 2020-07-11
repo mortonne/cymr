@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from cymr import fit
-from cymr import models
+from cymr import cmr
 from cymr import network
 
 
@@ -52,7 +52,7 @@ def test_prepare_study(data):
 
 
 def test_cmr(data):
-    model = models.CMR()
+    model = cmr.CMR()
     param = {'B_enc': .5, 'B_rec': .8,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
@@ -63,7 +63,7 @@ def test_cmr(data):
 
 
 def test_cmr_fit(data):
-    model = models.CMR()
+    model = cmr.CMR()
     fixed = {'B_rec': .8, 'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
@@ -92,7 +92,7 @@ def test_init_dist_cmr(patterns):
     weights = network.unpack_weights(weights_template, param)
     scaled = network.prepare_patterns(patterns, weights)
     item_index = np.arange(3)
-    net = models.init_dist_cmr(item_index, scaled, param)
+    net = cmr.init_dist_cmr(item_index, scaled, param)
     expected = np.array([[0.5774, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
                           0.8165, 0.0000, 0.0000],
                          [0.0000, 0.5774, 0.0000, 0.0000, 0.0000, 0.0000,
@@ -119,14 +119,14 @@ def test_dist_cmr(data):
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
 
-    model = models.CMRDistributed()
+    model = cmr.CMRDistributed()
     logl, n = model.likelihood(data, param, patterns=patterns,
                                weights=weights_template)
     np.testing.assert_allclose(logl, -5.936799964636842)
 
 
 def test_dist_cmr_fit(data):
-    model = models.CMRDistributed()
+    model = cmr.CMRDistributed()
     patterns = {'vector': {'loc': np.eye(6)}}
     weights_template = {'fcf': {'loc': 'w_loc'}}
     fixed = {'B_start': 0, 'B_rec': .8, 'w_loc': 1,

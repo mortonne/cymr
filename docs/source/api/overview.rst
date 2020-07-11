@@ -6,4 +6,4 @@ API Reference
 
    /api/network
    /api/fit
-   /api/models
+   /api/cmr

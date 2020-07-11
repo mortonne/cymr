@@ -6,6 +6,62 @@ from cymr import fit
 from cymr import network
 
 
+def primacy(n_item, L, P1, P2):
+    """
+    Primacy gradient in learning rate.
+
+    Parameters
+    ----------
+    n_item : int
+        Number of items in study list.
+
+    L : float
+        Base learning rate. Asymptote of gradient for later positions.
+
+    P1 : float
+        Additional learning for first item.
+
+    P2 : float
+        Decay rate for primacy gradient.
+
+    Returns
+    -------
+    rate : numpy.array
+        Learning rate for each serial position.
+    """
+    position = np.arange(n_item)
+    rate = L + (P1 * np.exp(-P2 * position))
+    return rate
+
+
+def p_stop_op(n_item, X1, X2, pmin=0.000001):
+    """
+    Probability of stopping based on output position.
+
+    Parameters
+    ----------
+    n_item : int
+        Number of items available for recall.
+
+    X1 : float
+        Probability of not recalling any items.
+
+    X2 : float
+        Shape parameter of exponential function increasing stop
+        probability by output position.
+
+    pmin : float, optional
+        Minimum probability of stopping recall at any position.
+    """
+    p_stop = X1 * np.exp(X2 * np.arange(n_item + 1))
+    p_stop[p_stop < pmin] = pmin
+    p_stop[p_stop > (1 - pmin)] = 1 - pmin
+
+    # after recalling all items, P(stop)=1 by definition
+    p_stop[-1] = 1
+    return p_stop
+
+
 def init_loc_cmr(n_item, param):
     """Initialize localist CMR for one list."""
     segments = {'item': (n_item, n_item), 'start': (1, 1)}
@@ -42,8 +98,8 @@ def init_dist_cmr(item_index, patterns, param):
 def prepare_list_param(n_item, param):
     """Prepare parameters that very within list."""
     Lfc = np.tile(param['Lfc'], n_item).astype(float)
-    Lcf = network.primacy(n_item, param['Lcf'], param['P1'], param['P2'])
-    p_stop = network.p_stop_op(n_item, param['X1'], param['X2'])
+    Lcf = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+    p_stop = p_stop_op(n_item, param['X1'], param['X2'])
     list_param = {'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop}
     return list_param
 
