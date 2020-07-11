@@ -58,6 +58,14 @@ def data():
     return data
 
 
+def test_dependent():
+    param = {'Lfc': .7}
+    dependent = {'Dfc': '1 - Lfc'}
+    updated = fit.set_dependent(param, dependent)
+    expected = {'Lfc': .7, 'Dfc': .3}
+    np.testing.assert_allclose(updated['Dfc'], expected['Dfc'])
+
+
 def test_likelihood_subject(data):
     data = data.copy()
     rec = TestRecall()
