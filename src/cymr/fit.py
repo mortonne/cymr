@@ -190,6 +190,53 @@ def set_dependent(param, dependent=None):
     return updated
 
 
+def set_dynamic(param, list_data, dynamic):
+    """
+    Set dynamic parameters for one trial type.
+
+    Parameters
+    ----------
+    param : dict of (str: float)
+        Parameter values.
+
+    list_data : dict of list of numpy.array
+        Data in list format with named fields.
+
+    dynamic : dict of (str: str)
+        Dynamic parameter definitions for one trial type. Expressions
+        will be evaluated with both param keys and data keys available
+        as variables. If a key exists on both param and data, the param
+        value takes precedence.
+
+    Returns
+    -------
+    updated : dict
+        Parameter values updated to include dynamic parameters.
+        Dynamic parameters are lists of numpy arrays.
+    """
+    # flip from dict of list to list of dict
+    data_keys = list(list_data.keys())
+    n_list = len(list_data[data_keys[0]])
+    data_list = [
+        {key: val[i] for key, val in list_data.items()}
+        for i in range(n_list)
+    ]
+
+    # merge in parameters
+    for i in range(len(data_list)):
+        data_list[i].update(param)
+    updated = param.copy()
+
+    # set each dynamic parameter
+    for key, expression in dynamic.items():
+        updated[key] = []
+        for data in data_list:
+            # restrict eval functions to the numpy namespace
+            val = eval(expression, np.__dict__, data)
+            updated[key].append(val)
+    return updated
+
+
 def sample_parameters(sampler):
     """Randomly sample parameters."""
     param = {}
