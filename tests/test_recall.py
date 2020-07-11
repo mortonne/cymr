@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from psifr import fr
+
 from cymr.fit import Recall
 from cymr import fit
+from cymr import parameters
 
 
 class TestRecall(Recall):
@@ -64,7 +66,7 @@ def data():
 def test_dependent():
     param = {'Lfc': .7}
     dependent = {'Dfc': '1 - Lfc'}
-    updated = fit.set_dependent(param, dependent)
+    updated = parameters.set_dependent(param, dependent)
     expected = {'Lfc': .7, 'Dfc': .3}
     np.testing.assert_allclose(updated['Dfc'], expected['Dfc'])
 
@@ -74,7 +76,7 @@ def test_dynamic(data):
     dynamic = {'study': {'B_enc': 'distract * B_distract'}}
     study_data = fr.filter_data(data, 1, 1, 'study')
     study = fr.split_lists(study_data, 'raw', ['distract'])
-    updated = fit.set_dynamic(param, study, dynamic['study'])
+    updated = parameters.set_dynamic(param, study, dynamic['study'])
     expected = {'B_distract': .2, 'B_enc': [np.array([.2, .4, .6])]}
     np.testing.assert_allclose(updated['B_enc'][0], expected['B_enc'][0])
 
