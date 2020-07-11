@@ -425,7 +425,7 @@ class Recall(ABC):
         return logl, n
 
     @abstractmethod
-    def prepare_sim(self, subject_data, param_def=None):
+    def prepare_sim(self, subject_data, study_keys=None, recall_keys=None):
         """
         Prepare data for simulation.
 
@@ -438,8 +438,11 @@ class Recall(ABC):
         subject_data : pandas.DataFrame
             Data for one subject.
 
-        param_def : cymr.fit.Parameters, optional
-            Parameter definitions. Used to prepare dynamic parameters.
+        study_keys : list of str
+            Data columns to include in the study data.
+
+        recall_keys : list of str
+            Data columns to include in the recall data.
 
         Returns
         -------
