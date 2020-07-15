@@ -687,6 +687,10 @@ class Network(object):
         # weights to use for recall (assume fixed during recall)
         rec_ind = self.f_ind[segment]
         n_item = self.n_f_segment[segment]
+        if not isinstance(B, np.ndarray):
+            B = np.tile(B, n_item).astype(float)
+        if not isinstance(T, np.ndarray):
+            T = np.tile(T, n_item).astype(float)
 
         recalls = []
         exclude = np.zeros(n_item, dtype=np.dtype('i'))
@@ -703,7 +707,7 @@ class Network(object):
                 np.asarray(recalls, dtype=np.dtype('i')), i
             )
             operations.apply_softmax(rec_ind.start, n_item, self.f_in,
-                                     exclude, amin, T)
+                                     exclude, amin, T[i])
 
             # select item for recall proportionate to support
             support = self.f_in[rec_ind]
@@ -719,7 +723,7 @@ class Network(object):
             exclude[recall] = 1
 
             # integrate context associated with the item into context
-            self.integrate(segment, recall, B)
+            self.integrate(segment, recall, B[i])
         return recalls
 
     def generate_recall_lba(self, segment, time_limit, B, A, b, s, tau):
