@@ -107,6 +107,11 @@ class Parameters(object):
         Expressions to define dependent parameters based the other
         parameters.
 
+    dynamic : dict of (str: dict of (str: str))
+        First dict specifies trial_type for dynamic parameters,
+        second dict keys are parameter names, and values are
+        expressions specifying how to update the parameter.
+
     weights : dict of (str: dict of (str: str))
         Weights template to set network connections.
     """
@@ -115,10 +120,11 @@ class Parameters(object):
         self.fixed = {}
         self.free = {}
         self.dependent = {}
+        self.dynamic = {}
         self.weights = {}
 
     def __repr__(self):
-        names = ['fixed', 'free', 'dependent', 'weights']
+        names = ['fixed', 'free', 'dependent', 'dynamic', 'weights']
         parts = {}
         for name in names:
             obj = getattr(self, name)
@@ -136,6 +142,9 @@ class Parameters(object):
     def add_dependent(self, *args, **kwargs):
         self.dependent.update(*args, **kwargs)
 
+    def add_dynamic(self, *args, **kwargs):
+        self.dynamic.update(*args, **kwargs)
+
     def add_weights(self, connect, *args, **kwargs):
         if connect in self.weights:
             self.weights[connect].update(*args, **kwargs)
@@ -144,6 +153,7 @@ class Parameters(object):
 
     def to_json(self, json_file):
         data = {'fixed': self.fixed, 'free': self.free,
-                'dependent': self.dependent, 'weights': self.weights}
+                'dependent': self.dependent, 'dynamic': self.dynamic,
+                'weights': self.weights}
         with open(json_file, 'w') as f:
             json.dump(data, f, indent=4)
