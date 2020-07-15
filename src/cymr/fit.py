@@ -236,7 +236,7 @@ class Recall(ABC):
         """
         pass
 
-    def likelihood(self, data, group_param, subj_param=None, patterns=None,
+    def likelihood(self, data, group_param_def, subj_param_fixed=None, patterns=None,
                    weights=None, data_keys=None):
         """
         Log likelihood summed over all subjects.
@@ -273,9 +273,13 @@ class Recall(ABC):
         logl = 0
         n = 0
         for subject in subjects:
-            param = group_param.copy()
-            if subj_param is not None:
-                param.update(subj_param[subject])
+            subj_param_def = parameters.Parameters()
+            subj_param_def.fixed.update(group_param_def.fixed)
+            subj_param_def.dependent.update(group_param_def.dependent)
+            subj_param_def.dynamic.update(group_param_def.dynamic)
+            # param_def = group_param_def.copy()
+            if subj_param_fixed is not None:
+                subj_param_def.fixed.update(subj_param_fixed[subject])
             subject_data = data.loc[data['subject'] == subject]
             if data_keys is not None:
                 study, recall = self.prepare_sim(
@@ -285,7 +289,7 @@ class Recall(ABC):
             else:
                 study, recall = self.prepare_sim(subject_data)
             subject_logl, subject_n = self.likelihood_subject(
-                study, recall, param, patterns=patterns, weights=weights)
+                study, recall, subj_param_def, patterns=patterns, weights=weights)
             logl += subject_logl
             n += subject_n
         return logl, n
@@ -476,8 +480,8 @@ class Recall(ABC):
         """
         pass
 
-    def generate(self, study, group_param, subj_param=None, patterns=None,
-                 weights=None, n_rep=1):
+    def generate(self, study, group_param_def, subj_param_fixed=None, patterns=None,
+                 weights=None, data_keys=None, n_rep=1):
         """
         Generate simulated data for all subjects.
 
@@ -509,14 +513,19 @@ class Recall(ABC):
         subjects = study['subject'].unique()
         data_list = []
         for subject in subjects:
-            param = group_param.copy()
-            if subj_param is not None:
-                param.update(subj_param[subject])
+            subj_param_def = parameters.Parameters()
+            subj_param_def.fixed.update(group_param_def.fixed)
+            subj_param_def.dependent.update(group_param_def.dependent)
+            subj_param_def.dynamic.update(group_param_def.dynamic)
+            if subj_param_fixed is not None:
+                subj_param_def.fixed.update(subj_param_fixed[subject])
             subject_study = study.loc[study['subject'] == subject]
+            # subject_study_dict = prepare_study(subject_study, study_keys=data_keys)
             max_list = subject_study['list'].max()
             for i in range(n_rep):
-                subject_data = self.generate_subject(subject_study, param,
-                                                     patterns, weights)
+                subject_data = self.generate_subject(subject_study, subj_param_def,
+                                                     patterns=patterns, weights=weights,
+                                                     data_keys=data_keys)
                 subject_data['list'] = i * max_list + subject_data['list']
                 data_list.append(subject_data)
         data = pd.concat(data_list, axis=0, ignore_index=True)
