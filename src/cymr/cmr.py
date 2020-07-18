@@ -270,6 +270,48 @@ class CMRDistributed(Recall):
         Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
     """
 
+    def convert_dframe_to_dict(self, data, data_keys=None):
+        # study_base = ['input', 'item_index', 'position']
+        study_base = ['input', 'item_index']
+        recall_base = ['input']
+        # unpack data_keys into study and recall keys
+        if not data_keys:
+            study_keys = []
+            recall_keys = []
+        if 'study' in data_keys.keys():
+            study_keys = data_keys['study']
+        else:
+            study_keys = []
+        if 'recall' in data_keys.keys():
+            recall_keys = data_keys['recall']
+        else:
+            recall_keys = []
+        # add base-level study keys unless already present
+        if not study_keys:
+            study_keys = study_base
+        else:
+            for term in study_base:
+                if term not in study_keys:
+                    study_keys += [term]
+        # only process recall if there are any recall events on the dataframe
+        if any(data['trial_type']=='recall'):
+            # add base-level recall keys unless already present
+            if not recall_keys:
+                recall_keys = recall_base
+            else:
+                for term in recall_base:
+                    if term not in recall_keys:
+                        recall_keys += [term]
+            study, recall = fit.prepare_lists(
+                data, study_keys=study_keys, recall_keys=recall_keys, clean=True)
+        else:
+            # there are no recall events
+            # recall = {}
+            # study = fit.prepare_study(data, study_keys=study_keys)
+            study, recall = fit.prepare_lists(
+                data, study_keys=study_keys, clean=True)
+        return study, recall
+
     def prepare_sim(self, data, study_keys=None, recall_keys=None):
         study_base = ['input', 'item_index']
         if study_keys is None:
@@ -333,43 +375,43 @@ class CMRDistributed(Recall):
             n += p.size
         return logl, n
 
-    def generate_subject(self, study_data, param_def, patterns=None, weights=None, data_keys=None,
-                         **kwargs):
-        if data_keys is None:
-            study = fit.prepare_study(study_data, study_keys=['position', 'item_index'])
-        else:
-            study = fit.prepare_study(study_data, study_keys=data_keys['study'] + ['position', 'item_index'])
-        n_item = len(study['position'][0])
-        n_list = len(study['position'])
+    def generate_subject(self, study_dict, recall_dict, param_def, patterns=None, weights=None, **kwargs):
+
+        n_item = len(study_dict['input'][0])
+        n_list = len(study_dict['input'])
         list_param = prepare_list_param(n_item, param_def.fixed)
 
         weights_param = network.unpack_weights(weights, param_def.fixed)
         scaled = network.prepare_patterns(patterns, weights_param)
-        recalls = []
+        # there may be dummy recall events if there is a dynamic recall parameter
+        recalls_list = []
+        if not recall_dict:
+            recall_dict = {}
         for i in range(n_list):
             # get the study events for this list
             list_study = {}
-            for dkey in study.keys():
-                list_study[dkey] = study[dkey][i]
+            for dkey in study_dict.keys():
+                list_study[dkey] = study_dict[dkey][i]
+            # get list-level dummy recall events if there are any
+            list_recall = {}
+            for dkey in recall_dict.keys():
+                list_recall[dkey] = recall_dict[dkey][i]
             net = init_dist_cmr(list_study['item_index'], scaled, param_def.fixed)
             sparam = param_def.fixed.copy()
             if param_def.dynamic:
                 if 'study' in param_def.dynamic:
                     sparam = parameters.set_dynamic(param_def.fixed, list_study, param_def.dynamic['study'])
-            net.study('item', list_study['position'], sparam['B_enc'],
+            net.study('item', list_study['input'], sparam['B_enc'],
                       list_param['Lfc'], list_param['Lcf'])
             net.integrate('start', 0, sparam['B_start'])
             rparam = param_def.fixed.copy()
             if param_def.dynamic:
                 if 'recall' in param_def.dynamic:
                     # generative dynamic recall requires eval statement
-                    # passing in study events allows code to create max_recalls dynamic values
-                    rparam = parameters.set_dynamic(param_def.fixed, list_study, param_def.dynamic['recall'])
-            recall = net.generate_recall('item', rparam['B_rec'], rparam['T'],
-                                         list_param['p_stop'])
-            recalls.append(recall)
-        data = fit.add_recalls(study_data, recalls)
-        return data
+                    rparam = parameters.set_dynamic(param_def.fixed, list_recall, param_def.dynamic['recall'])
+            recall_vec = net.generate_recall('item', rparam['B_rec'], rparam['T'], list_param['p_stop'])
+            recalls_list.append(recall_vec)
+        return recalls_list
 
     def record_network(self, data, param, patterns=None, weights=None,
                        remove_blank=False):
