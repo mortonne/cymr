@@ -269,10 +269,12 @@ class Recall(ABC):
         n : int
             Number of evaluated data points.
         """
+        # get the list of subjects
         subjects = data['subject'].unique()
         logl = 0
         n = 0
         for subject in subjects:
+            # combine subject-specific parameters with group param definitions
             subj_param_def = parameters.Parameters()
             subj_param_def.fixed.update(group_param_def.fixed)
             subj_param_def.dependent.update(group_param_def.dependent)
@@ -280,14 +282,13 @@ class Recall(ABC):
             # param_def = group_param_def.copy()
             if subj_param_fixed is not None:
                 subj_param_def.fixed.update(subj_param_fixed[subject])
+            # filter the data events for this subject
             subject_data = data.loc[data['subject'] == subject]
-            if data_keys is not None:
-                study, recall = self.prepare_sim(
-                    subject_data, study_keys=data_keys['study'],
-                    recall_keys=data_keys['recall']
-                )
-            else:
-                study, recall = self.prepare_sim(subject_data)
+            # convert subject dataframe to list format
+            if not data_keys:
+                data_keys = {}
+            study, recall = self.convert_dframe_to_dict(subject_data, data_keys=data_keys)
+            # run subject-specific likelihood function
             subject_logl, subject_n = self.likelihood_subject(
                 study, recall, subj_param_def, patterns=patterns, weights=weights)
             logl += subject_logl
@@ -480,15 +481,17 @@ class Recall(ABC):
         """
         pass
 
-    def generate(self, study, group_param_def, subj_param_fixed=None, patterns=None,
+    def generate(self, data, group_param_def, subj_param_fixed=None, patterns=None,
                  weights=None, data_keys=None, n_rep=1):
         """
         Generate simulated data for all subjects.
 
         Parameters
         ----------
-        study : dict of (str: list of numpy.array)
-            Information about the study phase in list format.
+        data : pandas.DataFrame
+            Data to guide simulation. Must include a 'subject' column.
+            May include dummy recall events if there is a dynamic
+            recall parameter.
 
         group_param : dict of (str: float)
             Values of parameters that apply to all subjects.
@@ -507,29 +510,41 @@ class Recall(ABC):
 
         Returns
         -------
-        data : pandas.DataFrame
+        sim_data : pandas.DataFrame
             Simulated data for each subject.
         """
-        subjects = study['subject'].unique()
+        # get the list of subjects
+        subjects = data['subject'].unique()
         data_list = []
         for subject in subjects:
+            # combine subject-specific parameters with group param definitions
             subj_param_def = parameters.Parameters()
             subj_param_def.fixed.update(group_param_def.fixed)
             subj_param_def.dependent.update(group_param_def.dependent)
             subj_param_def.dynamic.update(group_param_def.dynamic)
             if subj_param_fixed is not None:
                 subj_param_def.fixed.update(subj_param_fixed[subject])
-            subject_study = study.loc[study['subject'] == subject]
-            # subject_study_dict = prepare_study(subject_study, study_keys=data_keys)
-            max_list = subject_study['list'].max()
+            # filter the data events for this subject
+            subject_data = data.loc[data['subject'] == subject]
+            # convert subject dataframe to dict format
+            if not data_keys:
+                data_keys = {}
+            # recall will be empty unless dummy recall events have been provided
+            study, recall = self.convert_dframe_to_dict(subject_data, data_keys=data_keys)
+            max_list = subject_data['list'].max()
+            # iterate over repetitions for this subject
             for i in range(n_rep):
-                subject_data = self.generate_subject(subject_study, subj_param_def,
-                                                     patterns=patterns, weights=weights,
-                                                     data_keys=data_keys)
-                subject_data['list'] = i * max_list + subject_data['list']
-                data_list.append(subject_data)
-        data = pd.concat(data_list, axis=0, ignore_index=True)
-        return data
+                # run subject-specific generation function
+                rep_recalls_list = self.generate_subject(
+                    study, recall, subj_param_def, patterns=patterns, weights=weights)
+                rep_data = subject_data.copy()
+                rep_data['list'] = i * max_list + subject_data['list']
+                # strip off the dummy recall events
+                rep_data = rep_data[rep_data['trial_type'] == 'study']
+                rep_data = add_recalls(rep_data, rep_recalls_list)
+                data_list.append(rep_data)
+        sim_data = pd.concat(data_list, axis=0, ignore_index=True)
+        return sim_data
 
     def _run_parameter_recovery(self, study, fixed, free,
                                 dependent=None, patterns=None, weights=None,
