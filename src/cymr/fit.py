@@ -203,6 +203,46 @@ class Recall(ABC):
         to apply to a given feature.
     """
 
+    def convert_dframe_to_dict(self, data, data_keys=None):
+        # study_base = ['input', 'item_index', 'position']
+        study_base = ['input', 'item_index']
+        recall_base = ['input']
+        # unpack data_keys into study and recall keys
+        if not data_keys:
+            study_keys = []
+            recall_keys = []
+        if 'study' in data_keys.keys():
+            study_keys = data_keys['study']
+        else:
+            study_keys = []
+        if 'recall' in data_keys.keys():
+            recall_keys = data_keys['recall']
+        else:
+            recall_keys = []
+        # add base-level study keys unless already present
+        if not study_keys:
+            study_keys = study_base
+        else:
+            for term in study_base:
+                if term not in study_keys:
+                    study_keys += [term]
+        # only process recall if there are any recall events on the dataframe
+        if any(data['trial_type'] == 'recall'):
+            # add base-level recall keys unless already present
+            if not recall_keys:
+                recall_keys = recall_base
+            else:
+                for term in recall_base:
+                    if term not in recall_keys:
+                        recall_keys += [term]
+            study, recall = prepare_lists(data, study_keys=study_keys, recall_keys=recall_keys, clean=True)
+        else:
+            # there are no recall events
+            # recall = {}
+            # study = fit.prepare_study(data, study_keys=study_keys)
+            study, recall = prepare_lists(data, study_keys=study_keys, clean=True)
+        return study, recall
+
     @abstractmethod
     def likelihood_subject(self, study, recall, param, patterns=None,
                            weights=None):
@@ -371,8 +411,9 @@ class Recall(ABC):
             eval_param = parameters.set_dependent(
                 eval_param, param_def.dependent
             )
+            param_def.fixed = eval_param
             eval_logl, _ = self.likelihood_subject(
-                study, recall, eval_param, patterns, param_def.weights
+                study, recall, param_def, patterns, param_def.weights
             )
             return -eval_logl
 
@@ -387,13 +428,15 @@ class Recall(ABC):
         else:
             raise ValueError(f'Invalid method: {method}')
 
-        # fitted parameters
+        # get fitted parameters
         param = param_def.fixed.copy()
         param.update(dict(zip(var_names, res['x'])))
         param = parameters.set_dependent(param, param_def.dependent)
+        # place them back on the param_def object for likelihood evaluation
+        param_def.fixed = param.copy()
 
         # evaluate fitted parameters, get number of fitted points
-        logl, n = self.likelihood_subject(study, recall, param,
+        logl, n = self.likelihood_subject(study, recall, param_def,
                                           patterns, param_def.weights)
         k = len(param_def.free)
         assert logl == -res['fun']
@@ -519,9 +562,10 @@ class Recall(ABC):
         for subject in subjects:
             # combine subject-specific parameters with group param definitions
             subj_param_def = parameters.Parameters()
-            subj_param_def.fixed.update(group_param_def.fixed)
-            subj_param_def.dependent.update(group_param_def.dependent)
-            subj_param_def.dynamic.update(group_param_def.dynamic)
+            if group_param_def:
+                subj_param_def.fixed.update(group_param_def.fixed)
+                subj_param_def.dependent.update(group_param_def.dependent)
+                subj_param_def.dynamic.update(group_param_def.dynamic)
             if subj_param_fixed is not None:
                 subj_param_def.fixed.update(subj_param_fixed[subject])
             # filter the data events for this subject
