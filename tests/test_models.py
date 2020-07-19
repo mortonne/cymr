@@ -54,11 +54,12 @@ def test_prepare_study(data):
 
 def test_cmr(data):
     model = cmr.CMR()
-    param = {'B_enc': .5, 'B_rec': .8,
+    param_def = parameters.Parameters()
+    param_def.fixed = {'B_enc': .5, 'B_rec': .8,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    logl, n = model.likelihood(data, param)
+    logl, n = model.likelihood(data, param_def)
     np.testing.assert_allclose(logl, -5.936799964636842)
     assert n == 6
 
@@ -133,13 +134,14 @@ def test_dist_cmr(data):
     """Test localist CMR using the distributed framework."""
     patterns = {'vector': {'loc': np.eye(6)}}
     weights_template = {'fcf': {'loc': 'w_loc'}}
-    param = {'B_enc': .5, 'B_start': 0, 'B_rec': .8, 'w_loc': 1,
-             'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
-             'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
-             'T': 10, 'X1': .05, 'X2': 1}
+    param_def = parameters.Parameters()
+    param_def.fixed = {'B_enc': .5, 'B_start': 0, 'B_rec': .8, 'w_loc': 1,
+                       'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
+                       'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
+                       'T': 10, 'X1': .05, 'X2': 1}
 
     model = cmr.CMRDistributed()
-    logl, n = model.likelihood(data, param, patterns=patterns,
+    logl, n = model.likelihood(data, param_def, patterns=patterns,
                                weights=weights_template)
     np.testing.assert_allclose(logl, -5.936799964636842)
 

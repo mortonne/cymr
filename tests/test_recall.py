@@ -20,20 +20,18 @@ class TestRecall(Recall):
         recalls = fr.split_lists(merged, 'recall', ['input'])
         return study, recalls
 
-    def likelihood_subject(self, study, recalls, param, weights=None,
+    def likelihood_subject(self, study, recalls, param_def, weights=None,
                            patterns=None):
-        p = 2 - (param['x'] + 2) ** 2
+        p = 2 - (param_def.fixed['x'] + 2) ** 2
         eps = 0.0001
         if p < eps:
             p = eps
         n = 1
         return np.log(p), n
 
-    def generate_subject(self, study, param, patterns=None, weights=None,
-                         **kwargs):
-        recalls_list = [param['recalls']]
-        data = fit.add_recalls(study, recalls_list)
-        return data
+    def generate_subject(self, study_dict, recall_dict, param_def, patterns=None, weights=None, **kwargs):
+        recalls_list = [param_def.fixed['recalls']]
+        return recalls_list
 
 
 @pytest.fixture()
@@ -84,17 +82,19 @@ def test_dynamic(data):
 def test_likelihood_subject(data):
     data = data.copy()
     rec = TestRecall()
-    param = {'x': -2}
+    param_def = parameters.Parameters()
+    param_def.fixed = {'x': -2}
     subject_data = data.loc[data['subject'] == 1]
-    logl, n = rec.likelihood_subject([], [], param)
+    logl, n = rec.likelihood_subject([], [], param_def)
     np.testing.assert_allclose(logl, np.log(2))
 
 
 def test_likelihood(data):
     data = data.copy()
     rec = TestRecall()
-    param = {'x': -2}
-    logl, n = rec.likelihood(data, param)
+    param_def = parameters.Parameters()
+    param_def.fixed = {'x': -2}
+    logl, n = rec.likelihood(data, param_def)
     np.testing.assert_allclose(logl, np.log(2) + np.log(2))
 
 
@@ -129,11 +129,13 @@ def test_generate_subject(data):
     rec = TestRecall()
     study = data.loc[(data['trial_type'] == 'study') &
                      (data['subject'] == 1)]
-
+    param_def = parameters.Parameters()
+    param_def.fixed = {'recalls': [1, 2]}
     # our "model" recalls the positions indicated in the recalls parameter
-    sim = rec.generate_subject(study, {'recalls': [1, 2]})
+    rec_list = rec.generate_subject(study, {}, param_def)
+    data_sim = fit.add_recalls(study, rec_list)
     expected = ['absence', 'hollow', 'pupil', 'hollow', 'pupil']
-    assert sim['item'].to_list() == expected
+    assert data_sim['item'].to_list() == expected
 
 
 def test_generate(data):
@@ -142,7 +144,7 @@ def test_generate(data):
     study = data.loc[data['trial_type'] == 'study']
     subj_param = {1: {'recalls': [1, 2]},
                   2: {'recalls': [2, 0, 1]}}
-    sim = rec.generate(study, {}, subj_param=subj_param)
+    sim = rec.generate(study, {}, subj_param_fixed=subj_param)
     expected = ['absence', 'hollow', 'pupil',
                 'hollow', 'pupil',
                 'fountain', 'piano', 'pillow',
