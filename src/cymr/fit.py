@@ -244,8 +244,8 @@ class Recall(ABC):
         return study, recall
 
     @abstractmethod
-    def likelihood_subject(self, study, recall, param, patterns=None,
-                           weights=None):
+    def likelihood_subject(self, study, recall, param, param_def=None,
+                           patterns=None):
         """
         Log likelihood of data for one subject based on a given model.
 
@@ -260,11 +260,11 @@ class Recall(ABC):
         param : dict of (str: float)
             Model parameter values.
 
-        patterns : dict of (str: dict of (str: numpy.array))
-            Patterns to use in the model.
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definition object; used to interpret parameters.
 
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
+        patterns : dict of (str: dict of (str: numpy.array)), optional
+            Patterns to use in the model.
 
         Returns
         -------
@@ -276,8 +276,8 @@ class Recall(ABC):
         """
         pass
 
-    def likelihood(self, data, group_param_def, subj_param_fixed=None, patterns=None,
-                   weights=None, data_keys=None):
+    def likelihood(self, data, group_param, subj_param=None, param_def=None,
+                   patterns=None, study_keys=None, recall_keys=None):
         """
         Log likelihood summed over all subjects.
 
@@ -287,19 +287,22 @@ class Recall(ABC):
             Data to fit. Must include a 'subject' column.
 
         group_param : dict of (str: float)
-            Values of parameters that apply to all subjects.
+            Parameters that are fixed at the group level.
 
         subj_param : dict of (str: dict of (str: float))
             Parameters that vary by subject, indexed by subject.
 
+        param_def : cymr.parameters.Parameters
+            Parameter definitions (used to set dependent and dynamic).
+
         patterns : dict of (str: dict of (str: numpy.array))
             Patterns to use in the model.
 
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
+        study_keys : list of str
+            Fields to include in study data.
 
-        data_keys : dict of (str: list of str)
-            Fields to include in study and recall data.
+        recall_keys : list of str
+            Fields to include in recall data.
 
         Returns
         -------
@@ -315,22 +318,26 @@ class Recall(ABC):
         n = 0
         for subject in subjects:
             # combine subject-specific parameters with group param definitions
-            subj_param_def = parameters.Parameters()
-            subj_param_def.fixed.update(group_param_def.fixed)
-            subj_param_def.dependent.update(group_param_def.dependent)
-            subj_param_def.dynamic.update(group_param_def.dynamic)
-            # param_def = group_param_def.copy()
-            if subj_param_fixed is not None:
-                subj_param_def.fixed.update(subj_param_fixed[subject])
+            param = group_param.copy()
+            if subj_param is not None:
+                param.update(subj_param[subject])
+
             # filter the data events for this subject
             subject_data = data.loc[data['subject'] == subject]
+
             # convert subject dataframe to list format
-            if not data_keys:
-                data_keys = {}
-            study, recall = self.convert_dframe_to_dict(subject_data, data_keys=data_keys)
+            study, recall = self.prepare_sim(
+                subject_data, study_keys=study_keys, recall_keys=recall_keys
+            )
+
+            # evaluate dependent and dynamic parameters
+            if param_def is not None:
+                param = param_def.eval_dependent(param)
+                param = param_def.eval_dynamic(param, study, recall)
+
             # run subject-specific likelihood function
             subject_logl, subject_n = self.likelihood_subject(
-                study, recall, subj_param_def, patterns=patterns, weights=weights)
+                study, recall, param, param_def, patterns=patterns)
             logl += subject_logl
             n += subject_n
         return logl, n
