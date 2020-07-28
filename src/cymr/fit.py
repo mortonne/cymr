@@ -629,14 +629,12 @@ class Recall(ABC):
         df_sample = pd.concat((df_sim, df_fit), axis=0)
         return df_sample
 
-    def parameter_recovery(self, study, n_sample, fixed, free,
-                           dependent=None, patterns=None, weights=None,
+    def parameter_recovery(self, data, n_sample, param_def, patterns=None,
                            method='de', n_rep=1, n_jobs=None, **kwargs):
         """Run multiple iterations of parameter recovery."""
         results_list = Parallel(n_jobs=n_jobs)(
             delayed(self._run_parameter_recovery)(
-                study, fixed, free, dependent, patterns,
-                weights, method, n_rep, **kwargs
+                data, param_def, patterns, method, n_rep, **kwargs
             ) for i in range(n_sample)
         )
         results = pd.concat(results_list, axis=0, keys=np.arange(n_sample))
