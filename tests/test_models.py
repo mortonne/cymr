@@ -149,9 +149,9 @@ def test_dist_cmr(data):
 def test_dist_cmr_fit(data, param_def):
     model = cmr.CMRDistributed()
     patterns = {'vector': {'loc': np.eye(6)}}
-    param_def.add_weights('fcf', loc='w_loc')
-    param_def.add_fixed(w_loc=1)
-    param_def.add_free(B_enc=(0, 1))
+    param_def.set_weights('fcf', loc='w_loc')
+    param_def.set_fixed(w_loc=1)
+    param_def.set_free(B_enc=(0, 1))
     results = model.fit_indiv(data, param_def, patterns=patterns, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.02)
