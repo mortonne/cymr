@@ -298,38 +298,31 @@ class CMRDistributed(Recall):
         )
         return study, recall
 
-    def likelihood_subject(self, study, recall, param_def, patterns=None,
-                           weights=None):
+    def likelihood_subject(self, study, recall, param, param_def=None,
+                           patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        list_param = prepare_list_param(n_item, param_def.fixed)
+        trial_param = prepare_list_param(n_item, param)
 
-        weights_param = network.unpack_weights(weights, param_def.fixed)
+        weights_param = network.unpack_weights(param_def.weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         n = 0
         for i in range(n_list):
+            # access the dynamic parameters needed for this list
+            list_param = param.copy()
+            if param_def is not None:
+                list_param = param_def.get_dynamic(list_param, i)
+
             # get the study and recall events for this list
-            list_study = {}
-            list_recall = {}
-            for dkey in study.keys():
-                list_study[dkey] = study[dkey][i]
-            for dkey in recall.keys():
-                list_recall[dkey] = recall[dkey][i]
-            net = init_dist_cmr(list_study['item_index'], scaled, param_def.fixed)
-            sparam = param_def.fixed.copy()
-            if param_def.dynamic:
-                if 'study' in param_def.dynamic:
-                    sparam = parameters.set_dynamic(param_def.fixed, list_study, param_def.dynamic['study'])
-            net.study('item', list_study['input'], sparam['B_enc'],
-                      list_param['Lfc'], list_param['Lcf'])
-            net.integrate('start', 0, param_def.fixed['B_start'])
-            rparam = param_def.fixed.copy()
-            if param_def.dynamic:
-                if 'recall' in param_def.dynamic:
-                    rparam = parameters.set_dynamic(param_def.fixed, list_recall, param_def.dynamic['recall'])
-            p = net.p_recall('item', list_recall['input'], rparam['B_rec'],
-                             rparam['T'], list_param['p_stop'])
+            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
+            net.study('item', study['input'][i], list_param['B_enc'],
+                      trial_param['Lfc'], trial_param['Lcf'])
+            net.integrate('start', 0, list_param['B_start'])
+            p = net.p_recall(
+                'item', recall['input'][i], list_param['B_rec'],
+                list_param['T'], trial_param['p_stop']
+            )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
@@ -337,41 +330,29 @@ class CMRDistributed(Recall):
             n += p.size
         return logl, n
 
-    def generate_subject(self, study_dict, recall_dict, param_def, patterns=None, weights=None, **kwargs):
+    def generate_subject(self, study, recall, param, param_def=None,
+                         patterns=None, **kwargs):
 
-        n_item = len(study_dict['input'][0])
-        n_list = len(study_dict['input'])
-        list_param = prepare_list_param(n_item, param_def.fixed)
+        n_item = len(study['input'][0])
+        n_list = len(study['input'])
+        trial_param = prepare_list_param(n_item, param)
 
-        weights_param = network.unpack_weights(weights, param_def.fixed)
+        weights_param = network.unpack_weights(param_def.weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
-        # there may be dummy recall events if there is a dynamic recall parameter
         recalls_list = []
-        if not recall_dict:
-            recall_dict = {}
         for i in range(n_list):
-            # get the study events for this list
-            list_study = {}
-            for dkey in study_dict.keys():
-                list_study[dkey] = study_dict[dkey][i]
-            # get list-level dummy recall events if there are any
-            list_recall = {}
-            for dkey in recall_dict.keys():
-                list_recall[dkey] = recall_dict[dkey][i]
-            net = init_dist_cmr(list_study['item_index'], scaled, param_def.fixed)
-            sparam = param_def.fixed.copy()
-            if param_def.dynamic:
-                if 'study' in param_def.dynamic:
-                    sparam = parameters.set_dynamic(param_def.fixed, list_study, param_def.dynamic['study'])
-            net.study('item', list_study['input'], sparam['B_enc'],
-                      list_param['Lfc'], list_param['Lcf'])
-            net.integrate('start', 0, sparam['B_start'])
-            rparam = param_def.fixed.copy()
-            if param_def.dynamic:
-                if 'recall' in param_def.dynamic:
-                    # generative dynamic recall requires eval statement
-                    rparam = parameters.set_dynamic(param_def.fixed, list_recall, param_def.dynamic['recall'])
-            recall_vec = net.generate_recall('item', rparam['B_rec'], rparam['T'], list_param['p_stop'])
+            # access the dynamic parameters needed for this list
+            list_param = param.copy()
+            if param_def is not None:
+                list_param = param_def.get_dynamic(list_param, i)
+
+            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
+            net.study('item', study['input'][i], list_param['B_enc'],
+                      trial_param['Lfc'], trial_param['Lcf'])
+            net.integrate('start', 0, list_param['B_start'])
+            recall_vec = net.generate_recall(
+                'item', list_param['B_rec'], list_param['T'], trial_param['p_stop']
+            )
             recalls_list.append(recall_vec)
         return recalls_list
 
