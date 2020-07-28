@@ -133,6 +133,15 @@ class Parameters(object):
         s = '\n\n'.join([f'{name}:\n{f}' for name, f in parts.items()])
         return s
 
+    def copy(self):
+        param = Parameters()
+        param.fixed = self.fixed.copy()
+        param.free = self.free.copy()
+        param.dependent = self.dependent.copy()
+        param.dynamic = self.dynamic.copy()
+        param.weights = self.weights.copy()
+        return param
+
     def add_fixed(self, *args, **kwargs):
         self.fixed.update(*args, **kwargs)
 
