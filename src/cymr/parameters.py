@@ -27,7 +27,7 @@ def set_dependent(param, dependent=None):
     if dependent is not None:
         independent_param = param.copy()
         for name, expression in dependent.items():
-            updated[name] = eval(expression, None, independent_param)
+            updated[name] = eval(expression, np.__dict__, independent_param)
     return updated
 
 
