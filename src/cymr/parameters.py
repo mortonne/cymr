@@ -122,6 +122,7 @@ class Parameters(object):
         self.dependent = {}
         self.dynamic = {}
         self.weights = {}
+        self._dynamic_names = set()
 
     def __repr__(self):
         names = ['fixed', 'free', 'dependent', 'dynamic', 'weights']
@@ -156,6 +157,8 @@ class Parameters(object):
             self.dynamic[trial_type].update(*args, **kwargs)
         else:
             self.dynamic[trial_type] = dict(*args, **kwargs)
+        for key in self.dynamic[trial_type].keys():
+            self._dynamic_names.add(key)
 
     def set_weights(self, connect, *args, **kwargs):
         if connect in self.weights:
@@ -172,6 +175,12 @@ class Parameters(object):
         if 'recall' in self.dynamic:
             param = set_dynamic(param, recall, self.dynamic['recall'])
         return param
+
+    def get_dynamic(self, param, index):
+        indexed = param.copy()
+        for name in self._dynamic_names:
+            indexed[name] = param[name][index]
+        return indexed
 
     def to_json(self, json_file):
         data = {'fixed': self.fixed, 'free': self.free,
