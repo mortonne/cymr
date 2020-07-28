@@ -56,12 +56,11 @@ def test_prepare_study(data):
 
 def test_cmr(data):
     model = cmr.CMR()
-    param_def = parameters.Parameters()
-    param_def.fixed = {'B_enc': .5, 'B_rec': .8,
+    param = {'B_enc': .5, 'B_rec': .8,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    logl, n = model.likelihood(data, param_def)
+    logl, n = model.likelihood(data, param)
     np.testing.assert_allclose(logl, -5.936799964636842)
     assert n == 6
 
