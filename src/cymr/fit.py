@@ -196,11 +196,6 @@ class Recall(ABC):
         an array for one or more named features, with an
         [items x units] array for vector representations, or
         [items x items] for similarity matrices.
-
-    weights : dict
-        Keys indicate which model connections to apply weighting
-        to. Values are dicts of (feature: w), where w is the scale
-        to apply to a given feature.
     """
 
     def convert_dframe_to_dict(self, data, data_keys=None):
