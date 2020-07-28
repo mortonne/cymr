@@ -68,7 +68,7 @@ def test_cmr(data):
 @pytest.fixture()
 def param_def():
     param_def = parameters.Parameters()
-    param_def.add_fixed(
+    param_def.set_fixed(
         B_rec=0.8,
         B_start=0,
         Afc=0,
@@ -88,7 +88,7 @@ def param_def():
 
 def test_cmr_fit(data, param_def):
     model = cmr.CMR()
-    param_def.add_free(B_enc=(0, 1))
+    param_def.set_free(B_enc=(0, 1))
     results = model.fit_indiv(data, param_def, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.02)
