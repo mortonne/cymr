@@ -61,24 +61,6 @@ def data():
     return data
 
 
-def test_dependent():
-    param = {'Lfc': .7}
-    dependent = {'Dfc': '1 - Lfc'}
-    updated = parameters.set_dependent(param, dependent)
-    expected = {'Lfc': .7, 'Dfc': .3}
-    np.testing.assert_allclose(updated['Dfc'], expected['Dfc'])
-
-
-def test_dynamic(data):
-    param = {'B_distract': .2}
-    dynamic = {'study': {'B_enc': 'distract * B_distract'}}
-    study_data = fr.filter_data(data, 1, 1, 'study')
-    study = fr.split_lists(study_data, 'raw', ['distract'])
-    updated = parameters.set_dynamic(param, study, dynamic['study'])
-    expected = {'B_distract': .2, 'B_enc': [np.array([.2, .4, .6])]}
-    np.testing.assert_allclose(updated['B_enc'][0], expected['B_enc'][0])
-
-
 def test_likelihood_subject(data):
     data = data.copy()
     rec = TestRecall()
