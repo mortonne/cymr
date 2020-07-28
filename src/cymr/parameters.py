@@ -170,9 +170,9 @@ class Parameters(object):
         return set_dependent(param, self.dependent)
 
     def eval_dynamic(self, param, study=None, recall=None):
-        if 'study' in self.dynamic:
+        if 'study' in self.dynamic and study is not None:
             param = set_dynamic(param, study, self.dynamic['study'])
-        if 'recall' in self.dynamic:
+        if 'recall' in self.dynamic and recall is not None:
             param = set_dynamic(param, recall, self.dynamic['recall'])
         return param
 
