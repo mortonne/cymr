@@ -20,17 +20,18 @@ class TestRecall(Recall):
         recalls = fr.split_lists(merged, 'recall', ['input'])
         return study, recalls
 
-    def likelihood_subject(self, study, recalls, param_def, weights=None,
+    def likelihood_subject(self, study, recalls, param, param_def=None,
                            patterns=None):
-        p = 2 - (param_def.fixed['x'] + 2) ** 2
+        p = 2 - (param['x'] + 2) ** 2
         eps = 0.0001
         if p < eps:
             p = eps
         n = 1
         return np.log(p), n
 
-    def generate_subject(self, study_dict, recall_dict, param_def, patterns=None, weights=None, **kwargs):
-        recalls_list = [param_def.fixed['recalls']]
+    def generate_subject(self, study, recall, param, param_def=None,
+                         patterns=None, **kwargs):
+        recalls_list = [param['recalls']]
         return recalls_list
 
 
@@ -64,19 +65,18 @@ def data():
 def test_likelihood_subject(data):
     data = data.copy()
     rec = TestRecall()
-    param_def = parameters.Parameters()
-    param_def.fixed = {'x': -2}
     subject_data = data.loc[data['subject'] == 1]
-    logl, n = rec.likelihood_subject([], [], param_def)
+    study, recall = rec.prepare_sim(subject_data)
+    param = {'x': -2}
+    logl, n = rec.likelihood_subject(study, recall, param)
     np.testing.assert_allclose(logl, np.log(2))
 
 
 def test_likelihood(data):
     data = data.copy()
     rec = TestRecall()
-    param_def = parameters.Parameters()
-    param_def.fixed = {'x': -2}
-    logl, n = rec.likelihood(data, param_def)
+    param = {'x': -2}
+    logl, n = rec.likelihood(data, param)
     np.testing.assert_allclose(logl, np.log(2) + np.log(2))
 
 
@@ -84,8 +84,8 @@ def test_fit_subject(data):
     data = data.copy()
     rec = TestRecall()
     param_def = parameters.Parameters()
-    param_def.add_fixed(y=1)
-    param_def.add_free(x=[-10, 10])
+    param_def.set_fixed(y=1)
+    param_def.set_free(x=[-10, 10])
     subject_data = data.loc[data['subject'] == 1]
     param, logl, n, k = rec.fit_subject(subject_data, param_def)
     np.testing.assert_allclose(param['x'], -2, atol=0.00001)
@@ -97,8 +97,8 @@ def test_fit_indiv(data):
     data = data.copy()
     rec = TestRecall()
     param_def = parameters.Parameters()
-    param_def.add_fixed(y=1)
-    param_def.add_free(x=[-10, 10])
+    param_def.set_fixed(y=1)
+    param_def.set_free(x=[-10, 10])
     results = rec.fit_indiv(data, param_def)
     np.testing.assert_allclose(results['x'].to_numpy(), [-2, -2], atol=0.0001)
     np.testing.assert_allclose(results['logl'].to_numpy(), np.log([2, 2]),
@@ -111,10 +111,9 @@ def test_generate_subject(data):
     rec = TestRecall()
     study = data.loc[(data['trial_type'] == 'study') &
                      (data['subject'] == 1)]
-    param_def = parameters.Parameters()
-    param_def.fixed = {'recalls': [1, 2]}
+    param = {'recalls': [1, 2]}
     # our "model" recalls the positions indicated in the recalls parameter
-    rec_list = rec.generate_subject(study, {}, param_def)
+    rec_list = rec.generate_subject(study, None, param)
     data_sim = fit.add_recalls(study, rec_list)
     expected = ['absence', 'hollow', 'pupil', 'hollow', 'pupil']
     assert data_sim['item'].to_list() == expected
@@ -123,10 +122,9 @@ def test_generate_subject(data):
 def test_generate(data):
     data = data.copy()
     rec = TestRecall()
-    study = data.loc[data['trial_type'] == 'study']
     subj_param = {1: {'recalls': [1, 2]},
                   2: {'recalls': [2, 0, 1]}}
-    sim = rec.generate(study, {}, subj_param_fixed=subj_param)
+    sim = rec.generate(data, {}, subj_param)
     expected = ['absence', 'hollow', 'pupil',
                 'hollow', 'pupil',
                 'fountain', 'piano', 'pillow',
