@@ -332,7 +332,8 @@ class Recall(ABC):
 
             # run subject-specific likelihood function
             subject_logl, subject_n = self.likelihood_subject(
-                study, recall, param, param_def, patterns=patterns)
+                study, recall, param, param_def=param_def, patterns=patterns
+            )
             logl += subject_logl
             n += subject_n
         return logl, n
