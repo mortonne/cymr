@@ -4,7 +4,6 @@ import numpy as np
 from cymr.fit import Recall
 from cymr import fit
 from cymr import network
-from cymr import parameters
 
 
 def primacy(n_item, L, P1, P2):
