@@ -142,19 +142,22 @@ class Parameters(object):
         param.weights = self.weights.copy()
         return param
 
-    def add_fixed(self, *args, **kwargs):
+    def set_fixed(self, *args, **kwargs):
         self.fixed.update(*args, **kwargs)
 
-    def add_free(self, *args, **kwargs):
+    def set_free(self, *args, **kwargs):
         self.free.update(*args, **kwargs)
 
-    def add_dependent(self, *args, **kwargs):
+    def set_dependent(self, *args, **kwargs):
         self.dependent.update(*args, **kwargs)
 
-    def add_dynamic(self, *args, **kwargs):
-        self.dynamic.update(*args, **kwargs)
+    def set_dynamic(self, trial_type, *args, **kwargs):
+        if trial_type in self.dynamic:
+            self.dynamic[trial_type].update(*args, **kwargs)
+        else:
+            self.dynamic[trial_type] = dict(*args, **kwargs)
 
-    def add_weights(self, connect, *args, **kwargs):
+    def set_weights(self, connect, *args, **kwargs):
         if connect in self.weights:
             self.weights[connect].update(*args, **kwargs)
         else:
