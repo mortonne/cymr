@@ -606,24 +606,21 @@ class Recall(ABC):
         sim_data = pd.concat(data_list, axis=0, ignore_index=True)
         return sim_data
 
-    def _run_parameter_recovery(self, study, fixed, free,
-                                dependent=None, patterns=None, weights=None,
+    def _run_parameter_recovery(self, data, param_def, patterns=None,
                                 method='de', n_rep=1, **kwargs):
         """Run a parameter recovery test."""
         # generate parameters
-        param = fixed.copy()
-        sampled = parameters.sample_parameters(free)
+        param = param_def.fixed.copy()
+        sampled = parameters.sample_parameters(param_def.free)
         param.update(sampled)
-        param = parameters.set_dependent(param, dependent)
 
         # generate simulated data
-        sim = self.generate(study, param, patterns=patterns,
-                            weights=weights, n_rep=n_rep)
+        sim = self.generate(data, param, None, param_def, patterns=patterns,
+                            n_rep=n_rep)
 
         # fit the simulated data
         fitted_param, logl, n, k = self.fit_subject(
-            sim, fixed, free, dependent=dependent, patterns=patterns,
-            weights=weights, method=method, **kwargs
+            sim, param_def, patterns=patterns, method=method, **kwargs
         )
 
         # store results
