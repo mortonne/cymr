@@ -22,7 +22,7 @@ First, load some sample data to fit:
 
 .. ipython:: python
 
-    from cymr import fit
+    from cymr import fit, parameters
     data = fit.sample_data('Morton2013_mixed').query('subject <= 3')
 
 Search Definition
@@ -49,12 +49,12 @@ things up, we'll fix almost all parameters and just fit one,
 
 .. ipython:: python
 
-    par = fit.Parameters()
-    par.add_fixed(Afc=0, Acf=0, Aff=0, Dff=1, T=0.1,
+    par = parameters.Parameters()
+    par.set_fixed(Afc=0, Acf=0, Aff=0, Dff=1, T=0.1,
                   Lfc=0.15, Lcf=0.15, P1=0.2, P2=2,
                   B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25)
-    par.add_free(B_enc=(0, 1))
-    par.add_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
+    par.set_free(B_enc=(0, 1))
+    par.set_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
 
 Patterns and Weights
 ~~~~~~~~~~~~~~~~~~~~
@@ -85,8 +85,8 @@ we only have one component, which will have a fixed weight of 1.
 
 .. ipython:: python
 
-    par.add_weights('fcf', {'loc': 'w_loc'})
-    par.add_fixed(w_loc=1)
+    par.set_weights('fcf', {'loc': 'w_loc'})
+    par.set_fixed(w_loc=1)
 
 Parameter Search
 ~~~~~~~~~~~~~~~~
@@ -99,9 +99,7 @@ that the search converges.
 
     from cymr import cmr
     model = cmr.CMRDistributed()
-    results = model.fit_indiv(data, par.fixed, par.free,
-                              dependent=par.dependent, tol=0.1,
-                              patterns=patterns, weights=par.weights)
+    results = model.fit_indiv(data, par, patterns=patterns, tol=0.1)
     results[['B_enc', 'logl', 'n', 'k']]
 
 The results give the complete set of parameters, including fixed
