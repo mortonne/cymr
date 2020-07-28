@@ -10,6 +10,7 @@ from cymr import parameters
 
 @pytest.fixture()
 def data():
+    """Base test DataFrame."""
     data = pd.DataFrame({
         'subject': [1, 1, 1, 1, 1, 1,
                     1, 1, 1, 1, 1, 1],
@@ -37,6 +38,7 @@ def data():
 
 @pytest.fixture()
 def split_data(data):
+    """Data split into study and recall."""
     merged = fr.merge_free_recall(data, study_keys=['distract'])
     split = {
         'study': fr.split_lists(merged, 'study', ['input', 'distract']),
@@ -47,6 +49,7 @@ def split_data(data):
 
 @pytest.fixture()
 def param_def():
+    """Parameter definitions."""
     param = parameters.Parameters()
     param.set_fixed(a=1, b=2)
     param.set_fixed({'c': 3})
@@ -58,6 +61,7 @@ def param_def():
 
 
 def test_param(param_def):
+    """Test that parameter definitions are correct."""
     assert param_def.fixed == {'a': 1, 'b': 2, 'c': 3}
     assert param_def.free == {'f': [0, 1]}
     assert param_def.dependent == {'d': '2 + mean([a, b])'}
@@ -66,12 +70,14 @@ def test_param(param_def):
 
 
 def test_dependent(param_def):
+    """Test evaluation of dependent parameters."""
     param = {'a': 1, 'b': 2}
     param = param_def.eval_dependent(param)
     assert param == {'a': 1, 'b': 2, 'd': 3.5}
 
 
 def test_dynamic(param_def, split_data):
+    """Test evaluation of dynamic parameters."""
     param = {'c': 2}
     param = param_def.eval_dynamic(param, study=split_data['study'])
     np.testing.assert_array_equal(param['e'][0], np.array([0.5, 1, 1.5]))
@@ -79,6 +85,7 @@ def test_dynamic(param_def, split_data):
 
 
 def test_get_dynamic(param_def, split_data):
+    """Test indexing of dynamic parameters."""
     param = {'c': 2}
     param = param_def.eval_dynamic(param, study=split_data['study'])
 
