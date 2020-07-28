@@ -28,6 +28,8 @@ def data():
                   'pillow', 'fountain', 'pillow'],
          'item_index': [0, 1, 2, 1, 2, np.nan,
                         3, 4, 5, 5, 3, 5],
+         'distract': [1, 2, 3, np.nan, np.nan, np.nan,
+                      3, 2, 1, np.nan, np.nan, np.nan],
          'task': [1, 2, 1, 2, 1, np.nan,
                   1, 2, 1, 1, 1, 1]})
     return data
