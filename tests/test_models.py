@@ -155,3 +155,19 @@ def test_dist_cmr_fit(data, param_def):
     results = model.fit_indiv(data, param_def, patterns=patterns, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.02)
+
+
+def test_dynamic_cmr(data):
+    patterns = {'vector': {'loc': np.eye(6)}}
+    param = {'B_enc': .5, 'B_start': 0, 'B_rec': .8, 'w_loc': 1,
+             'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
+             'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
+             'T': 10, 'X1': .05, 'X2': 1, 'B_distract': .2}
+    param_def = parameters.Parameters()
+    param_def.set_dynamic('study', B_enc='distract * B_distract')
+    param_def.set_weights('fcf', loc='w_loc')
+
+    model = cmr.CMRDistributed()
+    logl, n = model.likelihood(data, param, None, param_def, patterns=patterns,
+                               study_keys=['distract'])
+    np.testing.assert_allclose(logl, -5.9899248839454415)
