@@ -93,3 +93,15 @@ def test_get_dynamic(param_def, split_data):
     np.testing.assert_array_equal(param1['e'], np.array([0.5, 1, 1.5]))
     param2 = param_def.get_dynamic(param, 1)
     np.testing.assert_array_equal(param2['e'], np.array([1.5, 1, 0.5]))
+
+
+def test_blank(split_data):
+    """Test that unspecified evaluation does nothing."""
+    param_def = parameters.Parameters()
+    param = {'a': 1, 'b': 2, 'c': 3}
+    orig = param.copy()
+    param = param_def.eval_dependent(param)
+    param = param_def.eval_dynamic(
+        param, study=split_data['study'], recall=split_data['recall']
+    )
+    assert param == orig
