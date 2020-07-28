@@ -163,6 +163,16 @@ class Parameters(object):
         else:
             self.weights[connect] = dict(*args, **kwargs)
 
+    def eval_dependent(self, param):
+        return set_dependent(param, self.dependent)
+
+    def eval_dynamic(self, param, study=None, recall=None):
+        if 'study' in self.dynamic:
+            param = set_dynamic(param, study, self.dynamic['study'])
+        if 'recall' in self.dynamic:
+            param = set_dynamic(param, recall, self.dynamic['recall'])
+        return param
+
     def to_json(self, json_file):
         data = {'fixed': self.fixed, 'free': self.free,
                 'dependent': self.dependent, 'dynamic': self.dynamic,
