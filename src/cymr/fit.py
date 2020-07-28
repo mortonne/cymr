@@ -414,7 +414,7 @@ class Recall(ABC):
             eval_param = param_def.eval_dependent(eval_param)
             eval_param = param_def.eval_dynamic(eval_param, study, recall)
             eval_logl, _ = self.likelihood_subject(
-                study, recall, eval_param, patterns, param_def.weights
+                study, recall, eval_param, param_def, patterns
             )
             return -eval_logl
 
