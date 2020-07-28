@@ -506,8 +506,8 @@ class Recall(ABC):
         return results
 
     @abstractmethod
-    def generate_subject(self, study, param, patterns=None, weights=None,
-                         **kwargs):
+    def generate_subject(self, study, recall, param, param_def=None,
+                         patterns=None, **kwargs):
         """
         Generate simulated data for one subject.
 
@@ -516,19 +516,22 @@ class Recall(ABC):
         study : dict of (str: list of numpy.array)
             Information about the study phase in list format.
 
+        recall : dict of (str: list of numpy.array)
+            Information about recall trials in list format.
+
         param : dict of (str: float)
             Model parameter values.
 
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definitions.
+
         patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
-
-        weights : dict of (str: dict of (str: float)), optional
-            Weights to apply to model feature patterns.
         """
         pass
 
-    def generate(self, data, group_param_def, subj_param_fixed=None, patterns=None,
-                 weights=None, data_keys=None, n_rep=1):
+    def generate(self, data, group_param, subj_param=None, param_def=None,
+                 patterns=None, study_keys=None, recall_keys=None, n_rep=1):
         """
         Generate simulated data for all subjects.
 
@@ -545,11 +548,17 @@ class Recall(ABC):
         subj_param : dict of (str: dict of (str: float))
             Parameters that vary by subject, indexed by subject.
 
-        patterns : dict of (str: dict of (str: numpy.array))
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definitions.
+
+        patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
 
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
+        study_keys : list of str
+            Data columns to include for the study phase.
+
+        recall_keys : list of str
+            Data columns to include for the recall phase.
 
         n_rep : int
             Number of times to repeat the simulation for each subject.
@@ -564,28 +573,32 @@ class Recall(ABC):
         data_list = []
         for subject in subjects:
             # combine subject-specific parameters with group param definitions
-            subj_param_def = parameters.Parameters()
-            if group_param_def:
-                subj_param_def.fixed.update(group_param_def.fixed)
-                subj_param_def.dependent.update(group_param_def.dependent)
-                subj_param_def.dynamic.update(group_param_def.dynamic)
-            if subj_param_fixed is not None:
-                subj_param_def.fixed.update(subj_param_fixed[subject])
+            param = group_param.copy()
+            if subj_param is not None:
+                param.update(subj_param[subject])
+
             # filter the data events for this subject
             subject_data = data.loc[data['subject'] == subject]
-            # convert subject dataframe to dict format
-            if not data_keys:
-                data_keys = {}
             # recall will be empty unless dummy recall events have been provided
-            study, recall = self.convert_dframe_to_dict(subject_data, data_keys=data_keys)
+            study, recall = self.prepare_sim(
+                subject_data, study_keys=study_keys, recall_keys=recall_keys
+            )
+
+            # evaluate dependent and dynamic parameters
+            if param_def is not None:
+                param = param_def.eval_dependent(param)
+                param = param_def.eval_dynamic(param, study, recall)
+
             max_list = subject_data['list'].max()
             # iterate over repetitions for this subject
             for i in range(n_rep):
                 # run subject-specific generation function
                 rep_recalls_list = self.generate_subject(
-                    study, recall, subj_param_def, patterns=patterns, weights=weights)
+                    study, recall, param, param_def, patterns=patterns
+                )
                 rep_data = subject_data.copy()
                 rep_data['list'] = i * max_list + subject_data['list']
+
                 # strip off the dummy recall events
                 rep_data = rep_data[rep_data['trial_type'] == 'study']
                 rep_data = add_recalls(rep_data, rep_recalls_list)
