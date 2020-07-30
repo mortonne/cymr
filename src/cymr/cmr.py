@@ -96,7 +96,7 @@ def init_dist_cmr(item_index, patterns, param):
 
 
 def prepare_list_param(n_item, param):
-    """Prepare parameters that very within list."""
+    """Prepare parameters that vary within list."""
     Lfc = np.tile(param['Lfc'], n_item).astype(float)
     Lcf = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
     p_stop = p_stop_op(n_item, param['X1'], param['X2'])
