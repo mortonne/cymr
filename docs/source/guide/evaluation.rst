@@ -68,15 +68,29 @@ of the :code:`w_loc` parameter.
 Finally, we define the parameters that we want to evaluate, by creating
 a dictionary with a name and value for each parameter. We'll get a
 different log likelihood for each parameter set. For a model to be
-evaluated, all parameters expected by that model must be defined.
+evaluated, all parameters expected by that model must be defined,
+including any parameters used for setting weights (here, :code:`w_loc`).
 
 .. ipython:: python
 
     param = {
-        'B_enc': .5, 'B_start': 0, 'B_rec': .8, 'w_loc': 1,
-        'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
-        'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
-        'T': 10, 'X1': .05, 'X2': 1
+        'B_enc': 0.7,
+        'B_start': 0.3,
+        'B_rec': 0.9,
+        'w_loc': 1,
+        'Afc': 0,
+        'Dfc': 0.85,
+        'Acf': 1,
+        'Dcf': 0.85,
+        'Aff': 0,
+        'Dff': 1,
+        'Lfc': 0.15,
+        'Lcf': 0.15,
+        'P1': 0.2,
+        'P2': 2,
+        'T': 0.1,
+        'X1': 0.001,
+        'X2': 0.25
     }
 
 Evaluating log likelihood
