@@ -114,7 +114,8 @@ parameters, optimized free parameters, and dependent parameters. It
 also includes fields with statistics relevant to the search:
 
 logl
-    Total log likelihood for each participant.
+    Total log likelihood for each participant. Greater (i.e., less negative)
+    values indicate better fit.
 
 n
     Number of data points fit.
