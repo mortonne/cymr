@@ -38,14 +38,22 @@ free
     Parameters that may vary to fit a dataset. For a search, must specify
     a range to be searched over.
 
+We'll also use two other types of parameters that set properties of the model
+based on a given parameter set:
+
 dependent
     Parameters that are derived from other parameters. These parameters
     are specified using an expression that generates them from other
     parameters.
 
-We can organize these things by creating a Parameters object. To speed
-things up, we'll fix almost all parameters and just fit one,
-:math:`\beta_\mathrm{enc}`.
+weights
+    Parameters that define weighting of different patterns in the model.
+
+We can organize these things by creating a Parameters object. To run
+a simple and fast search, we'll fix almost all parameters and just fit one,
+:math:`\beta_\mathrm{enc}`. For a real project, you may want to free other
+parameters also to fit individual differences in the primacy effect, temporal
+clustering, etc.
 
 .. ipython:: python
 
@@ -56,35 +64,17 @@ things up, we'll fix almost all parameters and just fit one,
     par.set_free(B_enc=(0, 1))
     par.set_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
 
-Patterns and Weights
-~~~~~~~~~~~~~~~~~~~~
-
 To simulate free recall using the CMR-Distributed model, we must first
 define pre-experimental weights for the network. For this example, we'll define
 localist patterns, which are distinct for each presented item. They can be
-represented by an identity matrix with one entry for each item.
+represented by an identity matrix with one entry for each item. See
+:doc:`/guide/evaluation` for details.
 
 .. ipython:: python
 
     n_items = 768
     loc_patterns = np.eye(n_items)
-
-To indicate where the patterns should be used in the network, they are
-specified as :code:`vector` (for the :math:`\mathrm{M}^{FC}` and/or
-:math:`\mathrm{M}^{CF}` matrices) or :code:`similarity`
-(for the :math:`\mathrm{M}^{FF}` matrix). We also label each pattern
-with a name; here, we'll refer to the localist patterns as :code:`'loc'`.
-
-.. ipython:: python
-
     patterns = {'vector': {'loc': loc_patterns}}
-
-Patterns may include multiple components that may be weighted differently.
-Weight parameters are used to set the weighting of each component. Here,
-we only have one component, which will have a fixed weight of 1.
-
-.. ipython:: python
-
     par.set_weights('fcf', {'loc': 'w_loc'})
     par.set_fixed(w_loc=1)
 
