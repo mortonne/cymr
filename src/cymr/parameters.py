@@ -5,6 +5,22 @@ import json
 import numpy as np
 
 
+def read_json(json_file):
+    """Read parameters from a JSON file."""
+    with open(json_file, 'r') as f:
+        par_dict = json.load(f)
+
+    par = Parameters()
+    par.set_free(par_dict['free'])
+    par.set_fixed(par_dict['fixed'])
+    par.set_dependent(par_dict['dependent'])
+    for trial_type, p in par_dict['dynamic'].items():
+        par.set_dynamic(trial_type, p)
+    for trial_type, p in par_dict['weights'].items():
+        par.set_weights(trial_type, p)
+    return par
+
+
 def set_dependent(param, dependent=None):
     """
     Set values of dependent parameters.
