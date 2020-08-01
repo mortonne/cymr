@@ -28,8 +28,8 @@ First, load some sample data to fit:
 Search Definition
 ~~~~~~~~~~~~~~~~~
 
-Next, we need to define our search parameters. There are three types
-of parameters used for searches:
+Next, we need to define our search parameters. There are two types
+of parameters used specifically for searches:
 
 fixed
     Parameters that have a fixed value. These parameters are not searched.
@@ -77,6 +77,23 @@ represented by an identity matrix with one entry for each item. See
     patterns = {'vector': {'loc': loc_patterns}}
     par.set_weights('fcf', {'loc': 'w_loc'})
     par.set_fixed(w_loc=1)
+
+We can print the parameter definition to get an overview of the settings.
+
+.. ipython:: python
+
+    print(par)
+
+The :py:meth:`~cymr.parameters.Parameters.to_json` method of
+:py:class:`~cymr.parameters.Parameters` can be used to save out parameter
+definitions to a file. The output file uses JSON format, which is
+both human- and machine-readable and can be loaded later to restore
+search settings:
+
+.. ipython:: python
+
+    par.to_json('parameters.json')
+    restored = parameters.read_json('parameters.json')
 
 Parameter Search
 ~~~~~~~~~~~~~~~~
