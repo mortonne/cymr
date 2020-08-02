@@ -198,46 +198,6 @@ class Recall(ABC):
         [items x items] for similarity matrices.
     """
 
-    def convert_dframe_to_dict(self, data, data_keys=None):
-        # study_base = ['input', 'item_index', 'position']
-        study_base = ['input', 'item_index']
-        recall_base = ['input']
-        # unpack data_keys into study and recall keys
-        if not data_keys:
-            study_keys = []
-            recall_keys = []
-        if 'study' in data_keys.keys():
-            study_keys = data_keys['study']
-        else:
-            study_keys = []
-        if 'recall' in data_keys.keys():
-            recall_keys = data_keys['recall']
-        else:
-            recall_keys = []
-        # add base-level study keys unless already present
-        if not study_keys:
-            study_keys = study_base
-        else:
-            for term in study_base:
-                if term not in study_keys:
-                    study_keys += [term]
-        # only process recall if there are any recall events on the dataframe
-        if any(data['trial_type'] == 'recall'):
-            # add base-level recall keys unless already present
-            if not recall_keys:
-                recall_keys = recall_base
-            else:
-                for term in recall_base:
-                    if term not in recall_keys:
-                        recall_keys += [term]
-            study, recall = prepare_lists(data, study_keys=study_keys, recall_keys=recall_keys, clean=True)
-        else:
-            # there are no recall events
-            # recall = {}
-            # study = fit.prepare_study(data, study_keys=study_keys)
-            study, recall = prepare_lists(data, study_keys=study_keys, clean=True)
-        return study, recall
-
     @abstractmethod
     def likelihood_subject(self, study, recall, param, param_def=None,
                            patterns=None):
