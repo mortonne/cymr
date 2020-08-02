@@ -55,6 +55,10 @@ cpdef response_pdf(double t, int ind, double A, double b,
     for i in range(n_v):
         p_neg *= normcdf(-v[i] / s)
 
+    # if this is a termination event return prob of none finishing
+    if ind == n_v:
+        return p_neg
+
     # probability of other accumulators not having finished
     for i in range(n_v):
         if i != ind:

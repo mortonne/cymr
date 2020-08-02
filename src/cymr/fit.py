@@ -2,12 +2,13 @@
 
 from pkg_resources import resource_filename
 from abc import ABC, abstractmethod
-import json
 import numpy as np
 from scipy import optimize
 import pandas as pd
 from joblib import Parallel, delayed
 from psifr import fr
+
+from cymr import parameters
 
 
 def sample_data(study):
@@ -172,86 +173,6 @@ def get_best_results(results):
     return best
 
 
-def set_dependent(param, dependent=None):
-    updated = param.copy()
-    if dependent is not None:
-        independent_param = param.copy()
-        for name, expression in dependent.items():
-            updated[name] = eval(expression, None, independent_param)
-    return updated
-
-
-def sample_parameters(sampler):
-    """Randomly sample parameters."""
-    param = {}
-    for name, value in sampler.items():
-        if callable(value):
-            param[name] = value()
-        elif isinstance(value, tuple):
-            param[name] = value[0] + np.random.rand() * value[1]
-        else:
-            param[name] = value
-    return param
-
-
-class Parameters(object):
-    """
-    Class to manage model parameters.
-
-    Attributes
-    ----------
-    fixed : dict of (str: float)
-        Values of fixed parameters.
-
-    free : dict of (str: tuple)
-        Bounds of each free parameter.
-
-    dependent : dict of (str: str)
-        Expressions to define dependent parameters based the other
-        parameters.
-
-    weights : dict of (str: dict of (str: str))
-        Weights template to set network connections.
-    """
-
-    def __init__(self):
-        self.fixed = {}
-        self.free = {}
-        self.dependent = {}
-        self.weights = {}
-
-    def __repr__(self):
-        names = ['fixed', 'free', 'dependent', 'weights']
-        parts = {}
-        for name in names:
-            obj = getattr(self, name)
-            fields = [f'{key}: {value}' for key, value in obj.items()]
-            parts[name] = '\n'.join(fields)
-        s = '\n\n'.join([f'{name}:\n{f}' for name, f in parts.items()])
-        return s
-
-    def add_fixed(self, *args, **kwargs):
-        self.fixed.update(*args, **kwargs)
-
-    def add_free(self, *args, **kwargs):
-        self.free.update(*args, **kwargs)
-
-    def add_dependent(self, *args, **kwargs):
-        self.dependent.update(*args, **kwargs)
-
-    def add_weights(self, connect, *args, **kwargs):
-        if connect in self.weights:
-            self.weights[connect].update(*args, **kwargs)
-        else:
-            self.weights[connect] = dict(*args, **kwargs)
-
-    def to_json(self, json_file):
-        data = {'fixed': self.fixed, 'free': self.free,
-                'dependent': self.dependent, 'weights': self.weights}
-        with open(json_file, 'w') as f:
-            json.dump(data, f, indent=4)
-
-
 class Recall(ABC):
     """
     Base class for evaluating a model of free recall.
@@ -275,16 +196,51 @@ class Recall(ABC):
         an array for one or more named features, with an
         [items x units] array for vector representations, or
         [items x items] for similarity matrices.
-
-    weights : dict
-        Keys indicate which model connections to apply weighting
-        to. Values are dicts of (feature: w), where w is the scale
-        to apply to a given feature.
     """
 
+    def convert_dframe_to_dict(self, data, data_keys=None):
+        # study_base = ['input', 'item_index', 'position']
+        study_base = ['input', 'item_index']
+        recall_base = ['input']
+        # unpack data_keys into study and recall keys
+        if not data_keys:
+            study_keys = []
+            recall_keys = []
+        if 'study' in data_keys.keys():
+            study_keys = data_keys['study']
+        else:
+            study_keys = []
+        if 'recall' in data_keys.keys():
+            recall_keys = data_keys['recall']
+        else:
+            recall_keys = []
+        # add base-level study keys unless already present
+        if not study_keys:
+            study_keys = study_base
+        else:
+            for term in study_base:
+                if term not in study_keys:
+                    study_keys += [term]
+        # only process recall if there are any recall events on the dataframe
+        if any(data['trial_type'] == 'recall'):
+            # add base-level recall keys unless already present
+            if not recall_keys:
+                recall_keys = recall_base
+            else:
+                for term in recall_base:
+                    if term not in recall_keys:
+                        recall_keys += [term]
+            study, recall = prepare_lists(data, study_keys=study_keys, recall_keys=recall_keys, clean=True)
+        else:
+            # there are no recall events
+            # recall = {}
+            # study = fit.prepare_study(data, study_keys=study_keys)
+            study, recall = prepare_lists(data, study_keys=study_keys, clean=True)
+        return study, recall
+
     @abstractmethod
-    def likelihood_subject(self, study, recall, param, patterns=None,
-                           weights=None):
+    def likelihood_subject(self, study, recall, param, param_def=None,
+                           patterns=None):
         """
         Log likelihood of data for one subject based on a given model.
 
@@ -299,11 +255,11 @@ class Recall(ABC):
         param : dict of (str: float)
             Model parameter values.
 
-        patterns : dict of (str: dict of (str: numpy.array))
-            Patterns to use in the model.
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definition object; used to interpret parameters.
 
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
+        patterns : dict of (str: dict of (str: numpy.array)), optional
+            Patterns to use in the model.
 
         Returns
         -------
@@ -315,8 +271,8 @@ class Recall(ABC):
         """
         pass
 
-    def likelihood(self, data, group_param, subj_param=None, patterns=None,
-                   weights=None):
+    def likelihood(self, data, group_param, subj_param=None, param_def=None,
+                   patterns=None, study_keys=None, recall_keys=None):
         """
         Log likelihood summed over all subjects.
 
@@ -326,16 +282,22 @@ class Recall(ABC):
             Data to fit. Must include a 'subject' column.
 
         group_param : dict of (str: float)
-            Values of parameters that apply to all subjects.
+            Parameters that are fixed at the group level.
 
         subj_param : dict of (str: dict of (str: float))
             Parameters that vary by subject, indexed by subject.
 
+        param_def : cymr.parameters.Parameters
+            Parameter definitions (used to set dependent and dynamic).
+
         patterns : dict of (str: dict of (str: numpy.array))
             Patterns to use in the model.
 
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
+        study_keys : list of str
+            Fields to include in study data.
+
+        recall_keys : list of str
+            Fields to include in recall data.
 
         Returns
         -------
@@ -345,23 +307,39 @@ class Recall(ABC):
         n : int
             Number of evaluated data points.
         """
+        # get the list of subjects
         subjects = data['subject'].unique()
         logl = 0
         n = 0
         for subject in subjects:
+            # combine subject-specific parameters with group param definitions
             param = group_param.copy()
             if subj_param is not None:
                 param.update(subj_param[subject])
+
+            # filter the data events for this subject
             subject_data = data.loc[data['subject'] == subject]
-            study, recall = self.prepare_sim(subject_data)
+
+            # convert subject dataframe to list format
+            study, recall = self.prepare_sim(
+                subject_data, study_keys=study_keys, recall_keys=recall_keys
+            )
+
+            # evaluate dependent and dynamic parameters
+            if param_def is not None:
+                param = param_def.eval_dependent(param)
+                param = param_def.eval_dynamic(param, study, recall)
+
+            # run subject-specific likelihood function
             subject_logl, subject_n = self.likelihood_subject(
-                study, recall, param, patterns=patterns, weights=weights)
+                study, recall, param, param_def=param_def, patterns=patterns
+            )
             logl += subject_logl
             n += subject_n
         return logl, n
 
     @abstractmethod
-    def prepare_sim(self, subject_data):
+    def prepare_sim(self, subject_data, study_keys=None, recall_keys=None):
         """
         Prepare data for simulation.
 
@@ -374,6 +352,12 @@ class Recall(ABC):
         subject_data : pandas.DataFrame
             Data for one subject.
 
+        study_keys : list of str
+            Data columns to include in the study data.
+
+        recall_keys : list of str
+            Data columns to include in the recall data.
+
         Returns
         -------
         study : dict of (str: list of numpy.array)
@@ -384,8 +368,8 @@ class Recall(ABC):
         """
         pass
 
-    def fit_subject(self, subject_data, fixed, free, dependent=None,
-                    patterns=None, weights=None, method='de', **kwargs):
+    def fit_subject(self, subject_data, param_def, patterns=None,
+                    method='de', **kwargs):
         """
         Fit a model to data for one subject.
 
@@ -394,20 +378,11 @@ class Recall(ABC):
         subject_data : pandas.DataFrame
             Data for one subject.
 
-        fixed : dict of (str: float)
-            Values of fixed parameters.
+        param_def : cymr.parameters.Parameters
+            Parameter definitions.
 
-        free : dict of (str: (float, float))
-            Allowed range of free parameters.
-
-        dependent : dict of (str: str), optional
-            Expressions to evaluate to set dependent parameters.
-
-        patterns : dict of (str: dict of (str: numpy.array))
+        patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
-
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
 
         method : str, optional
             Search method for fitting the parameters.
@@ -431,18 +406,20 @@ class Recall(ABC):
             Number of free parameters.
         """
         study, recall = self.prepare_sim(subject_data)
-        var_names = list(free.keys())
+        var_names = list(param_def.free.keys())
 
         def eval_fit(x):
-            eval_param = fixed.copy()
+            eval_param = param_def.fixed.copy()
             eval_param.update(dict(zip(var_names, x)))
-            eval_param = set_dependent(eval_param, dependent)
-            eval_logl, _ = self.likelihood_subject(study, recall, eval_param,
-                                                   patterns, weights)
+            eval_param = param_def.eval_dependent(eval_param)
+            eval_param = param_def.eval_dynamic(eval_param, study, recall)
+            eval_logl, _ = self.likelihood_subject(
+                study, recall, eval_param, param_def, patterns
+            )
             return -eval_logl
 
-        group_lb = [free[k][0] for k in var_names]
-        group_ub = [free[k][1] for k in var_names]
+        group_lb = [param_def.free[k][0] for k in var_names]
+        group_ub = [param_def.free[k][1] for k in var_names]
         bounds = optimize.Bounds(group_lb, group_ub)
         if method == 'de':
             res = optimize.differential_evolution(eval_fit, bounds, **kwargs)
@@ -452,30 +429,30 @@ class Recall(ABC):
         else:
             raise ValueError(f'Invalid method: {method}')
 
-        # fitted parameters
-        param = fixed.copy()
+        # get fitted parameters
+        param = param_def.fixed.copy()
         param.update(dict(zip(var_names, res['x'])))
-        param = set_dependent(param, dependent)
+        param = param_def.eval_dependent(param)
+        param = param_def.eval_dynamic(param, study, recall)
 
         # evaluate fitted parameters, get number of fitted points
-        logl, n = self.likelihood_subject(study, recall, param,
-                                          patterns, weights)
-        k = len(free)
+        logl, n = self.likelihood_subject(study, recall, param, param_def, patterns)
+        k = len(param_def.free)
         assert logl == -res['fun']
         return param, logl, n, k
 
-    def _run_fit_subject(self, data, subject, fixed, free, dependent,
-                         patterns=None, weights=None, method='de', **kwargs):
+    def _run_fit_subject(self, data, subject, param_def,
+                         patterns=None, method='de', **kwargs):
         """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
         param, logl, n, k = self.fit_subject(
-            subject_data, fixed, free, dependent, patterns, weights,
-            method, **kwargs)
+            subject_data, param_def, patterns, method, **kwargs
+        )
         results = {**param, 'logl': logl, 'n': n, 'k': k}
         return results
 
-    def fit_indiv(self, data, fixed, free, dependent=None, patterns=None,
-                  weights=None, n_jobs=None, method='de', n_rep=1, **kwargs):
+    def fit_indiv(self, data, param_def, patterns=None,
+                  n_jobs=None, method='de', n_rep=1, **kwargs):
         """
         Fit parameters to individual subjects.
 
@@ -484,20 +461,11 @@ class Recall(ABC):
         data : pandas.DataFrame
             Data for one or more subjects.
 
-        fixed : dict of (str: float)
-            Values of fixed parameters.
-
-        free : dict of (str: (float, float))
-            Allowed range of free parameters.
-
-        dependent : dict of (str: str), optional
-            Expressions to evaluate to set dependent parameters.
+        param_def : cymr.parameters.Parameters
+            Parameter definitions.
 
         patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
-
-        weights : dict of (str: dict of (str: float)), optional
-            Weights to apply to model feature patterns.
 
         n_jobs : int, optional
             Number of processes to use for fitting subjects in
@@ -524,8 +492,7 @@ class Recall(ABC):
         full_reps = np.tile(np.arange(n_rep), len(subjects))
         full_results = Parallel(n_jobs=n_jobs)(
             delayed(self._run_fit_subject)(
-                data, subject, fixed, free, dependent, patterns,
-                weights, method, **kwargs
+                data, subject, param_def, patterns, method, **kwargs
             ) for subject in full_subjects
         )
         d = {(subject, rep): res for subject, rep, res in
@@ -535,8 +502,8 @@ class Recall(ABC):
         return results
 
     @abstractmethod
-    def generate_subject(self, study, param, patterns=None, weights=None,
-                         **kwargs):
+    def generate_subject(self, study, recall, param, param_def=None,
+                         patterns=None, **kwargs):
         """
         Generate simulated data for one subject.
 
@@ -545,26 +512,31 @@ class Recall(ABC):
         study : dict of (str: list of numpy.array)
             Information about the study phase in list format.
 
+        recall : dict of (str: list of numpy.array)
+            Information about recall trials in list format.
+
         param : dict of (str: float)
             Model parameter values.
 
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definitions.
+
         patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
-
-        weights : dict of (str: dict of (str: float)), optional
-            Weights to apply to model feature patterns.
         """
         pass
 
-    def generate(self, study, group_param, subj_param=None, patterns=None,
-                 weights=None, n_rep=1):
+    def generate(self, data, group_param, subj_param=None, param_def=None,
+                 patterns=None, study_keys=None, recall_keys=None, n_rep=1):
         """
         Generate simulated data for all subjects.
 
         Parameters
         ----------
-        study : dict of (str: list of numpy.array)
-            Information about the study phase in list format.
+        data : pandas.DataFrame
+            Data to guide simulation. Must include a 'subject' column.
+            May include dummy recall events if there is a dynamic
+            recall parameter.
 
         group_param : dict of (str: float)
             Values of parameters that apply to all subjects.
@@ -572,54 +544,79 @@ class Recall(ABC):
         subj_param : dict of (str: dict of (str: float))
             Parameters that vary by subject, indexed by subject.
 
-        patterns : dict of (str: dict of (str: numpy.array))
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definitions.
+
+        patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
 
-        weights : dict of (str: dict of (str: float))
-            Weights to apply to model feature patterns.
+        study_keys : list of str
+            Data columns to include for the study phase.
+
+        recall_keys : list of str
+            Data columns to include for the recall phase.
 
         n_rep : int
             Number of times to repeat the simulation for each subject.
 
         Returns
         -------
-        data : pandas.DataFrame
+        sim_data : pandas.DataFrame
             Simulated data for each subject.
         """
-        subjects = study['subject'].unique()
+        # get the list of subjects
+        subjects = data['subject'].unique()
         data_list = []
         for subject in subjects:
+            # combine subject-specific parameters with group param definitions
             param = group_param.copy()
             if subj_param is not None:
                 param.update(subj_param[subject])
-            subject_study = study.loc[study['subject'] == subject]
-            max_list = subject_study['list'].max()
-            for i in range(n_rep):
-                subject_data = self.generate_subject(subject_study, param,
-                                                     patterns, weights)
-                subject_data['list'] = i * max_list + subject_data['list']
-                data_list.append(subject_data)
-        data = pd.concat(data_list, axis=0, ignore_index=True)
-        return data
 
-    def _run_parameter_recovery(self, study, fixed, free,
-                                dependent=None, patterns=None, weights=None,
+            # filter the data events for this subject
+            subject_data = data.loc[data['subject'] == subject]
+            # recall will be empty unless dummy recall events have been provided
+            study, recall = self.prepare_sim(
+                subject_data, study_keys=study_keys, recall_keys=recall_keys
+            )
+
+            # evaluate dependent and dynamic parameters
+            if param_def is not None:
+                param = param_def.eval_dependent(param)
+                param = param_def.eval_dynamic(param, study, recall)
+
+            max_list = subject_data['list'].max()
+            # iterate over repetitions for this subject
+            for i in range(n_rep):
+                # run subject-specific generation function
+                rep_recalls_list = self.generate_subject(
+                    study, recall, param, param_def, patterns=patterns
+                )
+                rep_data = subject_data.copy()
+                rep_data['list'] = i * max_list + subject_data['list']
+
+                # strip off the dummy recall events
+                rep_data = rep_data[rep_data['trial_type'] == 'study']
+                rep_data = add_recalls(rep_data, rep_recalls_list)
+                data_list.append(rep_data)
+        sim_data = pd.concat(data_list, axis=0, ignore_index=True)
+        return sim_data
+
+    def _run_parameter_recovery(self, data, param_def, patterns=None,
                                 method='de', n_rep=1, **kwargs):
         """Run a parameter recovery test."""
         # generate parameters
-        param = fixed.copy()
-        sampled = sample_parameters(free)
+        param = param_def.fixed.copy()
+        sampled = parameters.sample_parameters(param_def.free)
         param.update(sampled)
-        param = set_dependent(param, dependent)
 
         # generate simulated data
-        sim = self.generate(study, param, patterns=patterns,
-                            weights=weights, n_rep=n_rep)
+        sim = self.generate(data, param, None, param_def, patterns=patterns,
+                            n_rep=n_rep)
 
         # fit the simulated data
         fitted_param, logl, n, k = self.fit_subject(
-            sim, fixed, free, dependent=dependent, patterns=patterns,
-            weights=weights, method=method, **kwargs
+            sim, param_def, patterns=patterns, method=method, **kwargs
         )
 
         # store results
@@ -628,30 +625,28 @@ class Recall(ABC):
         df_sample = pd.concat((df_sim, df_fit), axis=0)
         return df_sample
 
-    def parameter_recovery(self, study, n_sample, fixed, free,
-                           dependent=None, patterns=None, weights=None,
+    def parameter_recovery(self, data, n_sample, param_def, patterns=None,
                            method='de', n_rep=1, n_jobs=None, **kwargs):
         """Run multiple iterations of parameter recovery."""
         results_list = Parallel(n_jobs=n_jobs)(
             delayed(self._run_parameter_recovery)(
-                study, fixed, free, dependent, patterns,
-                weights, method, n_rep, **kwargs
+                data, param_def, patterns, method, n_rep, **kwargs
             ) for i in range(n_sample)
         )
         results = pd.concat(results_list, axis=0, keys=np.arange(n_sample))
         return results
 
-    def parameter_sweep(self, study, fixed, param_names, param_sweeps,
-                        dependent=None, patterns=None, weights=None, n_rep=1):
+    def parameter_sweep(self, data, param_def, param_names, param_sweeps,
+                        patterns=None, n_rep=1):
         """Simulate data with varying parameters."""
         index = pd.MultiIndex.from_product(param_sweeps, names=param_names)
         df_list = []
         for idx in index:
-            param = fixed.copy()
+            param = param_def.fixed.copy()
             param.update(dict(zip(param_names, idx)))
-            param = set_dependent(param, dependent)
-            sim = self.generate(study, param, None, patterns=patterns,
-                                weights=weights, n_rep=n_rep)
+            sim = self.generate(
+                data, param, None, param_def, patterns=patterns, n_rep=n_rep
+            )
             df_list.append(sim)
         results = pd.concat(df_list, axis=0, keys=index)
         results = results.droplevel(len(param_sweeps))

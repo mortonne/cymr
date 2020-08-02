@@ -96,7 +96,7 @@ def init_dist_cmr(item_index, patterns, param):
 
 
 def prepare_list_param(n_item, param):
-    """Prepare parameters that very within list."""
+    """Prepare parameters that vary within list."""
     Lfc = np.tile(param['Lfc'], n_item).astype(float)
     Lcf = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
     p_stop = p_stop_op(n_item, param['X1'], param['X2'])
@@ -106,25 +106,28 @@ def prepare_list_param(n_item, param):
 
 class CMR(Recall):
 
-    def prepare_sim(self, data):
+    def prepare_sim(self, data, study_keys=None, recall_keys=None):
         study, recall = fit.prepare_lists(data, study_keys=['input'],
                                           recall_keys=['input'], clean=True)
         return study, recall
 
-    def likelihood_subject(self, study, recall, param, patterns=None,
-                           weights=None):
+    def likelihood_subject(self, study, recall, param, param_def=None,
+                           patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        list_param = prepare_list_param(n_item, param)
+        trial_param = prepare_list_param(n_item, param)
         net_init = init_loc_cmr(n_item, param)
         logl = 0
         n = 0
         for i in range(n_list):
             net = net_init.copy()
-            net.study('item', study['input'][i], param['B_enc'],
-                      list_param['Lfc'], list_param['Lcf'])
-            p = net.p_recall('item', recall['input'][i], param['B_rec'],
-                             param['T'], list_param['p_stop'])
+            list_param = param.copy()
+            if param_def is not None:
+                list_param = param_def.get_dynamic(list_param, i)
+            net.study('item', study['input'][i], list_param['B_enc'],
+                      trial_param['Lfc'], trial_param['Lcf'])
+            p = net.p_recall('item', recall['input'][i], list_param['B_rec'],
+                             list_param['T'], trial_param['p_stop'])
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
@@ -132,24 +135,27 @@ class CMR(Recall):
             n += p.size
         return logl, n
 
-    def generate_subject(self, study_data, param, patterns=None, weights=None,
-                         **kwargs):
-        study = fit.prepare_study(study_data, study_keys=['position'])
-        n_item = len(study['position'][0])
-        n_list = len(study['position'])
-        list_param = prepare_list_param(n_item, param)
+    def generate_subject(self, study, recall, param, param_def=None,
+                         patterns=None, **kwargs):
+        # study = fit.prepare_study(study_data, study_keys=['position'])
+        n_item = len(study['input'][0])
+        n_list = len(study['input'])
+        trial_param = prepare_list_param(n_item, param)
 
-        recalls = []
         net_init = init_loc_cmr(n_item, param)
+        recalls_list = []
         for i in range(n_list):
             net = net_init.copy()
-            net.study('item', study['input'][i], param['B_enc'],
-                      list_param['Lfc'], list_param['Lcf'])
-            recall = net.generate_recall('item', param['B_rec'], param['T'],
-                                         list_param['p_stop'])
-            recalls.append(recall)
-        data = fit.add_recalls(study_data, recalls)
-        return data
+            list_param = param.copy()
+            if param_def is not None:
+                list_param = param_def.get_dynamic(list_param, i)
+            net.study('item', study['input'][i], list_param['B_enc'],
+                      trial_param['Lfc'], trial_param['Lcf'])
+            recall_vec = net.generate_recall(
+                'item', list_param['B_rec'], list_param['T'], trial_param['p_stop']
+            )
+            recalls_list.append(recall_vec)
+        return recalls_list
 
     def record_network(self, data, param):
         study, recall = self.prepare_sim(data)
@@ -269,29 +275,53 @@ class CMRDistributed(Recall):
         Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
     """
 
-    def prepare_sim(self, data):
+    def prepare_sim(self, data, study_keys=None, recall_keys=None):
+        study_base = ['input', 'item_index']
+        if study_keys is None:
+            study_keys = study_base
+        else:
+            # only add the base key if it isn't already in there
+            for term in study_base:
+                if term not in study_keys:
+                    study_keys += [term]
+        recall_base = ['input']
+        if recall_keys is None:
+            recall_keys = recall_base
+        else:
+            for term in recall_base:
+                if term not in recall_keys:
+                    recall_keys += [term]
+
         study, recall = fit.prepare_lists(
-            data, study_keys=['input', 'item_index'],
-            recall_keys=['input'], clean=True)
+            data, study_keys=study_keys, recall_keys=recall_keys, clean=True
+        )
         return study, recall
 
-    def likelihood_subject(self, study, recall, param, patterns=None,
-                           weights=None):
+    def likelihood_subject(self, study, recall, param, param_def=None,
+                           patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        list_param = prepare_list_param(n_item, param)
+        trial_param = prepare_list_param(n_item, param)
 
-        weights_param = network.unpack_weights(weights, param)
+        weights_param = network.unpack_weights(param_def.weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         n = 0
         for i in range(n_list):
-            net = init_dist_cmr(study['item_index'][i], scaled, param)
-            net.study('item', study['input'][i], param['B_enc'],
-                      list_param['Lfc'], list_param['Lcf'])
-            net.integrate('start', 0, param['B_start'])
-            p = net.p_recall('item', recall['input'][i], param['B_rec'],
-                             param['T'], list_param['p_stop'])
+            # access the dynamic parameters needed for this list
+            list_param = param.copy()
+            if param_def is not None:
+                list_param = param_def.get_dynamic(list_param, i)
+
+            # get the study and recall events for this list
+            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
+            net.study('item', study['input'][i], list_param['B_enc'],
+                      trial_param['Lfc'], trial_param['Lcf'])
+            net.integrate('start', 0, list_param['B_start'])
+            p = net.p_recall(
+                'item', recall['input'][i], list_param['B_rec'],
+                list_param['T'], trial_param['p_stop']
+            )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
@@ -299,27 +329,31 @@ class CMRDistributed(Recall):
             n += p.size
         return logl, n
 
-    def generate_subject(self, study_data, param, patterns=None, weights=None,
-                         **kwargs):
-        study = fit.prepare_study(study_data,
-                                  study_keys=['position', 'item_index'])
-        n_item = len(study['position'][0])
-        n_list = len(study['position'])
-        list_param = prepare_list_param(n_item, param)
+    def generate_subject(self, study, recall, param, param_def=None,
+                         patterns=None, **kwargs):
 
-        weights_param = network.unpack_weights(weights, param)
+        n_item = len(study['input'][0])
+        n_list = len(study['input'])
+        trial_param = prepare_list_param(n_item, param)
+
+        weights_param = network.unpack_weights(param_def.weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
-        recalls = []
+        recalls_list = []
         for i in range(n_list):
-            net = init_dist_cmr(study['item_index'][i], scaled, param)
-            net.study('item', study['position'][i], param['B_enc'],
-                      list_param['Lfc'], list_param['Lcf'])
-            net.integrate('start', 0, param['B_start'])
-            recall = net.generate_recall('item', param['B_rec'], param['T'],
-                                         list_param['p_stop'])
-            recalls.append(recall)
-        data = fit.add_recalls(study_data, recalls)
-        return data
+            # access the dynamic parameters needed for this list
+            list_param = param.copy()
+            if param_def is not None:
+                list_param = param_def.get_dynamic(list_param, i)
+
+            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
+            net.study('item', study['input'][i], list_param['B_enc'],
+                      trial_param['Lfc'], trial_param['Lcf'])
+            net.integrate('start', 0, list_param['B_start'])
+            recall_vec = net.generate_recall(
+                'item', list_param['B_rec'], list_param['T'], trial_param['p_stop']
+            )
+            recalls_list.append(recall_vec)
+        return recalls_list
 
     def record_network(self, data, param, patterns=None, weights=None,
                        remove_blank=False):
