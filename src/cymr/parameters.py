@@ -151,6 +151,7 @@ class Parameters(object):
         return s
 
     def copy(self):
+        """Copy the parameters definition."""
         param = Parameters()
         param.fixed = self.fixed.copy()
         param.free = self.free.copy()
@@ -161,15 +162,19 @@ class Parameters(object):
         return param
 
     def set_fixed(self, *args, **kwargs):
+        """Set fixed parameter values."""
         self.fixed.update(*args, **kwargs)
 
     def set_free(self, *args, **kwargs):
+        """Set free parameter ranges."""
         self.free.update(*args, **kwargs)
 
     def set_dependent(self, *args, **kwargs):
+        """Set dependent parameters in terms of other parameters."""
         self.dependent.update(*args, **kwargs)
 
     def set_dynamic(self, trial_type, *args, **kwargs):
+        """Set dynamic parameters in terms of parameters and data."""
         if trial_type in self.dynamic:
             self.dynamic[trial_type].update(*args, **kwargs)
         else:
@@ -178,15 +183,18 @@ class Parameters(object):
             self._dynamic_names.add(key)
 
     def set_weights(self, connect, *args, **kwargs):
+        """Set weights on model patterns."""
         if connect in self.weights:
             self.weights[connect].update(*args, **kwargs)
         else:
             self.weights[connect] = dict(*args, **kwargs)
 
     def eval_dependent(self, param):
+        """Evaluate dependent parameters based on input parameters."""
         return set_dependent(param, self.dependent)
 
     def eval_dynamic(self, param, study=None, recall=None):
+        """Evaluate dynamic parameters based on data fields."""
         if 'study' in self.dynamic and study is not None:
             param = set_dynamic(param, study, self.dynamic['study'])
         if 'recall' in self.dynamic and recall is not None:
@@ -194,12 +202,14 @@ class Parameters(object):
         return param
 
     def get_dynamic(self, param, index):
+        """Get list-specific parameters."""
         indexed = param.copy()
         for name in self._dynamic_names:
             indexed[name] = param[name][index]
         return indexed
 
     def to_json(self, json_file):
+        """Write parameter definitions to a JSON file."""
         data = {'fixed': self.fixed, 'free': self.free,
                 'dependent': self.dependent, 'dynamic': self.dynamic,
                 'weights': self.weights}
