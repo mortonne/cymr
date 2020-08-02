@@ -76,6 +76,26 @@ def net_study_distract():
     return net
 
 
+def test_init_layer():
+    layer_segments = {
+        'loc': {'item': 3, 'start': 1},
+        'cat': {'item': 2, 'start': 1},
+        'sem': {'item': 5, 'start': 1}
+    }
+    layer = network.LayerIndex(layer_segments)
+
+    assert layer.size == 13
+    assert layer.size_sublayer['loc'] == 4
+    assert layer.size_segment['cat']['item'] == 2
+
+    np.testing.assert_array_equal(layer.get_sublayer('loc'), np.array([0, 1, 2, 3]))
+    np.testing.assert_array_equal(layer.get_segment('loc', 'item'), np.array([0, 1, 2]))
+    assert layer.get_unit('loc', 'item', 1) == 1
+    np.testing.assert_array_equal(layer.get_sublayer('cat'), np.array([4, 5, 6]))
+    np.testing.assert_array_equal(layer.get_segment('cat', 'start'), np.array([6]))
+    assert layer.get_unit('cat', 'item', 1) == 5
+
+
 def test_network_init(net):
     n_f = net.n_f
     n_c = net.n_c
