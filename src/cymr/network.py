@@ -159,17 +159,17 @@ class Network(object):
 
     Parameters
     ----------
-    segments : dict of {str: (int, int)}
-        Definition of network segments. For example, may have a segment
-        representing learned items and a segment representing
+    regions : dict of {str: (int, int)}
+        Definition of network regions. For example, may have segments
+        representing learned items and segments representing
         distraction trials. Each entry contains an (n_f, n_c) pair
         indicating the number of item and context units to allocate for
-        that segment.
+        that region.
 
     Attributes
     ----------
-    segments : dict of {str: (int, int)}
-        Number of item and context units for each named segment.
+    regions : dict of {str: (int, int)}
+        Number of item and context units for each named region.
 
     n_f_segment : dict of {str: int}
         Number of item units for each segment.
@@ -215,15 +215,15 @@ class Network(object):
     w_ff_exp : numpy.array
         Weights learned during the experiment connecting f to f.
     """
-    def __init__(self, segments):
+    def __init__(self, regions):
         n_f = 0
         n_c = 0
-        self.segments = segments
+        self.regions = regions
         self.n_f_segment = {}
         self.n_c_segment = {}
         self.f_ind = {}
         self.c_ind = {}
-        for name, (s_f, s_c) in segments.items():
+        for name, (s_f, s_c) in regions.items():
             self.n_f_segment[name] = s_f
             self.n_c_segment[name] = s_c
             self.f_ind[name] = slice(n_f, n_f + s_f)
@@ -281,7 +281,7 @@ class Network(object):
         net : cymr.Network
             Network with the same segments, weights, and activations.
         """
-        net = Network(self.segments)
+        net = Network(self.regions)
         net.f_ind = self.f_ind
         net.c_ind = self.c_ind
         net.n_f = self.n_f
