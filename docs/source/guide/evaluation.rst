@@ -18,6 +18,16 @@
 Evaluating a model
 ==================
 
+For a given model and set of parameters, we can measure the overall
+fit to a dataset by calculating the log likelihood. The *likelihood*
+is the probability of the data according to the model. Probability is
+calculated for full recall sequences and then multiplied for each recall
+sequence to obtain an overall probability of the data. In practice, this
+leads to extremely small probabilities, which may be difficult for the
+computer to calculate. Therefore, we use log probabilities to avoid this
+problem. For both likelihoods and log likelihood, greater values indicate
+a better fit of the model to the data.
+
 First, load some sample data:
 
 .. ipython:: python

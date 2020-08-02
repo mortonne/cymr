@@ -18,6 +18,11 @@
 Fitting a model
 ===============
 
+We can fit a model to individual participant data in a free-recall dataset
+by maximizing the probability of the data according to the model. This involves
+using a search algorithm to adjust the model parameters until the probability,
+or likelihood (see :doc:`/guide/evaluation`), of the data is maximized.
+
 First, load some sample data to fit:
 
 .. ipython:: python
@@ -98,7 +103,8 @@ search settings:
 Parameter Search
 ~~~~~~~~~~~~~~~~
 
-Finally, we can run the search. For speed, we'll set the tolerance to
+Finally, we can run the search. Parameters will be optimized separately
+for each participant. For speed, we'll set the tolerance to
 be pretty high (0.1); normally this should be much lower to ensure
 that the search converges.
 
