@@ -153,6 +153,33 @@ def init_plot(**kwargs):
     return fig, ax
 
 
+class LayerIndex(object):
+    def __init__(self, layer_segments):
+        self.size = 0
+        self.size_sublayer = {}
+        self.size_segment = layer_segments.copy()
+        self.sublayer = {}
+        self.segment = {}
+        for sub, segs in layer_segments.items():
+            self.segment[sub] = {}
+            self.size_sublayer[sub] = 0
+            start = self.size
+            for seg, s in segs.items():
+                self.segment[sub][seg] = np.arange(self.size, self.size + s)
+                self.size += s
+                self.size_sublayer[sub] += s
+            self.sublayer[sub] = np.arange(start, start + self.size_sublayer[sub])
+
+    def get_sublayer(self, sublayer):
+        return self.sublayer[sublayer]
+
+    def get_segment(self, sublayer, segment):
+        return self.segment[sublayer][segment]
+
+    def get_unit(self, sublayer, segment, index):
+        return self.segment[sublayer][segment][index]
+
+
 class Network(object):
     """
     Representation of interacting item and context layers.
