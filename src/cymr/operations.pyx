@@ -103,6 +103,25 @@ cpdef present(double [:, :] w_fc_exp,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cpdef study(
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_cf_exp,
+    double [:] c,
+    double [:] c_in,
+    double [:] f,
+    const int [:] item_list,
+    int [:] c_ind,
+    double [:] B,
+    double [:] Lfc,
+    double [:] Lcf,
+):
+    cdef Py_ssize_t n = item_list.shape[0]
+    for i in range(n):
+        present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
+                item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
+
+
 cpdef apply_softmax(int n,
                     int n_f,
                     double [:] f_in,
