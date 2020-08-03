@@ -124,27 +124,6 @@ cpdef study(
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef apply_softmax(int n,
-                    int n_f,
-                    double [:] f_in,
-                    int [:] exclude,
-                    double amin,
-                    double T):
-    cdef int i
-    for i in range(n_f):
-        if exclude[i]:
-            continue
-
-        # ensure minimal support for each item
-        if f_in[n + i] < amin:
-            f_in[n + i] = amin
-
-        # apply softmax
-        f_in[n + i] = exp((2 * f_in[n + i]) / T)
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef study_distract(
     double [:, :] w_fc_exp,
     const double [:, :] w_fc_pre,
@@ -201,6 +180,27 @@ cpdef cue_item(int n,
             # support from the previously recalled item
             f_in[n + i] += (w_ff_exp[n + recalls[output - 1], n + i] +
                             w_ff_pre[n + recalls[output - 1], n + i])
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef apply_softmax(int n,
+                    int n_f,
+                    double [:] f_in,
+                    int [:] exclude,
+                    double amin,
+                    double T):
+    cdef int i
+    for i in range(n_f):
+        if exclude[i]:
+            continue
+
+        # ensure minimal support for each item
+        if f_in[n + i] < amin:
+            f_in[n + i] = amin
+
+        # apply softmax
+        f_in[n + i] = exp((2 * f_in[n + i]) / T)
 
 
 @cython.boundscheck(False)
