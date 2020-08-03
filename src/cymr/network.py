@@ -431,7 +431,7 @@ class Network(object):
 
         Parameters
         ----------
-        item : tuple of (str, str, int)
+        item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
         sublayer : str
@@ -448,7 +448,7 @@ class Network(object):
 
         Parameters
         ----------
-        item : tuple of (str, str, int)
+        item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
         sublayer : str
@@ -469,7 +469,7 @@ class Network(object):
 
         Parameters
         ----------
-        item : tuple of (str, str, int)
+        item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
         sublayer : str
@@ -500,7 +500,7 @@ class Network(object):
         connect : {'fc', 'cf'}
             Connection matrix to update.
 
-        item : tuple of (str, str, int)
+        item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
         sublayer : str
@@ -524,7 +524,7 @@ class Network(object):
 
         Parameters
         ----------
-        segment : tuple of (str, str)
+        segment : tuple of str, str
             Sublayer and segment of items to present.
 
         item_list : numpy.array
