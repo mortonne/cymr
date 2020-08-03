@@ -11,8 +11,9 @@ from cymr import network
 
 @pytest.fixture()
 def net():
-    segments = {'item': (3, 5), 'task': (1, 1)}
-    net = network.Network(segments)
+    f_segments = {'task': {'item': 3, 'start': 1}}
+    c_segments = {'task': {'item': 5, 'start': 1}}
+    net = network.Network(f_segments, c_segments)
     return net
 
 
