@@ -314,7 +314,7 @@ class Network(object):
         net.w_ff_pre = self.w_ff_pre.copy()
         return net
 
-    def get_slices(self, region):
+    def get_region(self, f_segment, c_segment):
         """
         Return slices for a region.
 
@@ -326,8 +326,8 @@ class Network(object):
         c_ind : slice
             Span of the region in the context dimension.
         """
-        f_ind = self.f_ind[region[0]]
-        c_ind = self.c_ind[region[1]]
+        f_ind = self.f_ind.get_segment(*f_segment)
+        c_ind = self.c_ind.get_segment(*c_segment)
         return f_ind, c_ind
 
     def get_ind(self, layer, segment, item):
