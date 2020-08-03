@@ -114,6 +114,12 @@ def test_network_copy(net):
     assert net_copy.n_c == net.n_c
 
 
+def test_get_region(net):
+    f_ind, c_ind = net.get_region(('task', 'item'), ('task', 'start'))
+    np.testing.assert_array_equal(f_ind, np.array([0, 1, 2]))
+    np.testing.assert_array_equal(c_ind, np.array([5]))
+
+
 def test_pre_weights(net_pre, weights):
     net = net_pre
     f_ind, c_ind = net.get_slices(('item', 'item'))
