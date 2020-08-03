@@ -557,15 +557,15 @@ class Network(object):
                          self.w_cf_exp, self.c, self.c_in,
                          self.f, item_ind, c_ind, B, Lfc, Lcf)
 
-    def study_distract(self, segment, item_list, B, Lfc, Lcf, distract_segment=None,
-                       distract_list=None, distract_B=None):
+    def study_distract(self, segment, item_list, sublayer, B, Lfc, Lcf,
+                       distract_segment, distract_list, distract_B):
         """
         Study a list of items.
 
         Parameters
         ----------
-        segment : str
-            Segment representing the items to be presented.
+        segment : tuple of str, str
+            Sublayer and segment representing the items to be presented.
 
         item_list : numpy.array
             Item indices relative to the segment.
@@ -581,10 +581,10 @@ class Network(object):
         Lcf : float or numpy.array
             Learning rate for context to item associations.
 
-        distract_segment : str, optional
-            Segment representing distraction trials.
+        distract_segment : str, str
+            Sublayer and segment representing distraction trials.
 
-        distract_list : numpy.array, optional
+        distract_list : numpy.array
             Distraction item indices relative to the segment.
 
         distract_B : float or numpy.array
@@ -593,8 +593,8 @@ class Network(object):
             n_items + 1. Distraction will not be presented on trials i
             where distract_B[i] is zero.
         """
-        ind = self.f_ind[segment].start + item_list
-        ind = ind.astype(np.dtype('i'))
+        f_ind = self.get_segment('f', *segment)
+        item_ind = f_ind[item_list]
         if not isinstance(B, np.ndarray):
             B = np.tile(B, item_list.shape).astype(float)
         if not isinstance(Lfc, np.ndarray):
@@ -602,21 +602,19 @@ class Network(object):
         if not isinstance(Lcf, np.ndarray):
             Lcf = np.tile(Lcf, item_list.shape).astype(float)
 
-        if distract_segment is None or distract_list is None:
-            distract_ind = np.ndarray(shape=(0,), dtype=np.dtype('i'))
-        else:
-            distract_ind = self.f_ind[distract_segment].start + distract_list
-            distract_ind = distract_ind.astype(np.dtype('i'))
+        f_ind = self.get_segment('f', *distract_segment)
+        distract_ind = f_ind[distract_list]
 
-        if distract_B is None:
-            distract_B = np.zeros(item_list.shape[0] + 1, dtype=float)
-        elif not isinstance(distract_B, np.ndarray):
-            distract_B = np.tile(distract_B,
-                                 item_list.shape[0] + 1).astype(float)
+        if not isinstance(distract_B, np.ndarray):
+            distract_B = np.tile(
+                distract_B, item_list.shape[0] + 1
+            ).astype(float)
 
-        operations.study(self.w_fc_exp, self.w_fc_pre,
-                         self.w_cf_exp, self.c, self.c_in,
-                         self.f, ind, B, Lfc, Lcf, distract_ind, distract_B)
+        c_ind = self.get_sublayer('c', sublayer)
+        operations.study_distract(
+            self.w_fc_exp, self.w_fc_pre, self.w_cf_exp, self.c, self.c_in,
+            self.f, item_ind, c_ind, B, Lfc, Lcf, distract_ind, distract_B
+        )
 
     def record_study(self, segment, item_list, B, Lfc, Lcf,
                      distract_segment=None, distract_list=None,
