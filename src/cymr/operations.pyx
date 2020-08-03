@@ -122,6 +122,8 @@ cpdef study(
                 item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cpdef apply_softmax(int n,
                     int n_f,
                     double [:] f_in,
