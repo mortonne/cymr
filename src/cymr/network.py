@@ -330,6 +330,15 @@ class Network(object):
         c_ind = self.c_ind.get_segment(*c_segment)
         return f_ind, c_ind
 
+    def get_unit(self, layer, sublayer, segment, unit):
+        if layer == 'f':
+            ind = self.f_ind.get_unit(sublayer, segment, unit)
+        elif layer == 'c':
+            ind = self.c_ind.get_unit(sublayer, segment, unit)
+        else:
+            raise ValueError(f'Invalid layer: {layer}')
+        return ind
+
     def get_ind(self, layer, segment, item):
         """
         Get the absolute index for an item.
