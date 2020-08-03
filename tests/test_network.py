@@ -172,7 +172,7 @@ def test_pre_weights(net_pre, weights):
 
 def test_update(net_pre):
     net = net_pre
-    net.update('task', 'start', 0, 'task')
+    net.update(('task', 'start', 0), 'task')
     expected = np.array([0, 0, 0, 0, 0, 1])
     np.testing.assert_allclose(net.c, expected)
 
@@ -180,7 +180,7 @@ def test_update(net_pre):
 def test_present(net_pre):
     net = net_pre
     net.c[0] = 1
-    net.present('task', 'item', 0, 'task', .5)
+    net.present(('task', 'item', 0), 'task', .5)
     np.testing.assert_allclose(np.linalg.norm(net.c, 2), 1)
 
     c_ind = net.get_segment('c', 'task', 'item')
