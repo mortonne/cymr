@@ -38,10 +38,12 @@ cpdef integrate(double [:, :] w_fc_exp,
                 double [:] c_in,
                 double [:] f,
                 int item,
+                int [:] c_ind,
                 double B):
     cdef Py_ssize_t n_f = f.shape[0]
-    cdef Py_ssize_t n_c = c.shape[0]
+    cdef Py_ssize_t n_c = c_ind.shape[0]
     cdef int i
+    cdef int j
 
     # set item unit
     for i in range(n_f):
@@ -51,19 +53,20 @@ cpdef integrate(double [:, :] w_fc_exp,
             f[i] = 0
 
     # set c_in
-    for i in range(n_c):
-        c_in[i] = w_fc_exp[item, i] + w_fc_pre[item, i]
-
-    # get the vector length of the input to context
     cdef double sum_squares = 0
     for i in range(n_c):
-        sum_squares += c_in[i] * c_in[i]
+        j = c_ind[i]
+        c_in[j] = w_fc_exp[item, j] + w_fc_pre[item, j]
+        sum_squares += c_in[j] * c_in[j]
+
+    # normalize the vector to have an L2 norm of 1
     cdef double norm = sqrt(sum_squares)
     for i in range(n_c):
-        c_in[i] /= norm
+        j = c_ind[i]
+        c_in[j] /= norm
 
     # integrate
-    integrate_context(c, c_in, B)
+    integrate_context(c, c_in, B, c_ind)
 
 
 @cython.boundscheck(False)
