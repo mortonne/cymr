@@ -301,7 +301,7 @@ class Network(object):
         net : cymr.Network
             Network with the same segments, weights, and activations.
         """
-        net = Network(self.f_segments, self.c_segments)
+        net = Network(self.f_segment, self.c_segment)
         net.f_ind = self.f_ind
         net.c_ind = self.c_ind
         net.n_f = self.n_f
