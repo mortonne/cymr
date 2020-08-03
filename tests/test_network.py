@@ -34,25 +34,27 @@ def net_pre(net, weights):
 @pytest.fixture()
 def net_study(net_pre):
     net = net_pre.copy()
-    net.update('task', 0)
+    net.update(('task', 'start', 0), 'task')
     B = .5
     L = 1
-    for item in range(net.n_f_segment['item']):
-        net.present('item', item, B)
-        net.learn('fc', 'all', item, L)
-        net.learn('cf', 'all', item, L * 2)
+    n_item = net.f_segment['task']['item']
+    for item in range(n_item):
+        net.present(('task', 'item', item), 'task', B)
+        net.learn('fc', ('task', 'item', item), 'task', L)
+        net.learn('cf', ('task', 'item', item), 'task', L * 2)
     return net
 
 
 @pytest.fixture()
 def net_study_list(net_pre):
     net = net_pre.copy()
-    net.update('task', 0)
+    net.update(('task', 'start', 0), 'task')
     B = .5
     Lfc = 1
     Lcf = 2
-    item_list = np.arange(net.n_f_segment['item'])
-    net.study('item', item_list, B, Lfc, Lcf)
+    n_item = net.f_segment['task']['item']
+    item_list = np.arange(n_item)
+    net.study(('task', 'item'), item_list, 'task', B, Lfc, Lcf)
     return net
 
 
