@@ -398,34 +398,6 @@ class Network(object):
             raise ValueError(f'Invalid layer: {layer}')
         return ind
 
-    def get_ind(self, layer, segment, item):
-        """
-        Get the absolute index for an item.
-
-        Parameters
-        ----------
-        layer : {'f', 'c'}
-            Layer to access.
-
-        segment : str
-            Segment to access.
-
-        item : int
-            Index relative to the start of the segment.
-
-        Returns
-        -------
-        ind : int
-            Absolute index.
-        """
-        if layer == 'f':
-            ind = self.f_ind[segment].start + item
-        elif layer == 'c':
-            ind = self.c_ind[segment].start + item
-        else:
-            raise ValueError(f'Invalid layer: {layer}')
-        return ind
-
     def add_pre_weights(self, connect, f_segment, c_segment, weights,
                         slope=1, intercept=0):
         """
