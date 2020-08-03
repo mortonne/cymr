@@ -367,7 +367,8 @@ class Network(object):
             raise ValueError(f'Invalid layer: {layer}')
         return ind
 
-    def add_pre_weights(self, connect, region, weights, slope=1, intercept=0):
+    def add_pre_weights(self, connect, f_segment, c_segment, weights,
+                        slope=1, intercept=0):
         """
         Add pre-experimental weights to a network.
 
@@ -389,13 +390,13 @@ class Network(object):
             Intercept to add to weights.
         """
         scaled = intercept + slope * weights
-        f_ind, c_ind = self.get_slices(region)
+        f_ind, c_ind = self.get_region(f_segment, c_segment)
         if connect == 'fc':
-            self.w_fc_pre[f_ind, c_ind] = scaled
+            self.w_fc_pre[np.ix_(f_ind, c_ind)] = scaled
         elif connect == 'cf':
-            self.w_cf_pre[f_ind, c_ind] = scaled
+            self.w_cf_pre[np.ix_(f_ind, c_ind)] = scaled
         elif connect == 'ff':
-            self.w_ff_pre[f_ind, f_ind] = scaled
+            self.w_ff_pre[np.ix_(f_ind, c_ind)] = scaled
         else:
             raise ValueError(f'Invalid connection type: {connect}')
 
