@@ -242,24 +242,13 @@ class Network(object):
     w_ff_exp : numpy.array
         Weights learned during the experiment connecting f to f.
     """
-    def __init__(self, regions):
-        n_f = 0
-        n_c = 0
-        self.regions = regions
-        self.n_f_segment = {}
-        self.n_c_segment = {}
-        self.f_ind = {}
-        self.c_ind = {}
-        for name, (s_f, s_c) in regions.items():
-            self.n_f_segment[name] = s_f
-            self.n_c_segment[name] = s_c
-            self.f_ind[name] = slice(n_f, n_f + s_f)
-            self.c_ind[name] = slice(n_c, n_c + s_c)
-            n_f += s_f
-            n_c += s_c
-        self.f_ind['all'] = slice(0, n_f)
-        self.c_ind['all'] = slice(0, n_c)
-
+    def __init__(self, f_segments, c_segments):
+        self.f_segments = f_segments
+        self.c_segments = c_segments
+        self.f_ind = LayerIndex(f_segments)
+        self.c_ind = LayerIndex(c_segments)
+        n_f = self.f_ind.size
+        n_c = self.c_ind.size
         self.n_f = n_f
         self.n_c = n_c
         self.f = np.zeros(n_f)
