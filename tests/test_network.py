@@ -77,6 +77,32 @@ def net_study_distract():
     return net
 
 
+@pytest.fixture()
+def net_subregions():
+    f_segments = {'task': {'item': 3, 'start': 1}}
+    c_segments = {
+        'loc': {'item': 3, 'start': 1},
+        'cat': {'item': 2, 'start': 1},
+        'sem': {'item': 5, 'start': 1}
+    }
+    net = network.Network(f_segments, c_segments)
+    w_loc = np.eye(3)
+    net.add_pre_weights('fc', ('task', 'item'), ('loc', 'item'), w_loc)
+    net.update('loc', 'start', 0)
+    net.update('cat', 'start', 0)
+    net.update('sem', 'start', 0)
+    w_loc = np.eye(3)
+    w_cat = np.array([[1, 0], [0, 1], [1, 0]])
+    w_sem = np.arange(15).reshape(3, 5)
+    net.add_pre_weights('fc', ('item', 'loc'), w_loc)
+    net.add_pre_weights('fc', ('item', 'cat'), w_cat)
+    net.add_pre_weights('fc', ('item', 'sem'), w_sem)
+    net.add_pre_weights('cf', ('item', 'loc'), w_loc)
+    net.add_pre_weights('cf', ('item', 'cat'), w_cat)
+    net.add_pre_weights('cf', ('item', 'sem'), w_sem)
+    net.update('start', 0)
+
+
 def test_init_layer():
     layer_segments = {
         'loc': {'item': 3, 'start': 1},
@@ -120,6 +146,11 @@ def test_get_region(net):
     np.testing.assert_array_equal(c_ind, np.array([5]))
 
 
+def test_get_segment(net):
+    f_ind = net.get_segment('f', 'task', 'item')
+    np.testing.assert_array_equal(f_ind, np.array([0, 1, 2]))
+
+
 def test_get_unit(net):
     ind = net.get_unit('f', 'task', 'start', 0)
     assert ind == 3
@@ -136,7 +167,7 @@ def test_pre_weights(net_pre, weights):
 
 def test_update(net_pre):
     net = net_pre
-    net.update('task', 0)
+    net.update('task', 'start', 0)
     expected = np.array([0, 0, 0, 0, 0, 1])
     np.testing.assert_allclose(net.c, expected)
 
