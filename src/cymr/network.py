@@ -408,8 +408,11 @@ class Network(object):
         connect : {'fc', 'cf'}
             Connections to add weights to.
 
-        region : tuple of str, str
-            Combination of segments to add the weights to.
+        f_segment : tuple of str, str
+            Sublayer and segment to use for the item layer.
+
+        c_segment : tuple of str, str
+            Sublayer and segment to use for the context layer.
 
         weights : numpy.array
             Items x context array of weights.
