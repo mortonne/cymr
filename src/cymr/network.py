@@ -190,29 +190,25 @@ class Network(object):
 
     Parameters
     ----------
-    regions : dict of {str: (int, int)}
-        Definition of network regions. For example, may have segments
-        representing learned items and segments representing
-        distraction trials. Each entry contains an (n_f, n_c) pair
-        indicating the number of item and context units to allocate for
-        that region.
+    f_segment : dict of str: (dict of str: int)
+        For each item sublayer, the number of units in each segment.
+
+    c_segment : dict of str: (dict of str: int)
+        For each context sublayer, the number of units in each segment.
 
     Attributes
     ----------
-    regions : dict of {str: (int, int)}
-        Number of item and context units for each named region.
-
-    n_f_segment : dict of {str: int}
+    f_segment : dict of str: (dict of str: int)
         Number of item units for each segment.
 
-    n_c_segment : dict of {str: int}
+    c_segment : dict of str: (dict of str: int)
         Number of context units for each segment.
 
-    f_ind : dict of {str: slice}
-        Slice object for item units for each segment.
+    f_ind : cymr.network.LayerIndex
+        Index of units in the item layer.
 
-    c_ind : dict of {str: slice}
-        Slice object for context units for each segment
+    c_ind : cymr.network.LayerIndex
+        Index of units in the context layer.
 
     n_f : int
         Total number of item units.
