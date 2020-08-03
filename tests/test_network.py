@@ -179,10 +179,11 @@ def test_update(net_pre):
 
 def test_present(net_pre):
     net = net_pre
-    f_ind, c_ind = net.get_slices(('item', 'item'))
     net.c[0] = 1
-    net.present('item', 0, .5)
+    net.present('task', 'item', 0, 'task', .5)
     np.testing.assert_allclose(np.linalg.norm(net.c, 2), 1)
+
+    c_ind = net.get_segment('c', 'task', 'item')
     expected = np.array(
         [0.8660254, 0.09128709, 0.18257419, 0.27386128, 0.36514837])
     np.testing.assert_allclose(net.c[c_ind], expected)
