@@ -340,6 +340,25 @@ class Network(object):
         return f_ind, c_ind
 
     def get_segment(self, layer, sublayer, segment):
+        """
+        Get indices for a segment.
+
+        Parameters
+        ----------
+        layer : {'f', 'c'}
+            Layer to access.
+
+        sublayer : str
+            Sublayer to access.
+
+        segment : str
+            Segment to access.
+
+        Returns
+        -------
+        ind : numpy.array
+            Segment indices.
+        """
         if layer == 'f':
             ind = self.f_ind.get_segment(sublayer, segment)
         elif layer == 'c':
@@ -349,6 +368,28 @@ class Network(object):
         return ind
 
     def get_unit(self, layer, sublayer, segment, unit):
+        """
+        Get indices for a unit.
+
+        Parameters
+        ----------
+        layer : {'f', 'c'}
+            Layer to access.
+
+        sublayer : str
+            Sublayer to access.
+
+        segment : str
+            Segment to access.
+
+        unit : int
+            Index of the unit within the segment.
+
+        Returns
+        -------
+        ind : int
+            Absolute index of the unit within the layer.
+        """
         if layer == 'f':
             ind = self.f_ind.get_unit(sublayer, segment, unit)
         elif layer == 'c':
