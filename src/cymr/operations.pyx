@@ -143,6 +143,33 @@ cpdef apply_softmax(int n,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cpdef study_distract(
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_cf_exp,
+    double [:] c,
+    double [:] c_in,
+    double [:] f,
+    const int [:] item_list,
+    int [:] c_ind,
+    double [:] B,
+    double [:] Lfc,
+    double [:] Lcf,
+    const int [:] distract_list,
+    double [:] distract_B
+):
+    cdef Py_ssize_t n = item_list.shape[0]
+    for i in range(n):
+        if distract_B[i] > 0:
+            integrate(w_fc_exp, w_fc_pre, c, c_in, f,
+                      distract_list[i], c_ind, distract_B[i])
+        present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
+                item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
+    if distract_B[n] > 0:
+        integrate(w_fc_exp, w_fc_pre, c, c_in, f,
+                  distract_list[n], c_ind, distract_B[n])
+
+
 def p_recall(int start,
              int n_f,
              int [:] recalls,
