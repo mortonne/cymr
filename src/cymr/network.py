@@ -518,8 +518,47 @@ class Network(object):
         else:
             raise ValueError(f'Invalid connection: {connect}')
 
-    def study(self, segment, item_list, B, Lfc, Lcf, distract_segment=None,
-              distract_list=None, distract_B=None):
+    def study(self, segment, item_list, sublayer, B, Lfc, Lcf):
+        """
+        Study a list of items.
+
+        Parameters
+        ----------
+        segment : tuple of (str, str)
+            Sublayer and segment of items to present.
+
+        item_list : numpy.array
+            Item indices relative to the segment.
+
+        sublayer : str
+            Sublayer of context to update.
+
+        B : float or numpy.array
+            Context updating rate. If an array, specifies a rate for
+            each individual study trial.
+
+        Lfc : float or numpy.array
+            Learning rate for item to context associations. If an
+            array, specifies a learning rate for each individual trial.
+
+        Lcf : float or numpy.array
+            Learning rate for context to item associations.
+        """
+        if not isinstance(B, np.ndarray):
+            B = np.tile(B, item_list.shape).astype(float)
+        if not isinstance(Lfc, np.ndarray):
+            Lfc = np.tile(Lfc, item_list.shape).astype(float)
+        if not isinstance(Lcf, np.ndarray):
+            Lcf = np.tile(Lcf, item_list.shape).astype(float)
+        f_ind = self.get_segment('f', *segment)
+        item_ind = f_ind[item_list]
+        c_ind = self.get_sublayer('c', sublayer)
+        operations.study(self.w_fc_exp, self.w_fc_pre,
+                         self.w_cf_exp, self.c, self.c_in,
+                         self.f, item_ind, c_ind, B, Lfc, Lcf)
+
+    def study_distract(self, segment, item_list, B, Lfc, Lcf, distract_segment=None,
+                       distract_list=None, distract_B=None):
         """
         Study a list of items.
 
