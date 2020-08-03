@@ -25,9 +25,9 @@ def weights():
 
 @pytest.fixture()
 def net_pre(net, weights):
-    net.add_pre_weights('fc', ('item', 'item'), weights)
-    net.add_pre_weights('cf', ('item', 'item'), weights)
-    net.add_pre_weights('fc', ('task', 'task'), 1)
+    net.add_pre_weights('fc', ('task', 'item'), ('task', 'item'), weights)
+    net.add_pre_weights('cf', ('task', 'item'), ('task', 'item'), weights)
+    net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
     return net
 
 
@@ -129,9 +129,9 @@ def test_get_unit(net):
 
 def test_pre_weights(net_pre, weights):
     net = net_pre
-    f_ind, c_ind = net.get_slices(('item', 'item'))
-    np.testing.assert_array_equal(net.w_fc_pre[f_ind, c_ind], weights)
-    np.testing.assert_array_equal(net.w_cf_pre[f_ind, c_ind], weights)
+    f_ind, c_ind = net.get_region(('task', 'item'), ('task', 'item'))
+    np.testing.assert_array_equal(net.w_fc_pre[np.ix_(f_ind, c_ind)], weights)
+    np.testing.assert_array_equal(net.w_cf_pre[np.ix_(f_ind, c_ind)], weights)
 
 
 def test_update(net_pre):
