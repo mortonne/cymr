@@ -422,7 +422,7 @@ class Network(object):
         else:
             raise ValueError(f'Invalid connection type: {connect}')
 
-    def update(self, sublayer, segment, item, c_sublayer):
+    def update(self, item, sublayer):
         """
         Update context completely with input from the item layer.
 
@@ -431,48 +431,49 @@ class Network(object):
 
         Parameters
         ----------
-        segment : str
-            Segment of the item layer to cue with.
+        item : tuple of (str, str, int)
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Item index within the segment to present.
+        sublayer : str
+            Sublayer of context to update.
         """
-        f_ind = self.get_unit('f', sublayer, segment, item)
-        c_ind = self.get_sublayer('c', c_sublayer)
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayer('c', sublayer)
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
                              self.f, f_ind, c_ind, B=1)
 
-    def integrate(self, segment, item, B):
+    def integrate(self, item, sublayer, B):
         """
         Integrate input from the item layer into context.
 
         Parameters
         ----------
-        segment : str
-            Segment of the item layer to cue with.
+        item : tuple of (str, str, int)
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Item index within the segment to present.
+        sublayer : str
+            Sublayer of context to update.
 
         B : float
             Integration scaling factor; higher values update context
             to more strongly reflect the input.
         """
-        ind = self.f_ind[segment].start + item
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayer('c', sublayer)
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
-                             self.f, ind, B)
+                             self.f, f_ind, c_ind, B)
 
-    def present(self, sublayer, segment, item, c_sublayer, B, Lfc=0, Lcf=0):
+    def present(self, item, sublayer, B, Lfc=0, Lcf=0):
         """
         Present an item and learn context-item associations.
 
         Parameters
         ----------
-        segment : str
-            Segment of the item layer to cue with.
+        item : tuple of (str, str, int)
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Item index within the segment to present.
+        sublayer : str
+            Sublayer of context to update.
 
         B : float
             Integration scaling factor; higher values update context
@@ -484,14 +485,13 @@ class Network(object):
         Lcf : float, optional
             Learning rate for context to item associations.
         """
-        f_ind = self.get_unit('f', sublayer, segment, item)
-        c_ind = self.get_sublayer('c', c_sublayer)
-        operations.present(self.w_fc_exp, self.w_fc_pre,
-                           self.w_cf_exp,
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayer('c', sublayer)
+        operations.present(self.w_fc_exp, self.w_fc_pre, self.w_cf_exp,
                            self.c, self.c_in, self.f, f_ind, c_ind,
                            B, Lfc, Lcf)
 
-    def learn(self, connect, segment, item, L):
+    def learn(self, connect, item, sublayer, L):
         """
         Learn an association between the item and context layers.
 
@@ -500,20 +500,21 @@ class Network(object):
         connect : {'fc', 'cf'}
             Connection matrix to update.
 
-        segment : str
-            Segment of context to update.
+        item : tuple of (str, str, int)
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Absolute index of the item in the network.
+        sublayer : str
+            Sublayer of context to update.
 
         L : double
             Learning rate.
         """
-        ind = self.c_ind[segment]
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayer('c', sublayer)
         if connect == 'fc':
-            self.w_fc_exp[item, ind] += self.c[ind] * L
+            self.w_fc_exp[f_ind, c_ind] += self.c[c_ind] * L
         elif connect == 'cf':
-            self.w_cf_exp[item, ind] += self.c[ind] * L
+            self.w_cf_exp[f_ind, c_ind] += self.c[c_ind] * L
         else:
             raise ValueError(f'Invalid connection: {connect}')
 
