@@ -191,15 +191,16 @@ def test_present(net_pre):
 
 def test_learn(net_pre):
     net = net_pre
-    net.update('task', 0)
-    net.present('item', 0, .5)
-    net.learn('fc', 'all', 0, 1)
+    net.update(('task', 'start', 0), 'task')
+    net.present(('task', 'item', 0), 'task', .5)
+    net.learn('fc', ('task', 'item', 0), 'task', 1)
+
     expected = np.array([0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8660])
-    ind = net.get_ind('f', 'item', 0)
+    ind = net.get_unit('f', 'task', 'item', 0)
     actual = net.w_fc_exp[ind, :]
     np.testing.assert_allclose(actual, expected, atol=.0001)
 
-    net.learn('cf', 'all', 0, 2)
+    net.learn('cf', ('task', 'item', 0), 'task', 2)
     actual = net.w_cf_exp[ind, :]
     np.testing.assert_allclose(actual, expected * 2, atol=.0001)
 
