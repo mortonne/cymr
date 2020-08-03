@@ -169,7 +169,40 @@ cpdef study_distract(
         integrate(w_fc_exp, w_fc_pre, c, c_in, f,
                   distract_list[n], c_ind, distract_B[n])
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef cue_item(int n,
+               int n_f,
+               const double [:, :] w_cf_pre,
+               double [:, :] w_cf_exp,
+               const double [:, :] w_ff_pre,
+               double [:, :] w_ff_exp,
+               double [:] f_in,
+               double [:] c,
+               int [:] exclude,
+               int [:] recalls,
+               int output):
+    cdef Py_ssize_t n_c = w_cf_exp.shape[1]
+    cdef int i
+    cdef int j
 
+    for i in range(n_f):
+        f_in[n + i] = 0
+        if exclude[i]:
+            continue
+
+        # support from context cuing
+        for j in range(n_c):
+            f_in[n + i] += ((w_cf_exp[n + i, j] + w_cf_pre[n + i, j]) * c[j])
+
+        if output > 0:
+            # support from the previously recalled item
+            f_in[n + i] += (w_ff_exp[n + recalls[output - 1], n + i] +
+                            w_ff_pre[n + recalls[output - 1], n + i])
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def p_recall(int start,
              int n_f,
              int [:] recalls,
