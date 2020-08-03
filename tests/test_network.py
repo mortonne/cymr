@@ -108,6 +108,12 @@ def test_network_init(net):
     assert net.f.shape[0] == n_f
 
 
+def test_network_copy(net):
+    net_copy = net.copy()
+    assert net_copy.n_f == net.n_f
+    assert net_copy.n_c == net.n_c
+
+
 def test_pre_weights(net_pre, weights):
     net = net_pre
     f_ind, c_ind = net.get_slices(('item', 'item'))
