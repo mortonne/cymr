@@ -172,7 +172,7 @@ def test_pre_weights(net_pre, weights):
 
 def test_update(net_pre):
     net = net_pre
-    net.update('task', 'start', 0)
+    net.update('task', 'start', 0, 'task')
     expected = np.array([0, 0, 0, 0, 0, 1])
     np.testing.assert_allclose(net.c, expected)
 
