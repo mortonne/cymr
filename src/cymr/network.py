@@ -314,6 +314,15 @@ class Network(object):
         net.w_ff_pre = self.w_ff_pre.copy()
         return net
 
+    def get_sublayer(self, layer, sublayer):
+        if layer == 'f':
+            ind = self.f_ind.get_sublayer(sublayer)
+        elif layer == 'c':
+            ind = self.c_ind.get_sublayer(sublayer)
+        else:
+            raise ValueError(f'Invalid layer: {layer}')
+        return ind
+
     def get_region(self, f_segment, c_segment):
         """
         Return slices for a region.
