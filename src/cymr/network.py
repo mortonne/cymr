@@ -462,7 +462,7 @@ class Network(object):
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
                              self.f, ind, B)
 
-    def present(self, segment, item, B, Lfc=0, Lcf=0):
+    def present(self, sublayer, segment, item, c_sublayer, B, Lfc=0, Lcf=0):
         """
         Present an item and learn context-item associations.
 
@@ -484,11 +484,12 @@ class Network(object):
         Lcf : float, optional
             Learning rate for context to item associations.
         """
-        ind = self.f_ind[segment].start + item
+        f_ind = self.get_unit('f', sublayer, segment, item)
+        c_ind = self.get_sublayer('c', c_sublayer)
         operations.present(self.w_fc_exp, self.w_fc_pre,
                            self.w_cf_exp,
-                           self.c, self.c_in, self.f, ind, B,
-                           Lfc, Lcf)
+                           self.c, self.c_in, self.f, f_ind, c_ind,
+                           B, Lfc, Lcf)
 
     def learn(self, connect, segment, item, L):
         """
