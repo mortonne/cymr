@@ -120,6 +120,13 @@ def test_get_region(net):
     np.testing.assert_array_equal(c_ind, np.array([5]))
 
 
+def test_get_unit(net):
+    ind = net.get_unit('f', 'task', 'start', 0)
+    assert ind == 3
+    ind = net.get_unit('c', 'task', 'item', 4)
+    assert ind == 4
+
+
 def test_pre_weights(net_pre, weights):
     net = net_pre
     f_ind, c_ind = net.get_slices(('item', 'item'))
