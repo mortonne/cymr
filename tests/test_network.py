@@ -60,22 +60,27 @@ def net_study_list(net_pre):
 
 @pytest.fixture()
 def net_study_distract():
-    segments = {'item': (2, 5), 'start': (1, 1), 'distract': (3, 3)}
-    net = network.Network(segments)
+    f_segment = {'task': {'item': 2, 'start': 1, 'distract': 3}}
+    c_segment = {'task': {'item': 5, 'start': 1, 'distract': 3}}
+    net = network.Network(f_segment, c_segment)
     weights = np.arange(10).reshape((2, 5))
-    net.add_pre_weights('fc', ('item', 'item'), weights)
-    net.add_pre_weights('cf', ('item', 'item'), weights)
-    net.add_pre_weights('fc', ('start', 'start'), 1)
-    net.add_pre_weights('fc', ('distract', 'distract'), np.eye(3))
-    net.update('start', 0)
+    net.add_pre_weights('fc', ('task', 'item'), ('task', 'item'), weights)
+    net.add_pre_weights('cf', ('task', 'item'), ('task', 'item'), weights)
+    net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
+    net.add_pre_weights('fc', ('task', 'distract'), ('task', 'distract'), np.eye(3))
+    net.update(('task', 'start', 0), 'task')
     B = .5
     Lfc = 1
     Lcf = 2
     distract_B = .1
-    item_list = np.arange(net.n_f_segment['item'])
-    distract_list = np.arange(net.n_f_segment['distract'])
-    net.study('item', item_list, B, Lfc, Lcf,
-              'distract', distract_list, distract_B)
+    n_item = net.f_segment['task']['item']
+    n_distract = net.f_segment['task']['distract']
+    item_list = np.arange(n_item)
+    distract_list = np.arange(n_distract)
+    net.study_distract(
+        ('task', 'item'), item_list, 'task', B, Lfc, Lcf,
+        ('task', 'distract'), distract_list, distract_B
+    )
     return net
 
 
