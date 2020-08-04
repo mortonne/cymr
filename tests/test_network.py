@@ -85,7 +85,7 @@ def net_study_distract():
 
 
 @pytest.fixture()
-def net_subregions():
+def net_sublayers():
     f_segments = {'task': {'item': 3, 'start': 1}}
     c_segments = {
         'loc': {'item': 3, 'start': 1},
@@ -93,21 +93,7 @@ def net_subregions():
         'sem': {'item': 5, 'start': 1}
     }
     net = network.Network(f_segments, c_segments)
-    w_loc = np.eye(3)
-    net.add_pre_weights('fc', ('task', 'item'), ('loc', 'item'), w_loc)
-    net.update('loc', 'start', 0)
-    net.update('cat', 'start', 0)
-    net.update('sem', 'start', 0)
-    w_loc = np.eye(3)
-    w_cat = np.array([[1, 0], [0, 1], [1, 0]])
-    w_sem = np.arange(15).reshape(3, 5)
-    net.add_pre_weights('fc', ('item', 'loc'), w_loc)
-    net.add_pre_weights('fc', ('item', 'cat'), w_cat)
-    net.add_pre_weights('fc', ('item', 'sem'), w_sem)
-    net.add_pre_weights('cf', ('item', 'loc'), w_loc)
-    net.add_pre_weights('cf', ('item', 'cat'), w_cat)
-    net.add_pre_weights('cf', ('item', 'sem'), w_sem)
-    net.update('start', 0)
+    return net
 
 
 def test_init_layer():
