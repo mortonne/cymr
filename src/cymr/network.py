@@ -524,7 +524,7 @@ class Network(object):
                            self.c, self.c_in, self.f, f_ind, c_ind,
                            B, Lfc, Lcf)
 
-    def learn(self, connect, item, sublayer, L):
+    def learn(self, connect, item, sublayers, L):
         """
         Learn an association between the item and context layers.
 
@@ -536,20 +536,27 @@ class Network(object):
         item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
-        sublayer : str
-            Sublayer of context to update.
+        sublayers : str
+            Sublayers of context to update.
 
         L : double
             Learning rate.
         """
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        if not isinstance(L, np.ndarray):
+            L = np.tile(L, len(sublayers)).astype(float)
         f_ind = self.get_unit('f', *item)
-        c_ind = self.get_sublayer('c', sublayer)
+        c_ind = self.get_sublayers('c', sublayers)
         if connect == 'fc':
-            self.w_fc_exp[f_ind, c_ind] += self.c[c_ind] * L
+            mat = self.w_fc_exp
         elif connect == 'cf':
-            self.w_cf_exp[f_ind, c_ind] += self.c[c_ind] * L
+            mat = self.w_cf_exp
         else:
             raise ValueError(f'Invalid connection: {connect}')
+        for i, s_ind in enumerate(c_ind):
+            s_slice = slice(*tuple(s_ind))
+            mat[f_ind, s_slice] += self.c[s_slice] * L[i]
 
     def study(self, segment, item_list, sublayer, B, Lfc, Lcf):
         """
