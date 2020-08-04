@@ -323,6 +323,14 @@ class Network(object):
             raise ValueError(f'Invalid layer: {layer}')
         return ind
 
+    def get_sublayers(self, layer, sublayers):
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        ind_list = []
+        for sublayer in sublayers:
+            ind_list.append(self.get_sublayer(layer, sublayer))
+        return np.array(ind_list, dtype=np.dtype('i'))
+
     def get_region(self, f_segment, c_segment):
         """
         Return slices for a region.
