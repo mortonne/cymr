@@ -75,27 +75,28 @@ cpdef present(double [:, :] w_fc_exp,
               double [:] c_in,
               double [:] f,
               int item,
-              int [:] c_ind,
-              double B,
-              double Lfc,
-              double Lcf):
+              int [:, :] c_ind,
+              double [:] B,
+              double [:] Lfc,
+              double [:] Lcf):
     cdef Py_ssize_t n_f = f.shape[0]
-    cdef Py_ssize_t n_c = c_ind.shape[0]
+    cdef Py_ssize_t n_s = c_ind.shape[0]
     cdef int i
     cdef int j
+
     # retrieve item context and integrate into current context
     integrate(w_fc_exp, w_fc_pre, c, c_in, f, item, c_ind, B)
 
     # learn the association between f and c
-    if Lfc > 0:
-        for i in range(n_c):
-            j = c_ind[i]
-            w_fc_exp[item, j] += Lfc * c[j]
+    for i in range(n_s):
+        if Lfc[i] > 0:
+            for j in range(c_ind[i, 0], c_ind[i, 1]):
+                w_fc_exp[item, j] += Lfc[i] * c[j]
 
-    if Lcf > 0:
-        for i in range(n_c):
-            j = c_ind[i]
-            w_cf_exp[item, j] += Lcf * c[j]
+    for i in range(n_s):
+        if Lcf[i] > 0:
+            for j in range(c_ind[i, 0], c_ind[i, 1]):
+                w_cf_exp[item, j] += Lcf[i] * c[j]
 
 
 @cython.boundscheck(False)
