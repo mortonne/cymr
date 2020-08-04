@@ -117,10 +117,10 @@ def unpack_weights(weight_template, weight_param):
     return weights
 
 
-def expand_param(param, n):
+def expand_param(param, size):
     """Expand a scalar parameter to array format."""
     if not isinstance(param, np.ndarray):
-        param = np.tile(param, n).astype(float)
+        param = np.tile(param, size).astype(float)
     return param
 
 
