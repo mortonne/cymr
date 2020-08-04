@@ -108,11 +108,11 @@ def test_init_layer():
     assert layer.size_sublayer['loc'] == 4
     assert layer.size_segment['cat']['item'] == 2
 
-    np.testing.assert_array_equal(layer.get_sublayer('loc'), np.array([0, 1, 2, 3]))
-    np.testing.assert_array_equal(layer.get_segment('loc', 'item'), np.array([0, 1, 2]))
+    np.testing.assert_array_equal(layer.get_sublayer('loc'), np.array([0, 4]))
+    np.testing.assert_array_equal(layer.get_segment('loc', 'item'), np.array([0, 3]))
     assert layer.get_unit('loc', 'item', 1) == 1
-    np.testing.assert_array_equal(layer.get_sublayer('cat'), np.array([4, 5, 6]))
-    np.testing.assert_array_equal(layer.get_segment('cat', 'start'), np.array([6]))
+    np.testing.assert_array_equal(layer.get_sublayer('cat'), np.array([4, 7]))
+    np.testing.assert_array_equal(layer.get_segment('cat', 'start'), np.array([6, 7]))
     assert layer.get_unit('cat', 'item', 1) == 5
 
 
@@ -135,18 +135,18 @@ def test_network_copy(net):
 
 def test_get_sublayer(net):
     c_ind = net.get_sublayer('c', 'task')
-    np.testing.assert_array_equal(c_ind, np.array([0, 1, 2, 3, 4, 5]))
+    np.testing.assert_array_equal(c_ind, np.array([0, 6]))
 
 
 def test_get_region(net):
-    f_ind, c_ind = net.get_region(('task', 'item'), ('task', 'start'))
-    np.testing.assert_array_equal(f_ind, np.array([0, 1, 2]))
-    np.testing.assert_array_equal(c_ind, np.array([5]))
+    f_slice, c_slice = net.get_region(('task', 'item'), ('task', 'start'))
+    assert f_slice == slice(0, 3)
+    assert c_slice == slice(5, 6)
 
 
 def test_get_segment(net):
     f_ind = net.get_segment('f', 'task', 'item')
-    np.testing.assert_array_equal(f_ind, np.array([0, 1, 2]))
+    np.testing.assert_array_equal(f_ind, np.array([0, 3]))
 
 
 def test_get_unit(net):
@@ -158,9 +158,9 @@ def test_get_unit(net):
 
 def test_pre_weights(net_pre, weights):
     net = net_pre
-    f_ind, c_ind = net.get_region(('task', 'item'), ('task', 'item'))
-    np.testing.assert_array_equal(net.w_fc_pre[np.ix_(f_ind, c_ind)], weights)
-    np.testing.assert_array_equal(net.w_cf_pre[np.ix_(f_ind, c_ind)], weights)
+    f_slice, c_slice = net.get_region(('task', 'item'), ('task', 'item'))
+    np.testing.assert_array_equal(net.w_fc_pre[f_slice, c_slice], weights)
+    np.testing.assert_array_equal(net.w_cf_pre[f_slice, c_slice], weights)
 
 
 def test_update(net_pre):
@@ -179,7 +179,7 @@ def test_present(net_pre):
     c_ind = net.get_segment('c', 'task', 'item')
     expected = np.array(
         [0.8660254, 0.09128709, 0.18257419, 0.27386128, 0.36514837])
-    np.testing.assert_allclose(net.c[c_ind], expected)
+    np.testing.assert_allclose(net.c[c_ind[0]:c_ind[1]], expected)
 
 
 def test_learn(net_pre):
