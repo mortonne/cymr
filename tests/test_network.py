@@ -138,6 +138,11 @@ def test_get_sublayer(net):
     np.testing.assert_array_equal(c_ind, np.array([0, 6]))
 
 
+def test_get_sublayers(net_sublayers):
+    c_ind = net_sublayers.get_sublayers('c', ['loc', 'cat', 'sem'])
+    np.testing.assert_array_equal(c_ind, np.array([[0, 4], [4, 7], [7, 13]]))
+
+
 def test_get_region(net):
     f_slice, c_slice = net.get_region(('task', 'item'), ('task', 'start'))
     assert f_slice == slice(0, 3)
