@@ -16,18 +16,14 @@ cpdef integrate_context(double [:] c,
                         double[:] c_in,
                         double B,
                         int [:] c_ind):
-    cdef Py_ssize_t n = c_ind.shape[0]
     cdef double cdot = 0
     cdef int i
-    cdef int j
-    for i in range(n):
-        j = c_ind[i]
-        cdot += c[j] * c_in[j]
+    for i in range(c_ind[0], c_ind[1]):
+        cdot += c[i] * c_in[i]
     rho = calc_rho(cdot, B)
 
-    for i in range(n):
-        j = c_ind[i]
-        c[j] = rho * c[j] + B * c_in[j]
+    for i in range(c_ind[0], c_ind[1]):
+        c[i] = rho * c[i] + B * c_in[i]
 
 
 @cython.boundscheck(False)
