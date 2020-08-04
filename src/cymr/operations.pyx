@@ -109,10 +109,10 @@ cpdef study(
     double [:] c_in,
     double [:] f,
     const int [:] item_list,
-    int [:] c_ind,
-    double [:] B,
-    double [:] Lfc,
-    double [:] Lcf,
+    int [:, :] c_ind,
+    double [:, :] B,
+    double [:, :] Lfc,
+    double [:, :] Lcf,
 ):
     cdef Py_ssize_t n = item_list.shape[0]
     for i in range(n):
