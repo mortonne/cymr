@@ -432,13 +432,13 @@ class Network(object):
             Intercept to add to weights.
         """
         scaled = intercept + slope * weights
-        f_ind, c_ind = self.get_region(f_segment, c_segment)
+        f_slice, c_slice = self.get_region(f_segment, c_segment)
         if connect == 'fc':
-            self.w_fc_pre[np.ix_(f_ind, c_ind)] = scaled
+            self.w_fc_pre[f_slice, c_slice] = scaled
         elif connect == 'cf':
-            self.w_cf_pre[np.ix_(f_ind, c_ind)] = scaled
+            self.w_cf_pre[f_slice, c_slice] = scaled
         elif connect == 'ff':
-            self.w_ff_pre[np.ix_(f_ind, c_ind)] = scaled
+            self.w_ff_pre[f_slice, c_slice] = scaled
         else:
             raise ValueError(f'Invalid connection type: {connect}')
 
