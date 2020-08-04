@@ -463,7 +463,7 @@ class Network(object):
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
                              self.f, f_ind, c_ind, B)
 
-    def integrate(self, item, sublayer, B):
+    def integrate(self, item, sublayers, B):
         """
         Integrate input from the item layer into context.
 
@@ -472,15 +472,19 @@ class Network(object):
         item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
-        sublayer : str
-            Sublayer of context to update.
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
 
-        B : float
-            Integration scaling factor; higher values update context
-            to more strongly reflect the input.
+        B : float or numpy.array
+            Integration scaling factor for each sublayer; higher values
+            update context to more strongly reflect the input.
         """
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        if not isinstance(B, np.ndarray):
+            B = np.tile(B, len(sublayers))
         f_ind = self.get_unit('f', *item)
-        c_ind = self.get_sublayer('c', sublayer)
+        c_ind = self.get_sublayers('c', sublayers)
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
                              self.f, f_ind, c_ind, B)
 
