@@ -343,8 +343,8 @@ class Network(object):
         c_ind : slice
             Span of the region in the context dimension.
         """
-        f_ind = self.f_ind.get_segment(*f_segment)
-        c_ind = self.c_ind.get_segment(*c_segment)
+        f_ind = slice(*tuple(self.f_ind.get_segment(*f_segment)))
+        c_ind = slice(*tuple(self.c_ind.get_segment(*c_segment)))
         return f_ind, c_ind
 
     def get_segment(self, layer, sublayer, segment):
