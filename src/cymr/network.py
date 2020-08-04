@@ -442,7 +442,7 @@ class Network(object):
         else:
             raise ValueError(f'Invalid connection type: {connect}')
 
-    def update(self, item, sublayer):
+    def update(self, item, sublayers):
         """
         Update context completely with input from the item layer.
 
@@ -454,13 +454,14 @@ class Network(object):
         item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
-        sublayer : str
-            Sublayer of context to update.
+        sublayers : str of list of str
+            Sublayer(s) of context to update.
         """
         f_ind = self.get_unit('f', *item)
-        c_ind = self.get_sublayer('c', sublayer)
+        c_ind = self.get_sublayers('c', sublayers)
+        B = np.ones(len(sublayers))
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
-                             self.f, f_ind, c_ind, B=1)
+                             self.f, f_ind, c_ind, B)
 
     def integrate(self, item, sublayer, B):
         """
