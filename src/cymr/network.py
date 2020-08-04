@@ -165,13 +165,13 @@ class LayerIndex(object):
             self.size_sublayer[sub] = 0
             start = self.size
             for seg, s in segs.items():
-                self.segment[sub][seg] = np.arange(
-                    self.size, self.size + s, dtype=np.dtype('i')
+                self.segment[sub][seg] = np.array(
+                    [self.size, self.size + s], dtype=np.dtype('i')
                 )
                 self.size += s
                 self.size_sublayer[sub] += s
-            self.sublayer[sub] = np.arange(
-                start, start + self.size_sublayer[sub], dtype=np.dtype('i')
+            self.sublayer[sub] = np.array(
+                [start, start + self.size_sublayer[sub]], dtype=np.dtype('i')
             )
 
     def get_sublayer(self, sublayer):
@@ -181,7 +181,7 @@ class LayerIndex(object):
         return self.segment[sublayer][segment]
 
     def get_unit(self, sublayer, segment, index):
-        return self.segment[sublayer][segment][index]
+        return self.segment[sublayer][segment][0] + index
 
 
 class Network(object):
