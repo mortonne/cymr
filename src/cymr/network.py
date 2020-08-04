@@ -488,7 +488,7 @@ class Network(object):
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
                              self.f, f_ind, c_ind, B)
 
-    def present(self, item, sublayer, B, Lfc=0, Lcf=0):
+    def present(self, item, sublayers, B, Lfc=0, Lcf=0):
         """
         Present an item and learn context-item associations.
 
@@ -497,21 +497,29 @@ class Network(object):
         item : tuple of str, str, int
             Sublayer, segment, and unit of the item to present.
 
-        sublayer : str
-            Sublayer of context to update.
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
 
         B : float
-            Integration scaling factor; higher values update context
+            Integration scaling factors; higher values update context
             to more strongly reflect the input.
 
         Lfc : float, optional
-            Learning rate for item to context associations.
+            Learning rates for item to context associations.
 
         Lcf : float, optional
-            Learning rate for context to item associations.
+            Learning rates for context to item associations.
         """
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        if not isinstance(B, np.ndarray):
+            B = np.tile(B, len(sublayers)).astype(float)
+        if not isinstance(Lfc, np.ndarray):
+            Lfc = np.tile(Lfc, len(sublayers)).astype(float)
+        if not isinstance(Lcf, np.ndarray):
+            Lcf = np.tile(Lcf, len(sublayers)).astype(float)
         f_ind = self.get_unit('f', *item)
-        c_ind = self.get_sublayer('c', sublayer)
+        c_ind = self.get_sublayers('c', sublayers)
         operations.present(self.w_fc_exp, self.w_fc_pre, self.w_cf_exp,
                            self.c, self.c_in, self.f, f_ind, c_ind,
                            B, Lfc, Lcf)
