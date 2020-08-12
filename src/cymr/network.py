@@ -480,8 +480,7 @@ class Network(object):
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, len(sublayers))
+        B = expand_param(B, len(sublayers))
         f_ind = self.get_unit('f', *item)
         c_ind = self.get_sublayers('c', sublayers)
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
@@ -511,12 +510,10 @@ class Network(object):
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, len(sublayers)).astype(float)
-        if not isinstance(Lfc, np.ndarray):
-            Lfc = np.tile(Lfc, len(sublayers)).astype(float)
-        if not isinstance(Lcf, np.ndarray):
-            Lcf = np.tile(Lcf, len(sublayers)).astype(float)
+        n_sub = len(sublayers)
+        B = expand_param(B, n_sub)
+        Lfc = expand_param(Lfc, n_sub)
+        Lcf = expand_param(Lcf, n_sub)
         f_ind = self.get_unit('f', *item)
         c_ind = self.get_sublayers('c', sublayers)
         operations.present(self.w_fc_exp, self.w_fc_pre, self.w_cf_exp,
@@ -543,8 +540,7 @@ class Network(object):
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        if not isinstance(L, np.ndarray):
-            L = np.tile(L, len(sublayers)).astype(float)
+        L = expand_param(L, len(sublayers))
         f_ind = self.get_unit('f', *item)
         c_ind = self.get_sublayers('c', sublayers)
         if connect == 'fc':
@@ -587,12 +583,9 @@ class Network(object):
             sublayers = [sublayers]
         n_item = item_list.shape[0]
         n_sub = len(sublayers)
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, (n_item, n_sub)).astype(float)
-        if not isinstance(Lfc, np.ndarray):
-            Lfc = np.tile(Lfc, (n_item, n_sub)).astype(float)
-        if not isinstance(Lcf, np.ndarray):
-            Lcf = np.tile(Lcf, (n_item, n_sub)).astype(float)
+        B = expand_param(B, (n_item, n_sub))
+        Lfc = expand_param(Lfc, (n_item, n_sub))
+        Lcf = expand_param(Lcf, (n_item, n_sub))
         f_ind = self.get_segment('f', *segment)
         item_ind = (f_ind[0] + item_list).astype(np.dtype('i'))
         c_ind = self.get_sublayers('c', sublayers)
@@ -645,12 +638,9 @@ class Network(object):
             sublayers = [sublayers]
         n_item = item_list.shape[0]
         n_sub = len(sublayers)
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, (n_item, n_sub)).astype(float)
-        if not isinstance(Lfc, np.ndarray):
-            Lfc = np.tile(Lfc, (n_item, n_sub)).astype(float)
-        if not isinstance(Lcf, np.ndarray):
-            Lcf = np.tile(Lcf, (n_item, n_sub)).astype(float)
+        B = expand_param(B, (n_item, n_sub))
+        Lfc = expand_param(Lfc, (n_item, n_sub))
+        Lcf = expand_param(Lcf, (n_item, n_sub))
 
         f_ind = self.get_segment('f', *distract_segment)
         distract_ind = (f_ind[0] + distract_list).astype(np.dtype('i'))
