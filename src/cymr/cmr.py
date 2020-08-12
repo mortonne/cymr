@@ -64,14 +64,16 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
 
 def init_loc_cmr(n_item, param):
     """Initialize localist CMR for one list."""
-    segments = {'item': (n_item, n_item), 'start': (1, 1)}
-    net = network.Network(segments)
-    net.add_pre_weights('fc', ('item', 'item'), np.eye(n_item),
-                        param['Dfc'], param['Afc'])
-    net.add_pre_weights('cf', ('item', 'item'), np.eye(n_item),
-                        param['Dcf'], param['Acf'])
-    net.add_pre_weights('fc', ('start', 'start'), 1)
-    net.update('start', 0)
+    f_segment = {'task': {'item': n_item, 'start': 1}}
+    c_segment = {'task': {'item': n_item, 'start': 1}}
+
+    net = network.Network(f_segment, c_segment)
+    net.add_pre_weights('fc', ('task', 'item'), ('task', 'item'),
+                        np.eye(n_item), param['Dfc'], param['Afc'])
+    net.add_pre_weights('cf', ('task', 'item'), ('task', 'item'),
+                        np.eye(n_item), param['Dcf'], param['Acf'])
+    net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
+    net.update(('task', 'start', 0), 'task')
     return net
 
 
