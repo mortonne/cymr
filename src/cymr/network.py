@@ -766,14 +766,17 @@ class Network(object):
         )
         return p
 
-    def generate_recall(self, segment, B, T, p_stop, amin=0.000001):
+    def generate_recall(self, segment, sublayers, B, T, p_stop, amin=0.000001):
         """
         Generate a sequence of simulated free recall events.
 
         Parameters
         ----------
-        segment : str
-            Segment to retrieve items from.
+        segment : tuple of str, str
+            Sublayer and segment to retrieve items from.
+
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
 
         B : float
             Context updating rate after each recall.
@@ -788,13 +791,13 @@ class Network(object):
             Minimum activation of each not-yet-recalled item on each
             recall attempt.
         """
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
         # weights to use for recall (assume fixed during recall)
-        rec_ind = self.f_ind[segment]
-        n_item = self.n_f_segment[segment]
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, n_item).astype(float)
-        if not isinstance(T, np.ndarray):
-            T = np.tile(T, n_item).astype(float)
+        rec_ind = self.get_segment('f', *segment)
+        n_item = rec_ind[1] - rec_ind[0]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
 
         recalls = []
         exclude = np.zeros(n_item, dtype=np.dtype('i'))
@@ -806,15 +809,15 @@ class Network(object):
 
             # calculate item support
             operations.cue_item(
-                rec_ind.start, n_item, self.w_cf_pre, self.w_cf_exp,
+                rec_ind[0], n_item, self.w_cf_pre, self.w_cf_exp,
                 self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
                 np.asarray(recalls, dtype=np.dtype('i')), i
             )
-            operations.apply_softmax(rec_ind.start, n_item, self.f_in,
-                                     exclude, amin, T[i])
+            operations.apply_softmax(rec_ind[0], n_item, self.f_in,
+                                     exclude, amin, T)
 
             # select item for recall proportionate to support
-            support = self.f_in[rec_ind]
+            support = self.f_in[rec_ind[0]:rec_ind[1]]
             p_recall = support / np.sum(support)
             if np.any(np.isnan(p_recall)):
                 n = np.count_nonzero(exclude == 0)
@@ -827,7 +830,8 @@ class Network(object):
             exclude[recall] = 1
 
             # integrate context associated with the item into context
-            self.integrate(segment, recall, B[i])
+            item = (*segment, recall)
+            self.integrate(item, sublayers, B[i])
         return recalls
 
     def generate_recall_lba(self, segment, time_limit, B, A, b, s, tau):
