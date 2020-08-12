@@ -118,7 +118,8 @@ class CMR(Recall):
                            patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        trial_param = prepare_list_param(n_item, param)
+        n_sub = 1
+        trial_param = prepare_list_param(n_item, n_sub, param)
         net_init = init_loc_cmr(n_item, param)
         logl = 0
         n = 0
@@ -127,10 +128,14 @@ class CMR(Recall):
             list_param = param.copy()
             if param_def is not None:
                 list_param = param_def.get_dynamic(list_param, i)
-            net.study('item', study['input'][i], list_param['B_enc'],
-                      trial_param['Lfc'], trial_param['Lcf'])
-            p = net.p_recall('item', recall['input'][i], list_param['B_rec'],
-                             list_param['T'], trial_param['p_stop'])
+            net.study(
+                ('task', 'item'), study['input'][i], 'task',
+                list_param['B_enc'], trial_param['Lfc'], trial_param['Lcf']
+            )
+            p = net.p_recall(
+                ('task', 'item'), recall['input'][i], 'task', list_param['B_rec'],
+                list_param['T'], trial_param['p_stop']
+            )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
