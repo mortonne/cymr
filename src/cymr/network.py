@@ -301,10 +301,6 @@ class Network(object):
             Network with the same segments, weights, and activations.
         """
         net = Network(self.f_segment, self.c_segment)
-        net.f_ind = self.f_ind
-        net.c_ind = self.c_ind
-        net.n_f = self.n_f
-        net.n_c = self.n_c
         net.f = self.f.copy()
         net.f_in = self.f_in.copy()
         net.c = self.c.copy()
