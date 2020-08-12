@@ -834,10 +834,14 @@ class Network(object):
             self.integrate(item, sublayers, B[i])
         return recalls
 
-    def generate_recall_lba(self, segment, time_limit, B, A, b, s, tau):
+    def generate_recall_lba(self, segment, sublayers, time_limit, B, A, b, s, tau):
         """Generate timed free recall using the LBA model."""
-        rec_ind = self.f_ind[segment]
-        n_item = self.n_f_segment[segment]
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        rec_ind = self.get_segment('f', *segment)
+        n_item = rec_ind[1] - rec_ind[0]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
 
         recalls = []
         times = []
@@ -849,11 +853,11 @@ class Network(object):
 
             # calculate item support
             operations.cue_item(
-                rec_ind.start, n_item, self.w_cf_pre, self.w_cf_exp,
+                rec_ind[0], n_item, self.w_cf_pre, self.w_cf_exp,
                 self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
                 np.asarray(recalls, dtype=np.dtype('i')), i
             )
-            support = self.f_in[rec_ind]
+            support = self.f_in[rec_ind[0]:rec_ind[1]]
 
             # simulate response competition
             recall, irt = sample_response_lba(A, b, support, s, tau)
@@ -866,7 +870,8 @@ class Network(object):
                 exclude[recall] = 1
 
                 # integrate context associated with the item into context
-                self.integrate(segment, recall, B)
+                item = (*segment, recall)
+                self.integrate(item, sublayers, B[i])
         return recalls, times
 
     def plot(self, ax=None):
