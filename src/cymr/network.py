@@ -246,10 +246,10 @@ class Network(object):
         Weights learned during the experiment connecting f to f.
     """
     def __init__(self, f_segment, c_segment):
-        self.f_segment = f_segment
-        self.c_segment = c_segment
-        self.f_ind = LayerIndex(f_segment)
-        self.c_ind = LayerIndex(c_segment)
+        self.f_segment = f_segment.copy()
+        self.c_segment = c_segment.copy()
+        self.f_ind = LayerIndex(self.f_segment)
+        self.c_ind = LayerIndex(self.c_segment)
         n_f = self.f_ind.size
         n_c = self.c_ind.size
         self.n_f = n_f
