@@ -261,7 +261,7 @@ def test_recall(net_study):
     X1 = .05
     X2 = 1
     p_stop = cmr.p_stop_op(len(recalls), X1, X2)
-    p = net.p_recall('item', recalls, B, T, p_stop)
+    p = net.p_recall(('task', 'item'), recalls, 'task', B, T, p_stop)
     expected = np.array([0.8335545, 0.0760874, 0.6305471, 1.])
     np.testing.assert_allclose(p, expected, atol=.0000001)
 
@@ -285,7 +285,7 @@ def test_sequences(net_study):
     p[:] = np.nan
     for i, recalls in enumerate(sequences):
         net.c = c_study.copy()
-        p_recalls = net.p_recall('item', recalls, B, T, p_stop)
+        p_recalls = net.p_recall(('task', 'item'), recalls, 'task', B, T, p_stop)
         p[i, :len(p_recalls)] = p_recalls
 
     # probability of any recall sequence should be 1
@@ -301,7 +301,7 @@ def test_generate(net_study):
     X2 = 1
     n_item = 3
     p_stop = cmr.p_stop_op(n_item, X1, X2)
-    recalls = net.generate_recall('item', B, T, p_stop)
+    recalls = net.generate_recall(('task', 'item'), 'task', B, T, p_stop)
 
 
 def test_generate_lba(net_study):
@@ -312,8 +312,9 @@ def test_generate_lba(net_study):
     b = 8
     s = 1
     tau = 0
-    recalls, times = net.generate_recall_lba('item', time_limit, B,
-                                             A, b, s, tau)
+    recalls, times = net.generate_recall_lba(
+        ('task', 'item'), 'task', time_limit, B, A, b, s, tau
+    )
 
 
 @pytest.fixture()
