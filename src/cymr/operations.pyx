@@ -214,9 +214,10 @@ def p_recall(int start,
              double [:] f_in,
              double [:] c,
              double [:] c_in,
+             int [:, :] c_ind,
              int [:] exclude,
              double amin,
-             double [:] B,
+             double [:, :] B,
              double T,
              const double [:] p_stop,
              double [:] p):
@@ -240,9 +241,9 @@ def p_recall(int start,
 
         # calculate probability of this recall
         p[i] = (f_in[start + recalls[i]] / total) * (1 - p_stop[i])
-        exclude[recalls[i]] = 1
 
         # update context
         if i < (n_r - 1):
-            integrate(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B[i])
+            exclude[recalls[i]] = 1
+            integrate(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], c_ind, B[i])
     p[n_r] = p_stop[n_r]
