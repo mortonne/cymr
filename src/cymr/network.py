@@ -174,6 +174,9 @@ class LayerIndex(object):
                 [start, start + self.size_sublayer[sub]], dtype=np.dtype('i')
             )
 
+    def copy(self):
+        return self.__init__(self.size_segment)
+
     def get_sublayer(self, sublayer):
         return self.sublayer[sublayer]
 
