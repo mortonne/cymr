@@ -782,7 +782,7 @@ class Network(object):
         sublayers : str or list of str
             Sublayer(s) of context to update.
 
-        B : float
+        B : float or numpy.ndarray
             Context updating rate after each recall.
 
         T : float
