@@ -515,14 +515,14 @@ class Network(object):
         sublayers : str or list of str
             Sublayer(s) of context to update.
 
-        B : float
+        B : float or numpy.ndarray
             Integration scaling factors; higher values update context
             to more strongly reflect the input.
 
-        Lfc : float, optional
+        Lfc : float or numpy.ndarray, optional
             Learning rates for item to context associations.
 
-        Lcf : float, optional
+        Lcf : float or numpy.ndarray, optional
             Learning rates for context to item associations.
         """
         if not isinstance(sublayers, list):
