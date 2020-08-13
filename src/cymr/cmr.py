@@ -179,7 +179,8 @@ class CMR(Recall):
     def record_network(self, data, param):
         study, recall = self.prepare_sim(data)
         n_item = len(study['input'][0])
-        list_param = prepare_list_param(n_item, param)
+        n_sub = 1
+        list_param = prepare_list_param(n_item, n_sub, param)
         net_init = init_loc_cmr(n_item, param)
         n_list = len(study['input'])
 
@@ -187,10 +188,14 @@ class CMR(Recall):
         for i in range(n_list):
             net = net_init.copy()
             item_list = study['input'][i].astype(int)
-            state = net.record_study('item', item_list, param['B_enc'],
-                                     list_param['Lfc'], list_param['Lcf'])
-            rec = net.record_recall('item', recall['input'][i],
-                                    param['B_rec'], param['T'])
+            state = net.record_study(
+                ('task', 'item'), item_list, 'task', param['B_enc'],
+                list_param['Lfc'], list_param['Lcf']
+            )
+            rec = net.record_recall(
+                ('task', 'item'), recall['input'][i], 'task',
+                param['B_rec'], param['T']
+            )
             state.extend(rec)
             net_state.append(state)
         return net_state
