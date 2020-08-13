@@ -497,7 +497,7 @@ class Network(object):
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        B = expand_param(B, len(sublayers))
+        B = expand_param(B, np.array(len(sublayers)))
         f_ind = self.get_unit('f', *item)
         c_ind = self.get_sublayers('c', sublayers)
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
@@ -527,7 +527,7 @@ class Network(object):
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        n_sub = len(sublayers)
+        n_sub = np.array(len(sublayers))
         B = expand_param(B, n_sub)
         Lfc = expand_param(Lfc, n_sub)
         Lcf = expand_param(Lcf, n_sub)
