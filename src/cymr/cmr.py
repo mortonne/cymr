@@ -320,7 +320,8 @@ class CMRDistributed(Recall):
                            patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        trial_param = prepare_list_param(n_item, param)
+        n_sub = 1
+        trial_param = prepare_list_param(n_item, n_sub, param)
 
         weights_param = network.unpack_weights(param_def.weights, param)
         scaled = network.prepare_patterns(patterns, weights_param)
@@ -334,12 +335,14 @@ class CMRDistributed(Recall):
 
             # get the study and recall events for this list
             net = init_dist_cmr(study['item_index'][i], scaled, list_param)
-            net.study('item', study['input'][i], list_param['B_enc'],
-                      trial_param['Lfc'], trial_param['Lcf'])
-            net.integrate('start', 0, list_param['B_start'])
+            net.study(
+                ('task', 'item'), study['input'][i], 'task',
+                list_param['B_enc'], trial_param['Lfc'], trial_param['Lcf']
+            )
+            net.integrate(('task', 'start', 0), 'task', list_param['B_start'])
             p = net.p_recall(
-                'item', recall['input'][i], list_param['B_rec'],
-                list_param['T'], trial_param['p_stop']
+                ('task', 'item'), recall['input'][i], 'task',
+                list_param['B_rec'], list_param['T'], trial_param['p_stop']
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
