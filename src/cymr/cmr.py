@@ -81,19 +81,26 @@ def init_dist_cmr(item_index, patterns, param):
     """Initialize distributed CMR for one list."""
     n_c = patterns['fcf'].shape[1]
     n_f = len(item_index)
-    segments = {'item': (n_f, n_c), 'start': (1, 1)}
-    net = network.Network(segments)
+    f_segment = {'task': {'item': n_f, 'start': 1}}
+    c_segment = {'task': {'item': n_c, 'start': 1}}
+    net = network.Network(f_segment, c_segment)
     list_patterns = patterns['fcf'][item_index]
-    net.add_pre_weights('fc', ('item', 'item'), list_patterns,
-                        param['Dfc'], param['Afc'])
-    net.add_pre_weights('cf', ('item', 'item'), list_patterns,
-                        param['Dcf'], param['Acf'])
-    net.add_pre_weights('fc', ('start', 'start'), 1)
+    net.add_pre_weights(
+        'fc', ('task', 'item'), ('task', 'item'), list_patterns,
+        param['Dfc'], param['Afc']
+    )
+    net.add_pre_weights(
+        'cf', ('task', 'item'), ('task', 'item'), list_patterns,
+        param['Dcf'], param['Acf']
+    )
+    net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
     if 'ff' in patterns and patterns['ff'] is not None:
         mat = patterns['ff'][np.ix_(item_index, item_index)]
-        net.add_pre_weights('ff', ('item', 'item'), mat,
-                            param['Dff'], param['Aff'])
-    net.update('start', 0)
+        net.add_pre_weights(
+            'ff', ('task', 'item'), ('task', 'item'), mat,
+            param['Dff'], param['Aff']
+        )
+    net.update(('task', 'start', 0), 'task')
     return net
 
 
