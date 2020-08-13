@@ -343,6 +343,7 @@ class Network(object):
         return net
 
     def get_sublayer(self, layer, sublayer):
+        """Get indices for a sublayer."""
         if layer == 'f':
             ind = self.f_ind.get_sublayer(sublayer)
         elif layer == 'c':
@@ -352,6 +353,7 @@ class Network(object):
         return ind
 
     def get_sublayers(self, layer, sublayers):
+        """Get an array of indices for multiple sublayers."""
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
         ind_list = []
