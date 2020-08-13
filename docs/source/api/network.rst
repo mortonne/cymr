@@ -30,8 +30,10 @@ Accessing and Setting Values
 
     Network.copy
     Network.reset
-    Network.get_slices
-    Network.get_ind
+    Network.get_sublayer
+    Network.get_sublayers
+    Network.get_segment
+    Network.get_unit
     Network.add_pre_weights
 
 Operations
