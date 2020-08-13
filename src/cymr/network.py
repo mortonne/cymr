@@ -671,54 +671,51 @@ class Network(object):
             self.f, item_ind, c_ind, B, Lfc, Lcf, distract_ind, distract_B
         )
 
-    def record_study(self, segment, item_list, B, Lfc, Lcf,
-                     distract_segment=None, distract_list=None,
-                     distract_B=None):
-        n = len(item_list)
-        B = expand_param(B, n)
-        Lfc = expand_param(Lfc, n)
-        Lcf = expand_param(Lcf, n)
+    def record_study(self, segment, item_list, sublayers, B, Lfc, Lcf):
+        n_item = len(item_list)
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
+        Lfc = expand_param(Lfc, (n_item, n_sub))
+        Lcf = expand_param(Lcf, (n_item, n_sub))
         state = []
-        if distract_B is not None:
-            distract_B = expand_param(distract_B, n + 1)
         for i in range(len(item_list)):
-            if distract_B is not None and distract_B[i] > 0:
-                self.integrate(distract_segment, distract_list[i],
-                               distract_B[i])
-            self.present(segment, item_list[i], B[i], Lfc[i], Lcf[i])
+            item = (*segment, item_list[i])
+            self.present(item, sublayers, B[i], Lfc[i], Lcf[i])
             state.append(self.copy())
-        if distract_B is not None and distract_B[n] > 0:
-            self.integrate(distract_segment, distract_list[n], distract_B[n])
         state.append(self.copy())
         return state
 
-    def record_recall(self, segment, recalls, B, T, amin=0.000001):
-        rec_ind = self.f_ind[segment]
-        w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
+    def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001):
+        rec_ind = self.get_segment('f', *segment)
+        rec_slice = slice(rec_ind[0], rec_ind[1])
+        w_cf = self.w_cf_exp[rec_slice, :] + self.w_cf_pre[rec_slice, :]
         exclude = np.zeros(self.n_f, dtype=bool)
         state = [self.copy()]
         for output, recall in enumerate(recalls):
             # project the current state of context; assume nonzero support
-            self.f_in[rec_ind] = np.dot(w_cf, self.c)
+            self.f_in[rec_slice] = np.dot(w_cf, self.c)
             if output > 0:
-                item_cue = (self.w_ff_pre[rec_ind, recalls[output - 1]] +
-                            self.w_ff_exp[rec_ind, recalls[output - 1]])
-                self.f_in[rec_ind] += item_cue
+                item_cue = (self.w_ff_pre[rec_slice, recalls[output - 1]] +
+                            self.w_ff_exp[rec_slice, recalls[output - 1]])
+                self.f_in[rec_slice] += item_cue
             self.f_in[self.f_in < amin] = amin
 
             # scale based on choice parameter, set recalled items to zero
-            self.f_in[rec_ind] = np.exp((2 * self.f_in[rec_ind]) / T)
+            self.f_in[rec_slice] = np.exp((2 * self.f_in[rec_slice]) / T)
             self.f_in[exclude] = 0
 
             # remove recalled item from competition
             exclude[recall] = True
 
             # update context
-            ind = self.f_ind[segment].start + recall
+            ind = rec_ind[0] + recall
             self.f[:] = 0
             self.f[ind] = 1
             state.append(self.copy())
-            self.present(segment, recall, B)
+            item = (*segment, recall)
+            self.present(item, sublayers, B)
         state.append(self.copy())
         return state
 
