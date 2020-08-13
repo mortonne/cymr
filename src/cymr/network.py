@@ -118,11 +118,27 @@ def unpack_weights(weight_template, weight_param):
 
 
 def expand_param(param, size):
-    """Expand a scalar parameter to array format."""
+    """
+    Expand a scalar parameter to array format.
+
+    Parameters
+    ----------
+    param : float or numpy.ndarray
+        Parameter to expand.
+
+    size : iterable or numpy.ndarray
+        Size of the expanded parameter.
+
+    Returns
+    -------
+    param : numpy.ndarray
+        Expanded parameter.
+    """
+    size = np.asarray(size)
     if not isinstance(param, np.ndarray):
         # expand scalar to full array
         param = np.tile(param, size).astype(float)
-    elif not isinstance(size, int) and param.ndim < len(size):
+    elif size.shape and param.ndim < len(size):
         # expand array to have to correct number of dimensions
         param = np.expand_dims(param, size[param.ndim:])
         if param.shape != size:
