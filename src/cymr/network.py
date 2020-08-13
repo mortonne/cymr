@@ -120,7 +120,20 @@ def unpack_weights(weight_template, weight_param):
 def expand_param(param, size):
     """Expand a scalar parameter to array format."""
     if not isinstance(param, np.ndarray):
+        # expand scalar to full array
         param = np.tile(param, size).astype(float)
+    elif not isinstance(size, int) and param.ndim < len(size):
+        # expand array to have to correct number of dimensions
+        param = np.expand_dims(param, size[param.ndim:])
+        if param.shape != size:
+            # expand singleton dimensions as needed
+            rep = np.ones(size.shape)
+            for i, n in enumerate(param.shape):
+                if n == 1:
+                    rep[i] = size[i]
+                elif n != size[i] and n < size[i]:
+                    raise ValueError('Cannot expand parameter.')
+            param = np.tile(param, rep).astype(float)
     return param
 
 
