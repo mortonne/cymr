@@ -397,13 +397,13 @@ class CMRDistributed(Recall):
             if param_def is not None:
                 list_param = param_def.get_dynamic(list_param, i)
 
-            # get the study and recall events for this list
-            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
-            net.study(
-                ('task', 'item'), study['input'][i], 'task',
-                list_param['B_enc'], trial_param['Lfc'], trial_param['Lcf']
+            # simulate study
+            net = study_list(
+                param_def, list_param, study['item_index'][i],
+                study['input'][i], patterns
             )
-            net.integrate(('task', 'start', 0), 'task', list_param['B_start'])
+
+            # get recall probabilities
             p = net.p_recall(
                 ('task', 'item'), recall['input'][i], 'task',
                 list_param['B_rec'], list_param['T'], trial_param['p_stop']
