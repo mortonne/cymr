@@ -220,6 +220,24 @@ class Parameters(object):
             indexed[name] = param[name][index]
         return indexed
 
+    def eval_weights(self, patterns, param=None):
+        """Evaluate weights based on parameters and patterns."""
+        weights = {}
+        for sublayer, regions in self.weights.items():
+            weights[sublayer] = {}
+            if sublayer in ['fc', 'cf']:
+                layer_type = 'vector'
+            elif sublayer == 'ff':
+                layer_type = 'similarity'
+            else:
+                raise ValueError(f'Invalid sublayer: {sublayer}.')
+            data = patterns[layer_type].copy()
+            if param is not None:
+                data.update(param)
+            for region, expr in regions.items():
+                weights[sublayer][region] = eval(expr, np.__dict__, data)
+        return weights
+
     def to_json(self, json_file):
         """Write parameter definitions to a JSON file."""
         data = {'fixed': self.fixed, 'free': self.free,
