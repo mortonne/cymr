@@ -7,3 +7,4 @@ User guide
     /guide/evaluation
     /guide/fitting
     /guide/generation
+    /guide/network
