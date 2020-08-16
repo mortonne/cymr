@@ -113,7 +113,7 @@ def init_network(param_def, patterns, param, item_index):
 
     # initialize the network
     net = network.Network(f_segments, c_segments)
-    for connect in ['fc', 'cf', 'ff']:
+    for connect in weights.keys():
         for region, mat in weights[connect].items():
             if connect == 'ff':
                 f_segment = region
