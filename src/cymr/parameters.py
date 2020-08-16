@@ -107,6 +107,18 @@ def sample_parameters(sampler):
     return param
 
 
+def encode_region(region):
+    """Encode a region as a string."""
+    region_str = '_'.join('-'.join(segment) for segment in region)
+    return region_str
+
+
+def decode_region(region_str):
+    """Decode a region string."""
+    region = tuple([tuple(s.split('-')) for s in region_str.split('_')])
+    return region
+
+
 class Parameters(object):
     """
     Class to manage model parameters.
