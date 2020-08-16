@@ -97,8 +97,7 @@ def init_dist_cmr(item_index, patterns, param):
     if 'ff' in patterns and patterns['ff'] is not None:
         mat = patterns['ff'][np.ix_(item_index, item_index)]
         net.add_pre_weights(
-            'ff', ('task', 'item'), ('task', 'item'), mat,
-            param['Dff'], param['Aff']
+            'ff', ('task', 'item'), None, mat, param['Dff'], param['Aff']
         )
     net.update(('task', 'start', 0), 'task')
     return net
