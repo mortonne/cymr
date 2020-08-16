@@ -62,6 +62,7 @@ def param_def():
     }
     param.set_weights('fc', weights)
     param.set_weights('cf', weights)
+    param.set_weights('ff', {('task', 'item'): 'loc + cat'})
     return param
 
 
@@ -71,11 +72,19 @@ def patterns():
     cat[:8, 0] = 1
     cat[8:16, 1] = 1
     cat[16:, 2] = 1
+    sim_cat = np.zeros((24, 24))
+    sim_cat[:8, :8] = 1
+    sim_cat[8:16, 8:16] = 1
+    sim_cat[16:, 16:] = 1
     patterns = {
         'vector': {
             'loc': np.eye(24),
             'cat': cat,
         },
+        'similarity': {
+            'loc': np.eye(24),
+            'cat': sim_cat,
+        }
     }
     return patterns
 
@@ -162,4 +171,8 @@ def test_eval_weights(param_def, patterns):
     np.testing.assert_array_equal(
         weights['cf'][(('task', 'item'), ('cat', 'item'))],
         patterns['vector']['cat']
+    )
+    np.testing.assert_array_equal(
+        weights['ff'][('task', 'item')],
+        patterns['similarity']['loc'] + patterns['similarity']['cat']
     )
