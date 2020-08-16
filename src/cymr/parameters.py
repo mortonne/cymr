@@ -230,10 +230,11 @@ class Parameters(object):
             indexed[name] = param[name][index]
         return indexed
 
-    def eval_weights(self, patterns, param=None):
+    def eval_weights(self, patterns, param=None, item_index=None):
         """Evaluate weights based on parameters and patterns."""
         weights = {}
         for sublayer, regions in self.weights.items():
+            # get necessary patterns
             weights[sublayer] = {}
             if sublayer in ['fc', 'cf']:
                 layer_type = 'vector'
@@ -242,6 +243,16 @@ class Parameters(object):
             else:
                 raise ValueError(f'Invalid sublayer: {sublayer}.')
             data = patterns[layer_type].copy()
+
+            # filter by item index
+            if item_index is not None:
+                for feature, mat in data.items():
+                    if layer_type == 'vector':
+                        data[feature] = mat[item_index, :]
+                    else:
+                        data[feature] = mat[np.ix_(item_index, item_index)]
+
+            # evaluate expressions to get weights
             if param is not None:
                 data.update(param)
             for region, expr in regions.items():
