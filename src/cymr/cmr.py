@@ -385,7 +385,7 @@ class CMRDistributed(Recall):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         n_sub = 1
-        trial_param = prepare_list_param(n_item, n_sub, param)
+        param = prepare_list_param(n_item, n_sub, param)
 
         logl = 0
         n = 0
@@ -404,7 +404,7 @@ class CMRDistributed(Recall):
             # get recall probabilities
             p = net.p_recall(
                 ('task', 'item'), recall['input'][i], 'task',
-                list_param['B_rec'], list_param['T'], trial_param['p_stop']
+                list_param['B_rec'], list_param['T'], list_param['p_stop']
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
