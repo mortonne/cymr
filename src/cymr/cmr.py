@@ -168,7 +168,8 @@ def prepare_list_param(n_item, n_sub, param):
     Lcf_trial = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
     Lcf = np.tile(Lcf_trial[:, None], (1, n_sub))
     p_stop = p_stop_op(n_item, param['X1'], param['X2'])
-    list_param = {'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop}
+    list_param = param.copy()
+    list_param.update({'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop})
     return list_param
 
 
