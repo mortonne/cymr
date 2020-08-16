@@ -61,7 +61,6 @@ patterns are used.
         'B_enc': 0.6,
         'B_start': 0.3,
         'B_rec': 0.8,
-        'w_loc': 1,
         'Afc': 0,
         'Dfc': 0.85,
         'Acf': 1,
@@ -78,7 +77,9 @@ patterns are used.
     }
     patterns = {'vector': {'loc': np.eye(768)}}
     param_def = parameters.Parameters()
-    param_def.set_weights('fcf', {'loc': 'w_loc'})
+    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    param_def.set_weights('fc', weights)
+    param_def.set_weights('cf', weights)
 
 Running a simulation
 ~~~~~~~~~~~~~~~~~~~~

@@ -73,7 +73,9 @@ of the :code:`w_loc` parameter.
 .. ipython:: python
 
     param_def = parameters.Parameters()
-    param_def.set_weights('fcf', {'loc': 'w_loc'})
+    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    param_def.set_weights('fc', weights)
+    param_def.set_weights('cf', weights)
 
 Finally, we define the parameters that we want to evaluate, by creating
 a dictionary with a name and value for each parameter. We'll get a
