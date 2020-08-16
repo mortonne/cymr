@@ -254,6 +254,7 @@ class Parameters(object):
                 'dependent': self.dependent, 'dynamic': self.dynamic,
                 'weights': {}}
         for layer, regions in self.weights.items():
+            data['weights'][layer] = {}
             for region, expr in regions.items():
                 region_str = encode_region(region)
                 data['weights'][layer][region_str] = expr
