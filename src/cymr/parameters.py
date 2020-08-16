@@ -16,8 +16,9 @@ def read_json(json_file):
     par.set_dependent(par_dict['dependent'])
     for trial_type, p in par_dict['dynamic'].items():
         par.set_dynamic(trial_type, p)
-    for trial_type, p in par_dict['weights'].items():
-        par.set_weights(trial_type, p)
+    for connect, p in par_dict['weights'].items():
+        weight_dict = {decode_region(region): expr for region, expr in p}
+        par.set_weights(connect, weight_dict)
     return par
 
 
