@@ -124,6 +124,18 @@ def init_network(param_def, patterns, param, item_index):
     return net
 
 
+def study_list(param_def, param, item_index, item_input, patterns):
+    """Simulate study of a list."""
+    net = init_network(param_def, patterns, param, item_index)
+    net.update(('task', 'start', 0), 'task')
+    net.study(
+        ('task', 'item'), item_input, 'task', param['B_enc'],
+        param['Lfc'], param['Lcf']
+    )
+    net.integrate(('task', 'start', 0), 'task', param['B_start'])
+    return net
+
+
 def init_dist_cmr(item_index, patterns, param):
     """Initialize distributed CMR for one list."""
     n_c = patterns['fcf'].shape[1]
