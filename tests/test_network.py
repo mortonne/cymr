@@ -7,6 +7,7 @@ import numpy as np
 
 from cymr import cmr
 from cymr import network
+from cymr import parameters
 
 
 @pytest.fixture()
@@ -354,23 +355,59 @@ def test_pattern_io(patterns):
 
 
 def test_cmr_patterns(patterns):
-    weights_template = {'fcf': {'loc': 'w_loc', 'cat': 'w_cat'},
-                        'ff': {'loc': 's_loc', 'cat': 's_cat'}}
-    params = {'w_loc': 1, 'w_cat': np.sqrt(2), 's_loc': 1, 's_cat': 2}
-    weights = network.unpack_weights(weights_template, params)
-    scaled = network.prepare_patterns(patterns, weights)
-    expected = np.array([[0.57735027, 0., 0., 0., 0., 0., 0.81649658, 0.],
-                         [0., 0.57735027, 0., 0., 0., 0., 0., 0.81649658],
-                         [0., 0., 0.57735027, 0., 0., 0., 0.81649658, 0.],
-                         [0., 0., 0., 0.57735027, 0., 0., 0.81649658, 0.],
-                         [0., 0., 0., 0., 0.57735027, 0., 0., 0.81649658],
-                         [0., 0., 0., 0., 0., 0.57735027, 0.81649658, 0.]])
-    np.testing.assert_allclose(scaled['fcf'], expected)
+    param_def = parameters.Parameters()
+    fcf_weights = {
+        (('task', 'item'), ('task', 'loc')): 'w_loc * loc',
+        (('task', 'item'), ('task', 'cat')): 'w_cat * cat',
+    }
+    ff_weights = {('task', 'item'): 's_loc * loc + s_cat * cat'}
+    param_def.set_weights('fc', fcf_weights)
+    param_def.set_weights('ff', ff_weights)
+    param_def.set_dependent({
+        'w_loc': 'wr_loc / sqrt(wr_loc**2 + wr_cat**2)',
+        'w_cat': 'wr_cat / sqrt(wr_loc**2 + wr_cat**2)',
+        's_loc': 'sr_loc / (sr_loc + sr_cat)',
+        's_cat': 'sr_cat / (sr_loc + sr_cat)',
+    })
+    param = {'wr_loc': 1, 'wr_cat': np.sqrt(2), 'sr_loc': 1, 'sr_cat': 2}
+    param = param_def.eval_dependent(param)
+    weights = param_def.eval_weights(patterns, param)
 
-    expected = np.array([[1., 0., 0.66666667, 0.66666667, 0., 0.66666667],
-                         [0., 1., 0., 0., 0.66666667, 0.],
-                         [0.66666667, 0., 1., 0.66666667, 0., 0.66666667],
-                         [0.66666667, 0., 0.66666667, 1., 0., 0.66666667],
-                         [0., 0.66666667, 0., 0., 1., 0.],
-                         [0.66666667, 0., 0.66666667, 0.66666667, 0., 1.]])
-    np.testing.assert_allclose(scaled['ff'], expected)
+    # localist FC units
+    expected = np.array(
+        [[0.57735027, 0., 0., 0., 0., 0.],
+         [0., 0.57735027, 0., 0., 0., 0.],
+         [0., 0., 0.57735027, 0., 0., 0.],
+         [0., 0., 0., 0.57735027, 0., 0.],
+         [0., 0., 0., 0., 0.57735027, 0.],
+         [0., 0., 0., 0., 0., 0.57735027]]
+    )
+    np.testing.assert_allclose(
+        weights['fc'][(('task', 'item'), ('task', 'loc'))],
+        expected
+    )
+
+    # category FC units
+    expected = np.array(
+        [[0.81649658, 0.],
+         [0., 0.81649658],
+         [0.81649658, 0.],
+         [0.81649658, 0.],
+         [0., 0.81649658],
+         [0.81649658, 0.]]
+    )
+    np.testing.assert_allclose(
+        weights['fc'][(('task', 'item'), ('task', 'cat'))],
+        expected
+    )
+
+    # FF units
+    expected = np.array(
+        [[1., 0., 0.66666667, 0.66666667, 0., 0.66666667],
+         [0., 1., 0., 0., 0.66666667, 0.],
+         [0.66666667, 0., 1., 0.66666667, 0., 0.66666667],
+         [0.66666667, 0., 0.66666667, 1., 0., 0.66666667],
+         [0., 0.66666667, 0., 0., 1., 0.],
+         [0.66666667, 0., 0.66666667, 0.66666667, 0., 1.]]
+    )
+    np.testing.assert_allclose(weights['ff'][('task', 'item')], expected)
