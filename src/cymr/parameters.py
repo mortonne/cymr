@@ -242,6 +242,10 @@ class Parameters(object):
         """Write parameter definitions to a JSON file."""
         data = {'fixed': self.fixed, 'free': self.free,
                 'dependent': self.dependent, 'dynamic': self.dynamic,
-                'weights': self.weights}
+                'weights': {}}
+        for layer, regions in self.weights.items():
+            for region, expr in regions.items():
+                region_str = encode_region(region)
+                data['weights'][layer][region_str] = expr
         with open(json_file, 'w') as f:
             json.dump(data, f, indent=4)
