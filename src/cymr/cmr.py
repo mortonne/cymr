@@ -419,10 +419,8 @@ class CMRDistributed(Recall):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         n_sub = 1
-        trial_param = prepare_list_param(n_item, n_sub, param)
+        param = prepare_list_param(n_item, n_sub, param)
 
-        weights_param = network.unpack_weights(param_def.weights, param)
-        scaled = network.prepare_patterns(patterns, weights_param)
         recalls_list = []
         for i in range(n_list):
             # access the dynamic parameters needed for this list
@@ -430,15 +428,16 @@ class CMRDistributed(Recall):
             if param_def is not None:
                 list_param = param_def.get_dynamic(list_param, i)
 
-            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
-            net.study(
-                ('task', 'item'), study['input'][i], 'task',
-                list_param['B_enc'], trial_param['Lfc'], trial_param['Lcf']
+            # simulate study
+            net = study_list(
+                param_def, list_param, study['item_index'][i],
+                study['input'][i], patterns
             )
-            net.integrate(('task', 'start', 0), 'task', list_param['B_start'])
+
+            # simulate recall
             recall_vec = net.generate_recall(
                 ('task', 'item'), 'task', list_param['B_rec'],
-                list_param['T'], trial_param['p_stop']
+                list_param['T'], list_param['p_stop']
             )
             recalls_list.append(recall_vec)
         return recalls_list
