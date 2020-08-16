@@ -17,7 +17,8 @@ def read_json(json_file):
     for trial_type, p in par_dict['dynamic'].items():
         par.set_dynamic(trial_type, p)
     for connect, p in par_dict['weights'].items():
-        weight_dict = {decode_region(region): expr for region, expr in p}
+        weight_dict = {decode_region(region): expr
+                       for region, expr in p.items()}
         par.set_weights(connect, weight_dict)
     return par
 
