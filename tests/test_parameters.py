@@ -176,3 +176,14 @@ def test_eval_weights(param_def, patterns):
         weights['ff'][('task', 'item')],
         patterns['similarity']['loc'] + patterns['similarity']['cat']
     )
+
+
+def test_json(param_def, tmp_path):
+    p = tmp_path / 'parameters.json'
+    param_def.to_json(p.as_posix())
+    param = parameters.read_json(p.as_posix())
+    assert param.fixed == param_def.fixed
+    assert param.free == param_def.free
+    assert param.dependent == param_def.dependent
+    assert param.dynamic == param_def.dynamic
+    assert param.weights == param_def.weights
