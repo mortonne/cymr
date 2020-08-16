@@ -110,13 +110,21 @@ def sample_parameters(sampler):
 
 def encode_region(region):
     """Encode a region as a string."""
-    region_str = '_'.join('-'.join(segment) for segment in region)
+    if len(region) == 0:
+        raise ValueError('Cannot encode an empty region.')
+    elif isinstance(region[0], str):
+        region_str = '-'.join(region)
+    else:
+        region_str = '_'.join('-'.join(segment) for segment in region)
     return region_str
 
 
 def decode_region(region_str):
     """Decode a region string."""
-    region = tuple([tuple(s.split('-')) for s in region_str.split('_')])
+    if '_' in region_str:
+        region = tuple([tuple(s.split('-')) for s in region_str.split('_')])
+    else:
+        region = tuple(region_str.split('-'))
     return region
 
 
