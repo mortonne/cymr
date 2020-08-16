@@ -77,6 +77,53 @@ def init_loc_cmr(n_item, param):
     return net
 
 
+def init_network(param_def, patterns, param, item_index):
+    """Initialize a network with pattern weights."""
+    # set item weights
+    weights = param_def.eval_weights(patterns, param, item_index)
+
+    # get all defined sublayers
+    f_sublayers = set()
+    c_sublayers = set()
+    for regions in weights['fc'].keys():
+        f_regions, c_regions = regions
+        f_sublayers.add(f_regions[0])
+        c_sublayers.add(c_regions[0])
+
+    # set task units
+    for f_sublayer in f_sublayers:
+        for c_sublayer in c_sublayers:
+            region = ((f_sublayer, 'start'), (c_sublayer, 'start'))
+            weights['fc'][region] = np.array([[1]])
+            weights['cf'][region] = np.array([[1]])
+
+    # get all segment definitions
+    f_segments = {}
+    c_segments = {}
+    for region, mat in weights['fc'].items():
+        f_region, c_region = region
+        f_sublayer, f_segment = f_region
+        c_sublayer, c_segment = c_region
+        if f_sublayer not in f_segments:
+            f_segments[f_sublayer] = {}
+        if c_sublayer not in c_segments:
+            c_segments[c_sublayer] = {}
+        f_segments[f_sublayer][f_segment] = mat.shape[0]
+        c_segments[c_sublayer][c_segment] = mat.shape[1]
+
+    # initialize the network
+    net = network.Network(f_segments, c_segments)
+    for connect in ['fc', 'cf', 'ff']:
+        for region, mat in weights[connect].items():
+            if connect == 'ff':
+                f_segment = region
+                c_segment = None
+            else:
+                f_segment, c_segment = region
+            net.add_pre_weights(connect, f_segment, c_segment, mat)
+    return net
+
+
 def init_dist_cmr(item_index, patterns, param):
     """Initialize distributed CMR for one list."""
     n_c = patterns['fcf'].shape[1]
