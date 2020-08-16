@@ -207,13 +207,14 @@ def test_dist_cmr_fit(data, param_def):
 
 def test_dynamic_cmr(data):
     patterns = {'vector': {'loc': np.eye(6)}}
-    param = {'B_enc': .5, 'B_start': 0, 'B_rec': .8, 'w_loc': 1,
-             'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
+    param = {'B_enc': .5, 'B_start': 0, 'B_rec': .8,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1, 'B_distract': .2}
     param_def = parameters.Parameters()
+    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    param_def.set_weights('fc', weights)
+    param_def.set_weights('cf', weights)
     param_def.set_dynamic('study', B_enc='distract * B_distract')
-    param_def.set_weights('fcf', loc='w_loc')
 
     model = cmr.CMRDistributed()
     logl, n = model.likelihood(data, param, None, param_def, patterns=patterns,
@@ -223,13 +224,14 @@ def test_dynamic_cmr(data):
 
 def test_dynamic_cmr_recall(data):
     patterns = {'vector': {'loc': np.eye(6)}}
-    param = {'B_enc': .5, 'B_start': 0, 'B_rec': .8, 'w_loc': 1,
-             'Afc': 0, 'Dfc': 1, 'Acf': 1, 'Dcf': 1, 'Aff': 0, 'Dff': 1,
+    param = {'B_enc': .5, 'B_start': 0, 'B_rec': .8,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1, 'B_op': .2}
     param_def = parameters.Parameters()
+    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    param_def.set_weights('fc', weights)
+    param_def.set_weights('cf', weights)
     param_def.set_dynamic('recall', B_rec='op * B_op')
-    param_def.set_weights('fcf', loc='w_loc')
     model = cmr.CMRDistributed()
     logl, n = model.likelihood(data, param, None, param_def, patterns=patterns,
                                recall_keys=['op'])
