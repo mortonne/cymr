@@ -140,8 +140,8 @@ def expand_param(param, size):
         param = np.tile(param, size).astype(float)
     elif size.shape and param.ndim < len(size):
         # expand array to have to correct number of dimensions
-        param = np.expand_dims(param, size[param.ndim:])
-        if param.shape != size:
+        param = np.expand_dims(param, tuple(size[param.ndim:]))
+        if param.shape != tuple(size):
             # expand singleton dimensions as needed
             rep = np.ones(size.shape)
             for i, n in enumerate(param.shape):
