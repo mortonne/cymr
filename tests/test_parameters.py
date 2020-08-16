@@ -186,6 +186,14 @@ def test_eval_weights(param_def, patterns):
     )
 
 
+def test_eval_weights_index(param_def, patterns):
+    item_index = np.arange(12)
+    weights = param_def.eval_weights(patterns, item_index=item_index)
+    assert weights['fc'][(('task', 'item'), ('loc', 'item'))].shape == (12, 24)
+    assert weights['cf'][(('task', 'item'), ('loc', 'item'))].shape == (12, 24)
+    assert weights['ff'][('task', 'item')].shape == (12, 12)
+
+
 def test_json(param_def, tmp_path):
     p = tmp_path / 'parameters.json'
     param_def.to_json(p.as_posix())
