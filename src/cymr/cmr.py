@@ -387,8 +387,6 @@ class CMRDistributed(Recall):
         n_sub = 1
         trial_param = prepare_list_param(n_item, n_sub, param)
 
-        weights_param = network.unpack_weights(param_def.weights, param)
-        scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         n = 0
         for i in range(n_list):
