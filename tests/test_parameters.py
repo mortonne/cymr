@@ -113,7 +113,15 @@ def test_param(param_def):
     assert param_def.free == {'f': [0, 1]}
     assert param_def.dependent == {'d': '2 + mean([a, b])'}
     assert param_def.dynamic == {'study': {'e': 'distract / c'}}
-    assert param_def.weights == {'fcf': {'loc': 'f'}}
+    assert param_def.weights['fc'] == {
+        (('task', 'item'), ('loc', 'item')): 'loc',
+        (('task', 'item'), ('cat', 'item')): 'cat',
+    }
+    assert param_def.weights['cf'] == {
+        (('task', 'item'), ('loc', 'item')): 'loc',
+        (('task', 'item'), ('cat', 'item')): 'cat',
+    }
+    assert param_def.weights['ff'] == {('task', 'item'): 'loc + cat'}
 
 
 def test_dependent(param_def):
