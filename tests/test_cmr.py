@@ -106,6 +106,47 @@ def patterns():
     return patterns
 
 
+def test_init_network(patterns):
+    param_def = parameters.Parameters()
+    param_def.set_dependent(
+        w_loc='wr_loc / sqrt(wr_loc**2 + wr_cat**2)',
+        w_cat='wr_cat / sqrt(wr_loc**2 + wr_cat**2)',
+        s_loc='sr_loc / (sr_loc + sr_cat)',
+        s_cat='sr_cat / (sr_loc + sr_cat)',
+    )
+    param_def.set_weights('fc', {
+        (('task', 'item'), ('loc', 'item')): 'w_loc * loc',
+        (('task', 'item'), ('cat', 'item')): 'w_cat * cat',
+    })
+    param_def.set_weights('cf', {
+        (('task', 'item'), ('loc', 'item')): 'w_loc * loc',
+        (('task', 'item'), ('cat', 'item')): 'w_cat * cat',
+    })
+    param_def.set_weights('ff', {
+        ('task', 'item'): 's_loc * loc + s_cat * cat'
+    })
+    item_index = np.arange(3)
+    param = {'wr_loc': 1, 'wr_cat': np.sqrt(2), 'sr_loc': 1, 'sr_cat': 2}
+    param = param_def.eval_dependent(param)
+    net = cmr.init_network(param_def, patterns, param, item_index)
+
+    expected = np.array(
+        [[0.5774, 0.0000, 0.0000, 0, 0, 0, 0.0000, 0.8165, 0.0000, 0.0000],
+         [0.0000, 0.5774, 0.0000, 0, 0, 0, 0.0000, 0.0000, 0.8165, 0.0000],
+         [0.0000, 0.0000, 0.5774, 0, 0, 0, 0.0000, 0.8165, 0.0000, 0.0000],
+         [0.0000, 0.0000, 0.0000, 0, 0, 0, 1.0000, 0.0000, 0.0000, 1.0000]]
+    )
+    np.testing.assert_allclose(net.w_fc_pre, expected, atol=0.0001)
+
+    expected = np.array(
+        [[1.0000, 0.0000, 0.6667, 0.0000],
+         [0.0000, 1.0000, 0.0000, 0.0000],
+         [0.6667, 0.0000, 1.0000, 0.0000],
+         [0.0000, 0.0000, 0.0000, 0.0000]]
+    )
+    np.testing.assert_allclose(net.w_ff_pre, expected, atol=0.0001)
+
+
 def test_init_dist_cmr(patterns):
     weights_template = {'fcf': {'loc': 'w_loc', 'cat': 'w_cat'},
                         'ff': {'loc': 's_loc', 'cat': 's_cat'}}
