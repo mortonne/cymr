@@ -56,8 +56,28 @@ def param_def():
     param.set_dependent(d='2 + mean([a, b])')
     param.set_dynamic('study', e='distract / c')
     param.set_free(f=[0, 1])
-    param.set_weights('fcf', loc='f')
+    weights = {
+        (('task', 'item'), ('loc', 'item')): 'loc',
+        (('task', 'item'), ('cat', 'item')): 'cat',
+    }
+    param.set_weights('fc', weights)
+    param.set_weights('cf', weights)
     return param
+
+
+@pytest.fixture()
+def patterns():
+    cat = np.zeros((24, 3))
+    cat[:8, 0] = 1
+    cat[8:16, 1] = 1
+    cat[16:, 2] = 1
+    patterns = {
+        'vector': {
+            'loc': np.eye(24),
+            'cat': cat,
+        },
+    }
+    return patterns
 
 
 def test_set_dependent():
@@ -123,3 +143,23 @@ def test_blank(split_data):
         param, study=split_data['study'], recall=split_data['recall']
     )
     assert param == orig
+
+
+def test_eval_weights(param_def, patterns):
+    weights = param_def.eval_weights(patterns)
+    np.testing.assert_array_equal(
+        weights['fc'][(('task', 'item'), ('loc', 'item'))],
+        patterns['vector']['loc']
+    )
+    np.testing.assert_array_equal(
+        weights['fc'][(('task', 'item'), ('cat', 'item'))],
+        patterns['vector']['cat']
+    )
+    np.testing.assert_array_equal(
+        weights['cf'][(('task', 'item'), ('loc', 'item'))],
+        patterns['vector']['loc']
+    )
+    np.testing.assert_array_equal(
+        weights['cf'][(('task', 'item'), ('cat', 'item'))],
+        patterns['vector']['cat']
+    )
