@@ -203,6 +203,15 @@ class LayerIndex(object):
                 [start, start + self.size_sublayer[sub]], dtype=np.dtype('i')
             )
 
+    def __repr__(self):
+        s = ''
+        for sublayer, segments in self.size_segment.items():
+            size_sublayer = self.size_sublayer[sublayer]
+            s += f'{sublayer}: {size_sublayer} units\n'
+            for segment, size_segment in segments.items():
+                s += f'    {segment}: {size_segment} units\n'
+        return s
+
     def copy(self):
         return self.__init__(self.size_segment)
 
