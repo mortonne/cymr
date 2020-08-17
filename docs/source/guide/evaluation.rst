@@ -70,10 +70,19 @@ Weight parameters are used to set the weighting of each component. Here,
 we only have one component, which we assign a weight based on the value
 of the :code:`w_loc` parameter.
 
+Each pattern is placed in a *region* of the connection matrix.
+The region is defined by the sublayer and segment of the :math:`f` and
+:math:`c` layers. Conventionally, the :math:`f` layer
+has only one *sublayer* called :code:`'task'`. The :math:`c` layer may
+have multiple sublayers with different names. Here, we'll just use one,
+also called :code:`'task'`. Each of these sublayers has one *segment*
+corresponding to item representations. Segments for simulating the start
+of the list will also be added automatically.
+
 .. ipython:: python
 
     param_def = parameters.Parameters()
-    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    weights = {(('task', 'item'), ('task', 'item')): 'w_loc * loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
 
