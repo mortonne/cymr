@@ -164,7 +164,9 @@ class Parameters(object):
         self._dynamic_names = set()
 
     def __repr__(self):
-        names = ['fixed', 'free', 'dependent', 'dynamic', 'weights']
+        names = [
+            'fixed', 'free', 'dependent', 'dynamic', 'weights', 'sublayers'
+        ]
         parts = {}
         for name in names:
             obj = getattr(self, name)
