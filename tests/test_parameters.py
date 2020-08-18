@@ -63,6 +63,9 @@ def param_def():
     param.set_weights('fc', weights)
     param.set_weights('cf', weights)
     param.set_weights('ff', {('task', 'item'): 'loc + cat'})
+    param.set_sublayers('c', {
+        'B_enc': {'loc': 'B_enc_loc', 'cat': 'B_enc_cat'}
+    })
     return param
 
 
@@ -192,6 +195,17 @@ def test_eval_weights_index(param_def, patterns):
     assert weights['fc'][(('task', 'item'), ('loc', 'item'))].shape == (12, 24)
     assert weights['cf'][(('task', 'item'), ('loc', 'item'))].shape == (12, 24)
     assert weights['ff'][('task', 'item')].shape == (12, 12)
+
+
+def test_eval_sublayers(param_def):
+    param = {'B_enc_loc': .8, 'B_enc_cat': .4}
+    eval_param = param_def.eval_sublayers('c', ['loc', 'cat'], param, 3)
+    expected = np.array(
+        [[.8, .4],
+         [.8, .4],
+         [.8, .4]]
+    )
+    np.testing.assert_array_equal(eval_param['B_enc'], expected)
 
 
 def test_json(param_def, tmp_path):
