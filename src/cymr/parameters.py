@@ -160,6 +160,7 @@ class Parameters(object):
         self.dependent = {}
         self.dynamic = {}
         self.weights = {}
+        self.sublayers = {}
         self._dynamic_names = set()
 
     def __repr__(self):
@@ -203,6 +204,13 @@ class Parameters(object):
             self.dynamic[trial_type] = dict(*args, **kwargs)
         for key in self.dynamic[trial_type].keys():
             self._dynamic_names.add(key)
+
+    def set_sublayers(self, layer, *args, **kwargs):
+        """Set sublayers and sublayer parameters."""
+        if layer in self.sublayers:
+            self.sublayers[layer].update(*args, **kwargs)
+        else:
+            self.sublayers[layer] = dict(*args, **kwargs)
 
     def set_weights(self, connect, *args, **kwargs):
         """Set weights on model patterns."""
