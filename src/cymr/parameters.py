@@ -159,8 +159,9 @@ class Parameters(object):
         self.free = {}
         self.dependent = {}
         self.dynamic = {}
-        self.weights = {}
         self.sublayers = {}
+        self.weights = {}
+        self.sublayer_param = {}
         self._dynamic_names = set()
 
     def __repr__(self):
@@ -182,8 +183,9 @@ class Parameters(object):
         param.free = self.free.copy()
         param.dependent = self.dependent.copy()
         param.dynamic = self.dynamic.copy()
-        param.sublayers = self.sublayers.copy()
+        param.sublayers = self.layers.copy()
         param.weights = self.weights.copy()
+        param.sublayer_param = self.sublayers.copy()
         param._dynamic_names = self._dynamic_names.copy()
         return param
 
@@ -208,12 +210,16 @@ class Parameters(object):
         for key in self.dynamic[trial_type].keys():
             self._dynamic_names.add(key)
 
-    def set_sublayers(self, layer, *args, **kwargs):
-        """Set sublayers and sublayer parameters."""
-        if layer in self.sublayers:
-            self.sublayers[layer].update(*args, **kwargs)
+    def set_sublayers(self, *args, **kwargs):
+        """Set layers and sublayers of a network."""
+        self.sublayers.update(*args, **kwargs)
+
+    def set_sublayer_param(self, layer, *args, **kwargs):
+        """Set sublayer parameters."""
+        if layer in self.sublayer_param:
+            self.sublayer_param[layer].update(*args, **kwargs)
         else:
-            self.sublayers[layer] = dict(*args, **kwargs)
+            self.sublayer_param[layer] = dict(*args, **kwargs)
 
     def set_weights(self, connect, *args, **kwargs):
         """Set weights on model patterns."""
