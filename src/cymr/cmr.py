@@ -121,17 +121,13 @@ def init_network(param_def, patterns, param, item_index):
 def study_list(param_def, param, item_index, item_input, patterns):
     """Simulate study of a list."""
     net = init_network(param_def, patterns, param, item_index)
-    param = param.copy()
-    n_item = len(item_index)
-    if 'c' in param_def.sublayers:
-        param = param_def.eval_sublayers('c', net.c_sublayers, param, n_item)
     net.update(('task', 'start', 0), net.c_sublayers)
     net.study(
         ('task', 'item'), item_input, net.c_sublayers, param['B_enc'],
         param['Lfc'], param['Lcf']
     )
     net.integrate(('task', 'start', 0), net.c_sublayers, param['B_start'])
-    return net, param
+    return net
 
 
 def init_dist_cmr(item_index, patterns, param):
