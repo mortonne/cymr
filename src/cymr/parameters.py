@@ -182,6 +182,7 @@ class Parameters(object):
         param.free = self.free.copy()
         param.dependent = self.dependent.copy()
         param.dynamic = self.dynamic.copy()
+        param.sublayers = self.sublayers.copy()
         param.weights = self.weights.copy()
         param._dynamic_names = self._dynamic_names.copy()
         return param
