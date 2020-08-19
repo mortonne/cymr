@@ -56,6 +56,11 @@ def param_def():
     param.set_dependent(d='2 + mean([a, b])')
     param.set_dynamic('study', e='distract / c')
     param.set_free(f=[0, 1])
+    param.set_sublayers('f', {'task': {}})
+    param.set_sublayers('c', {
+        'loc': {'B_enc': 'B_enc_loc'},
+        'cat': {'B_enc': 'B_enc_cat'},
+    })
     weights = {
         (('task', 'item'), ('loc', 'item')): 'loc',
         (('task', 'item'), ('cat', 'item')): 'cat',
@@ -63,9 +68,6 @@ def param_def():
     param.set_weights('fc', weights)
     param.set_weights('cf', weights)
     param.set_weights('ff', {('task', 'item'): 'loc + cat'})
-    param.set_sublayers('c', {
-        'B_enc': {'loc': 'B_enc_loc', 'cat': 'B_enc_cat'}
-    })
     return param
 
 
@@ -116,6 +118,11 @@ def test_param(param_def):
     assert param_def.free == {'f': [0, 1]}
     assert param_def.dependent == {'d': '2 + mean([a, b])'}
     assert param_def.dynamic == {'study': {'e': 'distract / c'}}
+    assert param_def.sublayers['f'] == {'task': {}}
+    assert param_def.sublayers['c'] == {
+        'loc': {'B_enc': 'B_enc_loc'},
+        'cat': {'B_enc': 'B_enc_cat'},
+    }
     assert param_def.weights['fc'] == {
         (('task', 'item'), ('loc', 'item')): 'loc',
         (('task', 'item'), ('cat', 'item')): 'cat',
