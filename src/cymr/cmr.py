@@ -182,8 +182,7 @@ class CMR(Recall):
         n_sub = 1
         if param_def is None:
             param_def = parameters.Parameters()
-        param_def.set_sublayers('f', {'task': {}})
-        param_def.set_sublayers('c', {'task': {}})
+        param_def.set_sublayers(f=['task'], c=['task'])
         trial_param = prepare_list_param(n_item, n_sub, param, param_def)
         net_init = init_loc_cmr(n_item, param)
         logl = 0
@@ -216,8 +215,7 @@ class CMR(Recall):
         n_sub = 1
         if param_def is None:
             param_def = parameters.Parameters()
-        param_def.set_sublayers('f', {'task': {}})
-        param_def.set_sublayers('c', {'task': {}})
+        param_def.set_sublayers(f=['task'], c=['task'])
         trial_param = prepare_list_param(n_item, n_sub, param, param_def)
 
         net_init = init_loc_cmr(n_item, param)
@@ -243,8 +241,7 @@ class CMR(Recall):
         n_item = len(study['input'][0])
         n_sub = 1
         param_def = parameters.Parameters()
-        param_def.set_sublayers('f', {'task': {}})
-        param_def.set_sublayers('c', {'task': {}})
+        param_def.set_sublayers(f=['task'], c=['task'])
         list_param = prepare_list_param(n_item, n_sub, param, param_def)
         net_init = init_loc_cmr(n_item, param)
         n_list = len(study['input'])
