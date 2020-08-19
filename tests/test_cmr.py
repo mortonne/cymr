@@ -301,24 +301,12 @@ def test_sublayer_study(data, patterns, sublayer_param_def):
 
 
 def test_sublayer_cmr(data, patterns, sublayer_param_def):
-    cat = np.array([[1, 0, 1, 0, 1, 0],
-                    [0, 1, 0, 1, 0, 1]]).T
-    patterns = {'vector': {'loc': np.eye(6), 'cat': cat}}
     param = {'B_enc_loc': .5, 'B_enc_cat': .8, 'B_start': 0, 'B_rec': .8,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1, 'B_op': .2}
-    param_def = parameters.Parameters()
-    weights = {
-        (('task', 'item'), ('loc', 'item')): 'loc',
-        (('task', 'item'), ('cat', 'item')): 'cat',
-    }
-    param_def.set_weights('fc', weights)
-    param_def.set_weights('cf', weights)
-    param_def.set_sublayers('c', {
-        'B_enc': {'loc': 'B_enc_loc', 'cat': 'B_enc_cat'}
-    })
+
     model = cmr.CMRDistributed()
     logl, n = model.likelihood(
-        data, param, None, param_def, patterns=patterns
+        data, param, None, sublayer_param_def, patterns=patterns
     )
-    np.testing.assert_allclose(logl, -5.985369324344548)
+    np.testing.assert_allclose(logl, -5.8694368046085215)
