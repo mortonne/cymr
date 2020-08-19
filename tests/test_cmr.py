@@ -114,6 +114,7 @@ def test_init_network(patterns):
         s_loc='sr_loc / (sr_loc + sr_cat)',
         s_cat='sr_cat / (sr_loc + sr_cat)',
     )
+    param_def.set_sublayers(f=['task'], c=['loc', 'cat'])
     param_def.set_weights('fc', {
         (('task', 'item'), ('loc', 'item')): 'w_loc * loc',
         (('task', 'item'), ('cat', 'item')): 'w_cat * cat',
