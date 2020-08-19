@@ -601,7 +601,7 @@ class Network(object):
         item_list : numpy.array
             Item indices relative to the segment.
 
-        sublayers : str
+        sublayers : str or list of str
             Sublayers of context to update.
 
         B : float or numpy.array
