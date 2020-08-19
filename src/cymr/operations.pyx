@@ -1,4 +1,4 @@
-# cython: language_level=3, profile=False
+# cython: language_level=3, profile=False, boundscheck=False, wraparound=False
 
 cimport cython
 from libc.math cimport sqrt, exp
@@ -10,8 +10,6 @@ cdef inline double calc_rho(double cdot, double B):
     return rho
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef integrate_context(double [:] c,
                         double[:] c_in,
                         double B,
@@ -26,8 +24,6 @@ cpdef integrate_context(double [:] c,
         c[i] = rho * c[i] + B * c_in[i]
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef integrate(double [:, :] w_fc_exp,
                 const double [:, :] w_fc_pre,
                 double [:] c,
@@ -66,8 +62,6 @@ cpdef integrate(double [:, :] w_fc_exp,
         integrate_context(c, c_in, B[i], c_ind[i])
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef present(double [:, :] w_fc_exp,
               const double [:, :] w_fc_pre,
               double [:, :] w_cf_exp,
@@ -99,8 +93,6 @@ cpdef present(double [:, :] w_fc_exp,
                 w_cf_exp[item, j] += Lcf[i] * c[j]
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef study(
     double [:, :] w_fc_exp,
     const double [:, :] w_fc_pre,
@@ -120,8 +112,6 @@ cpdef study(
                 item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef study_distract(
     double [:, :] w_fc_exp,
     const double [:, :] w_fc_pre,
@@ -146,8 +136,7 @@ cpdef study_distract(
     integrate(w_fc_exp, w_fc_pre, c, c_in, f,
               distract_list[n], c_ind, distract_B[n])
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
+
 cpdef cue_item(int n,
                int n_f,
                const double [:, :] w_cf_pre,
@@ -178,8 +167,6 @@ cpdef cue_item(int n,
                             w_ff_pre[n + recalls[output - 1], n + i])
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef apply_softmax(int n,
                     int n_f,
                     double [:] f_in,
@@ -199,8 +186,6 @@ cpdef apply_softmax(int n,
         f_in[n + i] = exp((2 * f_in[n + i]) / T)
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 def p_recall(int start,
              int n_f,
              int [:] recalls,
