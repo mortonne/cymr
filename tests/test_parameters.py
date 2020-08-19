@@ -235,9 +235,9 @@ def test_eval_weights_index(param_def, patterns):
     assert weights['ff'][('task', 'item')].shape == (12, 12)
 
 
-def test_eval_sublayers(param_def):
+def test_eval_sublayer_param(param_def):
     param = {'B_enc_loc': .8, 'B_enc_cat': .4}
-    eval_param = param_def.eval_sublayers('c', param, 3)
+    eval_param = param_def.eval_sublayer_param('c', param, 3)
     expected = np.array(
         [[.8, .4],
          [.8, .4],
