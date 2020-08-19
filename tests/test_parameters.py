@@ -77,6 +77,16 @@ def param_def():
 
 
 @pytest.fixture()
+def param_def_simple():
+    param = parameters.Parameters()
+    param.set_sublayers(f=['task'], c=['task'])
+    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    param.set_weights('fc', weights)
+    param.set_weights('cf', weights)
+    return param
+
+
+@pytest.fixture()
 def patterns():
     cat = np.zeros((24, 3))
     cat[:8, 0] = 1
