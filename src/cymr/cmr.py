@@ -129,7 +129,8 @@ def study_list(param_def, param, item_index, item_input, patterns):
     net = init_network(param_def, patterns, param, item_index)
     param = param.copy()
     n_item = len(item_index)
-    param = param_def.eval_sublayers('c', net.c_sublayers, param, n_item)
+    if 'c' in param_def.sublayers:
+        param = param_def.eval_sublayers('c', net.c_sublayers, param, n_item)
     net.update(('task', 'start', 0), net.c_sublayers)
     net.study(
         ('task', 'item'), item_input, net.c_sublayers, param['B_enc'],
