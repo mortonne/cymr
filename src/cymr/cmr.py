@@ -382,7 +382,7 @@ class CMRDistributed(Recall):
         if param_def is None:
             raise ValueError('Must provide a Parameters object.')
         n_sub = len(param_def.get_sublayers('c'))
-        param = prepare_list_param(n_item, n_sub, param)
+        param = prepare_list_param(n_item, n_sub, param, param_def)
 
         logl = 0
         n = 0
@@ -390,13 +390,6 @@ class CMRDistributed(Recall):
             # access the dynamic parameters needed for this list
             list_param = param.copy()
             list_param = param_def.get_dynamic(list_param, i)
-
-            # access parameters that vary by context sublayer
-            c_sublayers = param_def.get_sublayers('c')
-            n_item = len(study['item_index'][i])
-            list_param = param_def.eval_sublayers(
-                'c', c_sublayers, list_param, n_item
-            )
 
             # simulate study
             net = study_list(
@@ -422,7 +415,7 @@ class CMRDistributed(Recall):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         n_sub = 1
-        param = prepare_list_param(n_item, n_sub, param)
+        param = prepare_list_param(n_item, n_sub, param, param_def)
 
         recalls_list = []
         for i in range(n_list):
