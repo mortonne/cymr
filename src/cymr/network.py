@@ -286,6 +286,8 @@ class Network(object):
     def __init__(self, f_segment, c_segment):
         self.f_segment = f_segment.copy()
         self.c_segment = c_segment.copy()
+        self.f_sublayers = list(self.f_segment.keys())
+        self.c_sublayers = list(self.c_segment.keys())
         self.f_ind = LayerIndex(self.f_segment)
         self.c_ind = LayerIndex(self.c_segment)
         n_f = self.f_ind.size
