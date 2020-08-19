@@ -76,6 +76,28 @@ def param_def():
     return param
 
 
+def test_param(param_def):
+    """Test that parameter definitions are correct."""
+    assert param_def.fixed == {'a': 1, 'b': 2, 'c': 3}
+    assert param_def.free == {'f': [0, 1]}
+    assert param_def.dependent == {'d': '2 + mean([a, b])'}
+    assert param_def.dynamic == {'study': {'e': 'distract / c'}}
+    assert param_def.sublayers['f'] == {'task': {}}
+    assert param_def.sublayers['c'] == {
+        'loc': {'B_enc': 'B_enc_loc'},
+        'cat': {'B_enc': 'B_enc_cat'},
+    }
+    assert param_def.weights['fc'] == {
+        (('task', 'item'), ('loc', 'item')): 'loc',
+        (('task', 'item'), ('cat', 'item')): 'cat',
+    }
+    assert param_def.weights['cf'] == {
+        (('task', 'item'), ('loc', 'item')): 'loc',
+        (('task', 'item'), ('cat', 'item')): 'cat',
+    }
+    assert param_def.weights['ff'] == {('task', 'item'): 'loc + cat'}
+
+
 @pytest.fixture()
 def param_def_simple():
     param = parameters.Parameters()
@@ -125,28 +147,6 @@ def test_set_dynamic(data):
     updated = parameters.set_dynamic(param, study, dynamic['study'])
     expected = {'B_distract': .2, 'B_enc': [np.array([.2, .4, .6])]}
     np.testing.assert_allclose(updated['B_enc'][0], expected['B_enc'][0])
-
-
-def test_param(param_def):
-    """Test that parameter definitions are correct."""
-    assert param_def.fixed == {'a': 1, 'b': 2, 'c': 3}
-    assert param_def.free == {'f': [0, 1]}
-    assert param_def.dependent == {'d': '2 + mean([a, b])'}
-    assert param_def.dynamic == {'study': {'e': 'distract / c'}}
-    assert param_def.sublayers['f'] == {'task': {}}
-    assert param_def.sublayers['c'] == {
-        'loc': {'B_enc': 'B_enc_loc'},
-        'cat': {'B_enc': 'B_enc_cat'},
-    }
-    assert param_def.weights['fc'] == {
-        (('task', 'item'), ('loc', 'item')): 'loc',
-        (('task', 'item'), ('cat', 'item')): 'cat',
-    }
-    assert param_def.weights['cf'] == {
-        (('task', 'item'), ('loc', 'item')): 'loc',
-        (('task', 'item'), ('cat', 'item')): 'cat',
-    }
-    assert param_def.weights['ff'] == {('task', 'item'): 'loc + cat'}
 
 
 def test_dependent(param_def):
