@@ -389,7 +389,7 @@ class CMRDistributed(Recall):
         n_list = len(study['input'])
         if param_def is None:
             raise ValueError('Must provide a Parameters object.')
-        n_sub = len(param_def.get_sublayers('c'))
+        n_sub = len(param_def.sublayers['c'])
         param = prepare_list_param(n_item, n_sub, param, param_def)
 
         logl = 0
