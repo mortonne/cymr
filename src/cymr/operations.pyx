@@ -222,12 +222,9 @@ def p_recall(int start,
              const double [:] p_stop,
              double [:] p):
     cdef Py_ssize_t n_r = recalls.shape[0]
-    cdef Py_ssize_t n_c = w_cf_exp.shape[1]
     cdef int i
     cdef int j
-    cdef int k
-    cdef double total = 0
-    cdef double norm
+    cdef double total
 
     for i in range(n_r):
         # calculate support for each item
