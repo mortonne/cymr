@@ -238,7 +238,69 @@ def test_dynamic_cmr_recall(data):
     np.testing.assert_allclose(logl, -5.919470385031945)
 
 
-def test_sublayer_cmr(data):
+@pytest.fixture()
+def sublayer_param_def():
+    param_def = parameters.Parameters()
+    param_def.set_sublayers('f', {'task': {}})
+    param_def.set_sublayers('c', {
+        'loc': {'B_enc': 'B_enc_loc'},
+        'cat': {'B_enc': 'B_enc_cat'}
+    })
+    weights = {
+        (('task', 'item'), ('loc', 'item')): 'loc',
+        (('task', 'item'), ('cat', 'item')): 'cat',
+    }
+    param_def.set_weights('fc', weights)
+    param_def.set_weights('cf', weights)
+    return param_def
+
+
+def test_sublayer_study(data, patterns, sublayer_param_def):
+    param = {'B_enc_loc': .5, 'B_enc_cat': .8, 'B_start': 0, 'B_rec': .8,
+             'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
+             'T': 10, 'X1': .05, 'X2': 1, 'B_op': .2}
+    n_item = 3
+    n_sub = 2
+
+    # test expanded list parameters
+    list_param = cmr.prepare_list_param(n_item, n_sub, param)
+    np.testing.assert_array_equal(
+        list_param['Lfc'], np.array([[1, 1], [1, 1], [1, 1]])
+    )
+    np.testing.assert_array_equal(
+        list_param['Lcf'], np.array([[1, 1], [1, 1], [1, 1]])
+    )
+
+    # test sublayer-specific parameters
+    c_sublayers = sublayer_param_def.get_sublayers('c')
+    assert c_sublayers == ['loc', 'cat']
+    list_param = sublayer_param_def.eval_sublayers(
+        'c', c_sublayers, list_param, n_item
+    )
+    np.testing.assert_array_equal(
+        list_param['B_enc'], np.array([[.5, .8], [.5, .8], [.5, .8]])
+    )
+
+    # prepare lists for simulation
+    study, recall = fit.prepare_lists(
+        data, study_keys=['input', 'item_index'], recall_keys=['input'], clean=True
+    )
+
+    # study the first list
+    net = cmr.study_list(
+        sublayer_param_def, list_param, study['item_index'][0],
+        study['input'][0], patterns
+    )
+    expected = np.array(
+        [[0.5, 0., 0., 0., 0., 0., 0.8660, 0.8, 0., 0.6],
+         [0.4330, 0.5, 0., 0., 0., 0., 0.75, 0.48, 0.8, 0.36],
+         [0.375, 0.4330, 0.5, 0., 0., 0., 0.6495, 0.9576, 0.2627, 0.1182],
+         [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]]
+    )
+    np.testing.assert_allclose(net.w_fc_exp, expected, atol=0.0001)
+
+
+def test_sublayer_cmr(data, patterns, sublayer_param_def):
     cat = np.array([[1, 0, 1, 0, 1, 0],
                     [0, 1, 0, 1, 0, 1]]).T
     patterns = {'vector': {'loc': np.eye(6), 'cat': cat}}
