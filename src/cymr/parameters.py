@@ -247,7 +247,7 @@ class Parameters(object):
             indexed[name] = param[name][index]
         return indexed
 
-    def eval_sublayers(self, layer, param, n_trial=None):
+    def eval_sublayer_param(self, layer, param, n_trial=None):
         """Evaluate sublayer parameters."""
         eval_param = param.copy()
 
