@@ -253,9 +253,8 @@ class Parameters(object):
 
         # get parameter values for each sublayer
         param_lists = {}
-        sublayers = self.get_sublayers(layer)
-        for sublayer in sublayers:
-            for par, expr in self.sublayers[layer][sublayer].items():
+        for sublayer in self.sublayers[layer]:
+            for par, expr in self.sublayer_param[layer][sublayer].items():
                 if par not in param_lists:
                     param_lists[par] = []
                 value = eval(expr, np.__dict__, param)
