@@ -1,6 +1,7 @@
 """Manage model parameter settings."""
 
 import json
+import copy
 
 import numpy as np
 
@@ -182,10 +183,10 @@ class Parameters(object):
         param.fixed = self.fixed.copy()
         param.free = self.free.copy()
         param.dependent = self.dependent.copy()
-        param.dynamic = self.dynamic.copy()
-        param.sublayers = self.layers.copy()
-        param.weights = self.weights.copy()
-        param.sublayer_param = self.sublayers.copy()
+        param.dynamic = copy.deepcopy(self.dynamic)
+        param.sublayers = copy.deepcopy(self.sublayers)
+        param.weights = copy.deepcopy(self.weights)
+        param.sublayer_param = copy.deepcopy(self.sublayers)
         param._dynamic_names = self._dynamic_names.copy()
         return param
 
