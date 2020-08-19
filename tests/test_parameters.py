@@ -50,17 +50,16 @@ def split_data(data):
 @pytest.fixture()
 def param_def():
     """Parameter definitions."""
+    # general parameter management
     param = parameters.Parameters()
     param.set_fixed(a=1, b=2)
     param.set_fixed({'c': 3})
     param.set_dependent(d='2 + mean([a, b])')
     param.set_dynamic('study', e='distract / c')
     param.set_free(f=[0, 1])
-    param.set_sublayers('f', {'task': {}})
-    param.set_sublayers('c', {
-        'loc': {'B_enc': 'B_enc_loc'},
-        'cat': {'B_enc': 'B_enc_cat'},
-    })
+
+    # network definition
+    param.set_sublayers(f=['task'], c=['loc', 'cat'])
     weights = {
         (('task', 'item'), ('loc', 'item')): 'loc',
         (('task', 'item'), ('cat', 'item')): 'cat',
@@ -68,6 +67,12 @@ def param_def():
     param.set_weights('fc', weights)
     param.set_weights('cf', weights)
     param.set_weights('ff', {('task', 'item'): 'loc + cat'})
+
+    # sublayer-varying parameters
+    param.set_sublayer_param('c', {
+        'loc': {'B_enc': 'B_enc_loc'},
+        'cat': {'B_enc': 'B_enc_cat'},
+    })
     return param
 
 
