@@ -82,15 +82,9 @@ def init_network(param_def, patterns, param, item_index):
     # set item weights
     weights = param_def.eval_weights(patterns, param, item_index)
 
-    # get all defined sublayers
-    f_sublayers = set()
-    c_sublayers = set()
-    for regions in weights['fc'].keys():
-        f_regions, c_regions = regions
-        f_sublayers.add(f_regions[0])
-        c_sublayers.add(c_regions[0])
-
     # set task units
+    f_sublayers = param_def.get_sublayers('f')
+    c_sublayers = param_def.get_sublayers('c')
     for f_sublayer in f_sublayers:
         for c_sublayer in c_sublayers:
             region = ((f_sublayer, 'start'), (c_sublayer, 'start'))
