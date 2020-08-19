@@ -178,6 +178,7 @@ def test_init_dist_cmr(patterns):
 def test_dist_cmr(data):
     """Test localist CMR using the distributed framework."""
     param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
@@ -194,6 +195,7 @@ def test_dist_cmr(data):
 
 
 def test_dist_cmr_fit(data, param_def):
+    param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
@@ -212,6 +214,7 @@ def test_dynamic_cmr(data):
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1, 'B_distract': .2}
     param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
@@ -229,6 +232,7 @@ def test_dynamic_cmr_recall(data):
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1, 'B_op': .2}
     param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
@@ -242,8 +246,8 @@ def test_dynamic_cmr_recall(data):
 @pytest.fixture()
 def sublayer_param_def():
     param_def = parameters.Parameters()
-    param_def.set_sublayers('f', {'task': {}})
-    param_def.set_sublayers('c', {
+    param_def.set_sublayers(f=['task'], c=['loc', 'cat'])
+    param_def.set_sublayer_param('c', {
         'loc': {'B_enc': 'B_enc_loc'},
         'cat': {'B_enc': 'B_enc_cat'}
     })
@@ -264,7 +268,7 @@ def test_sublayer_study(data, patterns, sublayer_param_def):
     n_sub = 2
 
     # test expanded list parameters
-    list_param = cmr.prepare_list_param(n_item, n_sub, param)
+    list_param = cmr.prepare_list_param(n_item, n_sub, param, sublayer_param_def)
     np.testing.assert_array_equal(
         list_param['Lfc'], np.array([[1, 1], [1, 1], [1, 1]])
     )
@@ -273,10 +277,9 @@ def test_sublayer_study(data, patterns, sublayer_param_def):
     )
 
     # test sublayer-specific parameters
-    c_sublayers = sublayer_param_def.get_sublayers('c')
-    assert c_sublayers == ['loc', 'cat']
-    list_param = sublayer_param_def.eval_sublayers(
-        'c', c_sublayers, list_param, n_item
+    assert sublayer_param_def.sublayers['c'] == ['loc', 'cat']
+    list_param = sublayer_param_def.eval_sublayer_param(
+        'c', list_param, n_item
     )
     np.testing.assert_array_equal(
         list_param['B_enc'], np.array([[.5, .8], [.5, .8], [.5, .8]])
