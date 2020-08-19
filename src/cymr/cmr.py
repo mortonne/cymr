@@ -378,7 +378,9 @@ class CMRDistributed(Recall):
                            patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        n_sub = 1
+        if param_def is None:
+            raise ValueError('Must provide a Parameters object.')
+        n_sub = len(param_def.get_sublayers('c'))
         param = prepare_list_param(n_item, n_sub, param)
 
         logl = 0
@@ -386,8 +388,7 @@ class CMRDistributed(Recall):
         for i in range(n_list):
             # access the dynamic parameters needed for this list
             list_param = param.copy()
-            if param_def is not None:
-                list_param = param_def.get_dynamic(list_param, i)
+            list_param = param_def.get_dynamic(list_param, i)
 
             # simulate study
             net, list_param = study_list(
