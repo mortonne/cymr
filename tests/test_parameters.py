@@ -108,6 +108,22 @@ def param_def_simple():
     return param
 
 
+def test_param_simple(param_def_simple):
+    param_def = param_def_simple
+    assert param_def.fixed == {}
+    assert param_def.free == {}
+    assert param_def.dependent == {}
+    assert param_def.dynamic == {}
+    assert param_def.sublayers == {'f': ['task'], 'c': ['task']}
+    assert param_def.weights['fc'] == {
+        (('task', 'item'), ('task', 'item')): 'loc'
+    }
+    assert param_def.weights['cf'] == {
+        (('task', 'item'), ('task', 'item')): 'loc'
+    }
+    assert param_def.sublayer_param == {}
+
+
 @pytest.fixture()
 def patterns():
     cat = np.zeros((24, 3))
