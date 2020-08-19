@@ -4,6 +4,7 @@ import numpy as np
 from cymr.fit import Recall
 from cymr import fit
 from cymr import network
+from cymr import parameters
 
 
 def primacy(n_item, L, P1, P2):
@@ -180,7 +181,11 @@ class CMR(Recall):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         n_sub = 1
-        trial_param = prepare_list_param(n_item, n_sub, param)
+        if param_def is None:
+            param_def = parameters.Parameters()
+        param_def.set_sublayers('f', {'task': {}})
+        param_def.set_sublayers('c', {'task': {}})
+        trial_param = prepare_list_param(n_item, n_sub, param, param_def)
         net_init = init_loc_cmr(n_item, param)
         logl = 0
         n = 0
@@ -210,7 +215,11 @@ class CMR(Recall):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         n_sub = 1
-        trial_param = prepare_list_param(n_item, n_sub, param)
+        if param_def is None:
+            param_def = parameters.Parameters()
+        param_def.set_sublayers('f', {'task': {}})
+        param_def.set_sublayers('c', {'task': {}})
+        trial_param = prepare_list_param(n_item, n_sub, param, param_def)
 
         net_init = init_loc_cmr(n_item, param)
         recalls_list = []
@@ -234,7 +243,10 @@ class CMR(Recall):
         study, recall = self.prepare_sim(data)
         n_item = len(study['input'][0])
         n_sub = 1
-        list_param = prepare_list_param(n_item, n_sub, param)
+        param_def = parameters.Parameters()
+        param_def.set_sublayers('f', {'task': {}})
+        param_def.set_sublayers('c', {'task': {}})
+        list_param = prepare_list_param(n_item, n_sub, param, param_def)
         net_init = init_loc_cmr(n_item, param)
         n_list = len(study['input'])
 
