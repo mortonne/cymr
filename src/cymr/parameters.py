@@ -244,14 +244,22 @@ class Parameters(object):
     def eval_sublayers(self, layer, sublayers, param, n_trial=None):
         """Evaluate sublayer parameters."""
         eval_param = param.copy()
-        for par, sub_param in self.sublayers[layer].items():
-            par_list = [eval(sub_param[sub], np.__dict__, param)
-                        for sub in sublayers]
+
+        # get parameter values for each sublayer
+        param_lists = {}
+        for sublayer in sublayers:
+            for par, expr in self.sublayers[layer][sublayer].items():
+                if par not in param_lists:
+                    param_lists[par] = []
+                value = eval(expr, np.__dict__, param)
+                param_lists[par].append(value)
+
+        # prepare parameter arrays
+        for par, values in param_lists.items():
             if n_trial is not None:
-                par_array = np.tile(np.asarray(par_list), (n_trial, 1))
+                eval_param[par] = np.tile(np.asarray(values), (n_trial, 1))
             else:
-                par_array = np.array(par_list)
-            eval_param[par] = par_array
+                eval_param[par] = np.array(values)
         return eval_param
 
     def eval_weights(self, patterns, param=None, item_index=None):
