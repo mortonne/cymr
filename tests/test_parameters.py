@@ -82,11 +82,7 @@ def test_param(param_def):
     assert param_def.free == {'f': [0, 1]}
     assert param_def.dependent == {'d': '2 + mean([a, b])'}
     assert param_def.dynamic == {'study': {'e': 'distract / c'}}
-    assert param_def.sublayers['f'] == {'task': {}}
-    assert param_def.sublayers['c'] == {
-        'loc': {'B_enc': 'B_enc_loc'},
-        'cat': {'B_enc': 'B_enc_cat'},
-    }
+    assert param_def.sublayers == {'f': ['task'], 'c': ['loc', 'cat']}
     assert param_def.weights['fc'] == {
         (('task', 'item'), ('loc', 'item')): 'loc',
         (('task', 'item'), ('cat', 'item')): 'cat',
@@ -96,6 +92,10 @@ def test_param(param_def):
         (('task', 'item'), ('cat', 'item')): 'cat',
     }
     assert param_def.weights['ff'] == {('task', 'item'): 'loc + cat'}
+    assert param_def.sublayer_param['c'] == {
+        'loc': {'B_enc': 'B_enc_loc'},
+        'cat': {'B_enc': 'B_enc_cat'},
+    }
 
 
 @pytest.fixture()
