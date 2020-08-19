@@ -390,8 +390,15 @@ class CMRDistributed(Recall):
             list_param = param.copy()
             list_param = param_def.get_dynamic(list_param, i)
 
+            # access parameters that vary by context sublayer
+            c_sublayers = param_def.get_sublayers('c')
+            n_item = len(study['item_index'][i])
+            list_param = param_def.eval_sublayers(
+                'c', c_sublayers, list_param, n_item
+            )
+
             # simulate study
-            net, list_param = study_list(
+            net = study_list(
                 param_def, list_param, study['item_index'][i],
                 study['input'][i], patterns
             )
