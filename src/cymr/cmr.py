@@ -156,7 +156,7 @@ def init_dist_cmr(item_index, patterns, param):
     return net
 
 
-def prepare_list_param(n_item, n_sub, param):
+def prepare_list_param(n_item, n_sub, param, param_def):
     """Prepare parameters that vary within list."""
     Lfc = np.tile(param['Lfc'], (n_item, n_sub)).astype(float)
     Lcf_trial = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
@@ -164,6 +164,7 @@ def prepare_list_param(n_item, n_sub, param):
     p_stop = p_stop_op(n_item, param['X1'], param['X2'])
     list_param = param.copy()
     list_param.update({'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop})
+    list_param = param_def.eval_sublayer('c', list_param, n_item)
     return list_param
 
 
