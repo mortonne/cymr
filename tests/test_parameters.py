@@ -206,8 +206,7 @@ def test_eval_weights_index(param_def, patterns):
 
 def test_eval_sublayers(param_def):
     param = {'B_enc_loc': .8, 'B_enc_cat': .4}
-    sublayers = param_def.get_sublayers('c')
-    eval_param = param_def.eval_sublayers('c', sublayers, param, 3)
+    eval_param = param_def.eval_sublayers('c', param, 3)
     expected = np.array(
         [[.8, .4],
          [.8, .4],
