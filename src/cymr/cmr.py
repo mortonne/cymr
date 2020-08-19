@@ -127,13 +127,16 @@ def init_network(param_def, patterns, param, item_index):
 def study_list(param_def, param, item_index, item_input, patterns):
     """Simulate study of a list."""
     net = init_network(param_def, patterns, param, item_index)
-    net.update(('task', 'start', 0), 'task')
+    param = param.copy()
+    n_item = len(item_index)
+    param = param_def.eval_sublayers('c', net.c_sublayers, param, n_item)
+    net.update(('task', 'start', 0), net.c_sublayers)
     net.study(
-        ('task', 'item'), item_input, 'task', param['B_enc'],
+        ('task', 'item'), item_input, net.c_sublayers, param['B_enc'],
         param['Lfc'], param['Lcf']
     )
-    net.integrate(('task', 'start', 0), 'task', param['B_start'])
-    return net
+    net.integrate(('task', 'start', 0), net.c_sublayers, param['B_start'])
+    return net, param
 
 
 def init_dist_cmr(item_index, patterns, param):
@@ -396,14 +399,14 @@ class CMRDistributed(Recall):
                 list_param = param_def.get_dynamic(list_param, i)
 
             # simulate study
-            net = study_list(
+            net, list_param = study_list(
                 param_def, list_param, study['item_index'][i],
                 study['input'][i], patterns
             )
 
             # get recall probabilities
             p = net.p_recall(
-                ('task', 'item'), recall['input'][i], 'task',
+                ('task', 'item'), recall['input'][i], net.c_sublayers,
                 list_param['B_rec'], list_param['T'], list_param['p_stop']
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
