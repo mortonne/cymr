@@ -9,42 +9,29 @@ from cymr import parameters
 
 
 @pytest.fixture()
-def data():
-    """Base test DataFrame."""
-    data = pd.DataFrame({
-        'subject': [1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1],
-        'list': [1, 1, 1, 1, 1, 1,
-                 2, 2, 2, 2, 2, 2],
-        'trial_type': ['study', 'study', 'study',
-                       'recall', 'recall', 'recall',
-                       'study', 'study', 'study',
-                       'recall', 'recall', 'recall'],
-        'position': [1, 2, 3, 1, 2, 3,
-                     1, 2, 3, 1, 2, 3],
-        'item': ['absence', 'hollow', 'pupil',
-                 'hollow', 'pupil', 'empty',
-                 'fountain', 'piano', 'pillow',
-                 'pillow', 'fountain', 'pillow'],
-        'item_index': [0, 1, 2, 1, 2, np.nan,
-                       3, 4, 5, 5, 3, 5],
-        'task': [1, 2, 1, 2, 1, np.nan,
-                 1, 2, 1, 1, 1, 1],
-        'distract': [1, 2, 3, np.nan, np.nan, np.nan,
-                     3, 2, 1, np.nan, np.nan, np.nan],
-    })
-    return data
+def param_def_simple():
+    param = parameters.Parameters()
+    param.set_sublayers(f=['task'], c=['task'])
+    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    param.set_weights('fc', weights)
+    param.set_weights('cf', weights)
+    return param
 
 
-@pytest.fixture()
-def split_data(data):
-    """Data split into study and recall."""
-    merged = fr.merge_free_recall(data, study_keys=['distract'])
-    split = {
-        'study': fr.split_lists(merged, 'study', ['input', 'distract']),
-        'recall': fr.split_lists(merged, 'recall', ['input']),
+def test_param_simple(param_def_simple):
+    param_def = param_def_simple
+    assert param_def.fixed == {}
+    assert param_def.free == {}
+    assert param_def.dependent == {}
+    assert param_def.dynamic == {}
+    assert param_def.sublayers == {'f': ['task'], 'c': ['task']}
+    assert param_def.weights['fc'] == {
+        (('task', 'item'), ('task', 'item')): 'loc'
     }
-    return split
+    assert param_def.weights['cf'] == {
+        (('task', 'item'), ('task', 'item')): 'loc'
+    }
+    assert param_def.sublayer_param == {}
 
 
 @pytest.fixture()
@@ -99,29 +86,42 @@ def test_param(param_def):
 
 
 @pytest.fixture()
-def param_def_simple():
-    param = parameters.Parameters()
-    param.set_sublayers(f=['task'], c=['task'])
-    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
-    param.set_weights('fc', weights)
-    param.set_weights('cf', weights)
-    return param
+def data():
+    """Base test DataFrame."""
+    data = pd.DataFrame({
+        'subject': [1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1],
+        'list': [1, 1, 1, 1, 1, 1,
+                 2, 2, 2, 2, 2, 2],
+        'trial_type': ['study', 'study', 'study',
+                       'recall', 'recall', 'recall',
+                       'study', 'study', 'study',
+                       'recall', 'recall', 'recall'],
+        'position': [1, 2, 3, 1, 2, 3,
+                     1, 2, 3, 1, 2, 3],
+        'item': ['absence', 'hollow', 'pupil',
+                 'hollow', 'pupil', 'empty',
+                 'fountain', 'piano', 'pillow',
+                 'pillow', 'fountain', 'pillow'],
+        'item_index': [0, 1, 2, 1, 2, np.nan,
+                       3, 4, 5, 5, 3, 5],
+        'task': [1, 2, 1, 2, 1, np.nan,
+                 1, 2, 1, 1, 1, 1],
+        'distract': [1, 2, 3, np.nan, np.nan, np.nan,
+                     3, 2, 1, np.nan, np.nan, np.nan],
+    })
+    return data
 
 
-def test_param_simple(param_def_simple):
-    param_def = param_def_simple
-    assert param_def.fixed == {}
-    assert param_def.free == {}
-    assert param_def.dependent == {}
-    assert param_def.dynamic == {}
-    assert param_def.sublayers == {'f': ['task'], 'c': ['task']}
-    assert param_def.weights['fc'] == {
-        (('task', 'item'), ('task', 'item')): 'loc'
+@pytest.fixture()
+def split_data(data):
+    """Data split into study and recall."""
+    merged = fr.merge_free_recall(data, study_keys=['distract'])
+    split = {
+        'study': fr.split_lists(merged, 'study', ['input', 'distract']),
+        'recall': fr.split_lists(merged, 'recall', ['input']),
     }
-    assert param_def.weights['cf'] == {
-        (('task', 'item'), ('task', 'item')): 'loc'
-    }
-    assert param_def.sublayer_param == {}
+    return split
 
 
 @pytest.fixture()
