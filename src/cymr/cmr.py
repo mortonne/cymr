@@ -163,7 +163,8 @@ def prepare_list_param(n_item, n_sub, param, param_def):
     p_stop = p_stop_op(n_item, param['X1'], param['X2'])
     list_param = param.copy()
     list_param.update({'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop})
-    list_param = param_def.eval_sublayer('c', list_param, n_item)
+    if 'c' in param_def.sublayer_param:
+        list_param = param_def.eval_sublayer_param('c', list_param, n_item)
     return list_param
 
 
