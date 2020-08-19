@@ -262,6 +262,10 @@ class Parameters(object):
                 eval_param[par] = np.array(values)
         return eval_param
 
+    def get_sublayers(self, layer):
+        """Get all sublayers with defined weights."""
+        return list(self.sublayers[layer].keys())
+
     def eval_weights(self, patterns, param=None, item_index=None):
         """Evaluate weights based on parameters and patterns."""
         weights = {}
