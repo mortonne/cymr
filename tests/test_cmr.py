@@ -5,7 +5,6 @@ import pandas as pd
 import pytest
 from cymr import fit
 from cymr import cmr
-from cymr import network
 from cymr import parameters
 
 
@@ -145,33 +144,6 @@ def test_init_network(patterns):
          [0.6667, 0.0000, 1.0000, 0.0000],
          [0.0000, 0.0000, 0.0000, 0.0000]]
     )
-    np.testing.assert_allclose(net.w_ff_pre, expected, atol=0.0001)
-
-
-def test_init_dist_cmr(patterns):
-    weights_template = {'fcf': {'loc': 'w_loc', 'cat': 'w_cat'},
-                        'ff': {'loc': 's_loc', 'cat': 's_cat'}}
-    param = {'w_loc': 1, 'w_cat': np.sqrt(2),
-             's_loc': 1, 's_cat': 2,
-             'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1, 'Aff': 0, 'Dff': 1}
-    weights = network.unpack_weights(weights_template, param)
-    scaled = network.prepare_patterns(patterns, weights)
-    item_index = np.arange(3)
-    net = cmr.init_dist_cmr(item_index, scaled, param)
-    expected = np.array([[0.5774, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-                          0.8165, 0.0000, 0.0000],
-                         [0.0000, 0.5774, 0.0000, 0.0000, 0.0000, 0.0000,
-                          0.0000, 0.8165, 0.0000],
-                         [0.0000, 0.0000, 0.5774, 0.0000, 0.0000, 0.0000,
-                          0.8165, 0.0000, 0.0000],
-                         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-                          0.0000, 0.0000, 1.0000]])
-    np.testing.assert_allclose(net.w_fc_pre, expected, atol=0.0001)
-
-    expected = np.array([[1.0000, 0.0000, 0.6667, 0.0000],
-                         [0.0000, 1.0000, 0.0000, 0.0000],
-                         [0.6667, 0.0000, 1.0000, 0.0000],
-                         [0.0000, 0.0000, 0.0000, 0.0000]])
     np.testing.assert_allclose(net.w_ff_pre, expected, atol=0.0001)
 
 
