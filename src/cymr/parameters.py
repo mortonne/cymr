@@ -17,10 +17,13 @@ def read_json(json_file):
     par.set_dependent(par_dict['dependent'])
     for trial_type, p in par_dict['dynamic'].items():
         par.set_dynamic(trial_type, p)
+    par.set_sublayers(par_dict['sublayers'])
     for connect, p in par_dict['weights'].items():
         weight_dict = {decode_region(region): expr
                        for region, expr in p.items()}
         par.set_weights(connect, weight_dict)
+    for layer, p in par_dict['sublayer_param'].items():
+        par.set_sublayer_param(layer, p)
     return par
 
 
