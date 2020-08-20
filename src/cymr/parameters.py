@@ -298,12 +298,29 @@ class Parameters(object):
         else:
             self.sublayer_param[layer] = dict(*args, **kwargs)
 
-    def set_weights(self, connect, *args, **kwargs):
-        """Set weights on model patterns."""
+    def set_weights(self, connect, regions):
+        """
+        Set weights on model patterns.
+
+        Parameters
+        ----------
+        connect : str
+            Network connection to set weights for.
+
+        regions : dict of (tuple of (tuple of str)): str
+            Weights for each region to set.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> region = (('f_sub', 'f_reg'), ('c_sub', 'c_reg'))
+        >>> param_def.set_weights('fc', {region: 'b * pattern'})
+        """
         if connect in self.weights:
-            self.weights[connect].update(*args, **kwargs)
+            self.weights[connect].update(regions)
         else:
-            self.weights[connect] = dict(*args, **kwargs)
+            self.weights[connect] = regions
 
     def eval_dependent(self, param):
         """
