@@ -215,9 +215,15 @@ class Parameters(object):
         json_file : str
             Path to file to save json data.
         """
-        data = {'fixed': self.fixed, 'free': self.free,
-                'dependent': self.dependent, 'dynamic': self.dynamic,
-                'weights': {}}
+        data = {
+            'fixed': self.fixed,
+            'free': self.free,
+            'dependent': self.dependent,
+            'dynamic': self.dynamic,
+            'sublayers': self.sublayers,
+            'weights': {},
+            'sublayer_param': self.sublayer_param,
+        }
         for layer, regions in self.weights.items():
             data['weights'][layer] = {}
             for region, expr in regions.items():
