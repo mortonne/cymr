@@ -175,14 +175,19 @@ def test_init_dist_cmr(patterns):
     np.testing.assert_allclose(net.w_ff_pre, expected, atol=0.0001)
 
 
-def test_dist_cmr(data):
-    """Test localist CMR using the distributed framework."""
-    param_def = parameters.Parameters()
+@pytest.fixture()
+def param_def_dist(param_def):
+    param_def = param_def.copy()
     param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
-    patterns = {'vector': {'loc': np.eye(6)}}
+    return param_def
+
+
+def test_dist_cmr(data, patterns, param_def_dist):
+    """Test localist CMR using the distributed framework."""
+    param_def = param_def_dist.copy()
     param = {
         'B_enc': .5, 'B_start': 0, 'B_rec': .8,
         'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
@@ -194,18 +199,26 @@ def test_dist_cmr(data):
     np.testing.assert_allclose(logl, -5.936799964636842)
 
 
-def test_dist_cmr_fit(data, param_def):
-    param_def.set_sublayers(f=['task'], c=['task'])
-    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
-    param_def.set_weights('fc', weights)
-    param_def.set_weights('cf', weights)
-    patterns = {'vector': {'loc': np.eye(6)}}
+def test_dist_cmr_fit(data, patterns, param_def_dist):
+    param_def = param_def_dist.copy()
     model = cmr.CMRDistributed()
     param_def.set_fixed(w_loc=1)
     param_def.set_free(B_enc=(0, 1))
     results = model.fit_indiv(data, param_def, patterns=patterns, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.02)
+
+
+def test_dist_cmr_generate(data, patterns, param_def_dist):
+    param_def = param_def_dist.copy()
+    param = {
+        'B_enc': .5, 'B_start': 0, 'B_rec': .8,
+        'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
+        'T': 10, 'X1': .05, 'X2': 1
+    }
+    model = cmr.CMRDistributed()
+    sim = model.generate(data, param, None, param_def, patterns=patterns)
+    assert isinstance(sim, pd.DataFrame)
 
 
 def test_dynamic_cmr(data):
