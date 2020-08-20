@@ -241,25 +241,7 @@ class CMRDistributed(Recall):
     """
     Context Maintenance and Retrieval-Distributed model.
 
-    **Model Parameter Definitions**
-
-    Afc : float
-        Intercept of pre-experimental item-context weights.
-
-    Acf : float
-        Intercept of pre-experimental context-item weights.
-
-    Aff : float
-        Intercept of pre-experimental item-item weights.
-
-    Dfc : float
-        Slope of pre-experimental item-context weights.
-
-    Dcf : float
-        Slope of pre-experimental context-item weights.
-
-    Dff : float
-        Slope of pre-experimental item-item weights.
+    **Model Parameters**
 
     Lfc : float
         Learning rate of item-context weights.
@@ -289,24 +271,19 @@ class CMRDistributed(Recall):
         Shape parameter of exponential function increasing stop
         probability by output position.
 
-    **Search Parameters**
+    **Parameter definition objects**
 
-    All parameters listed above must be defined to evaluate a model.
-    In the context of fitting a model using a parameter search,
-    parameters may be fixed (i.e., not searched over), free (included
-    in the search), or dependent (derived from the other parameters).
+    Parameters objects are used to indicate sublayers to include
+    in the network and to indicate how network weights should be
+    initialized. The :code:`sublayers` and :code:`weights` attributes
+    must be set.
 
-    fixed : dict of (str: float)
-        Values of fixed parameters.
-        Example: :code:`{'Lfc': .8, 'Lcf': .5}`
+    Parameters objects may also be used to define parameters that depend
+    on other parameters and/or dynamic parameters that depend on columns
+    of the input data.
 
-    free : dict of (str: (float, float))
-        Allowed range of free parameters.
-        Example: :code:`{'B_enc': (0, 1)}`
-
-    dependent : dict of (str: str), optional
-        Expressions to evaluate to set dependent parameters.
-        Example: :code:`{'Dfc': '1 - Lfc', 'Dcf': '1 - Lcf'}`
+    Finally, Parameters objects are used to define searches, using the
+    :code:`fixed` and :code:`free` attributes.
 
     **Model Patterns**
 
@@ -315,24 +292,15 @@ class CMRDistributed(Recall):
     may be orthonormal as in many published variants of CMR, or they
     may be distributed, overlapping patterns.
 
-    patterns : dict
-        May include keys: :code:`'vector'` and/or :code:`'similarity'`.
-        Vectors are used to set distributed model representations.
-        Similarity matrices are used to set item connections. Vector
-        and similarity values are dicts of (feature: array) specifying
-        an array for one or more named features, with an
-        [items x units] array for vector representations, or
-        [items x items] for similarity matrices.
-        Example: :code:`{'vector': {'loc': np.eye(24)}}`
+    Patterns may include :code:`'vector'` and/or :code:`'similarity'` matrices.
+    Vector representations are used to set the :math:`M^{FC}_{pre}`
+    and :math:`M^{CF}_{pre}` matrices, while similarity matrices are
+    used to set the :math:`M^{FF}_{pre}` matrix.
 
-    weights : dict
-        Keys indicate which model connections to apply weighting
-        to. These may include :code:`'fcf'` (applied to
-        :math:`M^{FC}_{pre}` and :math:`M^{CF}_{pre}`) and
-        :code:`'ff'` (applied to :math:`M^{FF}_{pre}`). Values are
-        dicts of (feature: w), where :code:`w` is the name of the
-        parameter indicating the scale to apply to a given feature.
-        Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
+    Vector and similarity values are dicts of (feature: array) specifying
+    an array for one or more named features, with an
+    [items x units] array for vector representations, or
+    [items x items] for similarity matrices.
     """
 
     def prepare_sim(self, data, study_keys=None, recall_keys=None):
