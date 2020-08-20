@@ -78,6 +78,7 @@ represented by an identity matrix with one entry for each item. See
 
     n_items = 768
     patterns = {'vector': {'loc': np.eye(n_items)}}
+    par.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     par.set_weights('fc', weights)
     par.set_weights('cf', weights)
