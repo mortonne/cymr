@@ -88,15 +88,34 @@ together with a weights template.
     }
 
 Once a set of patterns has been defined, they can be referenced
-in a weights template to indicate where they should be placed:
+in a weights template to indicate where they should be placed.
+First, define the sublayers to be included in the model.
 
 .. ipython:: python
 
     from cymr import parameters
     param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['loc', 'cat'])
+
+Regions of the weights matrices are addressed as tuples of
+:code:`('sublayer', 'segment')` for the :math:`f` and :math:`c`
+layers. Segments will be added as needed to include
+all of the indicated weights.
+
+.. ipython:: python
+
     weights = {
         (('task', 'item'), ('loc', 'item')): 'loc',
         (('task', 'item'), ('cat', 'item')): 'cat',
     }
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
+
+The weights template indicates which regions to add weights to.
+For each specified region, you may use any expression referencing
+any of the :code:`vector` patterns in the patterns dictionary, and
+optionally any parameter. The expression may also use any numpy
+function available from the main numpy namespace. In this simple
+example, here, we just reference the :code:`loc` and :code:`cat`
+patterns to place those patterns in the specified regions in the
+:math:`M^{FC}` and :math:`M^{CF}` weight matrices.
