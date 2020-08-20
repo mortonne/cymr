@@ -186,7 +186,7 @@ class Parameters(object):
         param.dynamic = copy.deepcopy(self.dynamic)
         param.sublayers = copy.deepcopy(self.sublayers)
         param.weights = copy.deepcopy(self.weights)
-        param.sublayer_param = copy.deepcopy(self.sublayers)
+        param.sublayer_param = copy.deepcopy(self.sublayer_param)
         param._dynamic_names = self._dynamic_names.copy()
         return param
 
