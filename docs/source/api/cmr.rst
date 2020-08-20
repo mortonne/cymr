@@ -20,7 +20,8 @@ Model Initialization
     :toctree: api/
 
     init_loc_cmr
-    init_dist_cmr
+    init_network
+    study_list
 
 Model Framework
 ~~~~~~~~~~~~~~~
