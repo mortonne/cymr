@@ -10,6 +10,7 @@ from cymr import parameters
 
 @pytest.fixture()
 def data():
+    """Generate sample free recall data."""
     data = pd.DataFrame(
         {'subject': [1, 1, 1, 1, 1, 1,
                      2, 2, 2, 2, 2, 2],
@@ -37,6 +38,7 @@ def data():
 
 
 def test_prepare_lists(data):
+    """Test splitting lists into study and recall list format."""
     study, recall = fit.prepare_lists(data)
     np.testing.assert_array_equal(study['input'][0], np.array([0, 1, 2]))
     np.testing.assert_array_equal(study['input'][1], np.array([0, 1, 2]))
@@ -47,6 +49,7 @@ def test_prepare_lists(data):
 
 
 def test_prepare_study(data):
+    """Test splitting study lists."""
     study_data = data.loc[data['trial_type'] == 'study'].copy()
     study = fit.prepare_study(study_data)
     np.testing.assert_array_equal(study['position'][0], np.array([0, 1, 2]))
@@ -56,6 +59,7 @@ def test_prepare_study(data):
 
 
 def test_cmr(data):
+    """Test CMR likelihood evaluation."""
     model = cmr.CMR()
     param = {'B_enc': .5, 'B_rec': .8,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
@@ -68,6 +72,7 @@ def test_cmr(data):
 
 @pytest.fixture()
 def param_def():
+    """Generate a parameter definition with standard fixed values."""
     param_def = parameters.Parameters()
     param_def.set_fixed(
         B_rec=0.8,
@@ -88,6 +93,7 @@ def param_def():
 
 
 def test_cmr_fit(data, param_def):
+    """Test fit of CMR parameters to sample data."""
     model = cmr.CMR()
     param_def.set_free(B_enc=(0, 1))
     results = model.fit_indiv(data, param_def, n_jobs=2)
@@ -98,6 +104,7 @@ def test_cmr_fit(data, param_def):
 
 @pytest.fixture()
 def patterns():
+    """Generate patterns for use in CMR-D."""
     cat = np.array([[1, 0, 1, 1, 0, 1],
                     [0, 1, 0, 0, 1, 0]]).T
     patterns = {'vector': {'loc': np.eye(6), 'cat': cat},
@@ -106,6 +113,7 @@ def patterns():
 
 
 def test_init_network(patterns):
+    """Test initialization of a complex network."""
     param_def = parameters.Parameters()
     param_def.set_dependent(
         w_loc='wr_loc / sqrt(wr_loc**2 + wr_cat**2)',
@@ -149,6 +157,7 @@ def test_init_network(patterns):
 
 @pytest.fixture()
 def param_def_dist(param_def):
+    """Generate parameter definitions for a simple CMR-D network."""
     param_def = param_def.copy()
     param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
@@ -159,6 +168,7 @@ def param_def_dist(param_def):
 
 @pytest.fixture()
 def param_dist():
+    """Generate standard parameters for testing CMR-D."""
     param = {
         'B_enc': .5, 'B_start': 0, 'B_rec': .8,
         'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
@@ -168,7 +178,7 @@ def param_dist():
 
 
 def test_dist_cmr(data, patterns, param_def_dist, param_dist):
-    """Test localist CMR using the distributed framework."""
+    """Test localist CMR using the CMR-D implementation."""
     model = cmr.CMRDistributed()
     logl, n = model.likelihood(
         data, param_dist, None, param_def_dist, patterns=patterns
@@ -177,6 +187,7 @@ def test_dist_cmr(data, patterns, param_def_dist, param_dist):
 
 
 def test_dist_cmr_fit(data, patterns, param_def_dist):
+    """Test fitted parameter values for CMR-D."""
     param_def = param_def_dist.copy()
     model = cmr.CMRDistributed()
     param_def.set_fixed(w_loc=1)
@@ -187,12 +198,14 @@ def test_dist_cmr_fit(data, patterns, param_def_dist):
 
 
 def test_dist_cmr_generate(data, patterns, param_def_dist, param_dist):
+    """Test that CMR-D generation runs."""
     model = cmr.CMRDistributed()
     sim = model.generate(data, param_dist, None, param_def_dist, patterns=patterns)
     assert isinstance(sim, pd.DataFrame)
 
 
 def test_dynamic_cmr(data, patterns, param_def_dist, param_dist):
+    """Test evaluation of a dynamic study parameter."""
     param = param_dist.copy()
     param_def = param_def_dist.copy()
     param['B_distract'] = .2
@@ -204,6 +217,7 @@ def test_dynamic_cmr(data, patterns, param_def_dist, param_dist):
 
 
 def test_dynamic_cmr_recall(data, patterns, param_def_dist, param_dist):
+    """Test evaluation of a dynamic recall parameter."""
     param = param_dist.copy()
     param_def = param_def_dist.copy()
     param['B_op'] = .2
@@ -216,6 +230,7 @@ def test_dynamic_cmr_recall(data, patterns, param_def_dist, param_dist):
 
 @pytest.fixture()
 def param_def_sublayer():
+    """Generate parameter definitions for multiple context sublayers."""
     param_def = parameters.Parameters()
     param_def.set_sublayers(f=['task'], c=['loc', 'cat'])
     param_def.set_sublayer_param('c', {
@@ -232,6 +247,7 @@ def param_def_sublayer():
 
 
 def test_sublayer_study(data, patterns, param_def_sublayer, param_dist):
+    """Test steps involved in working with context sublayers."""
     # test expanded list parameters
     param = param_dist.copy()
     param['B_enc_loc'] = .5
@@ -277,6 +293,7 @@ def test_sublayer_study(data, patterns, param_def_sublayer, param_dist):
 
 
 def test_sublayer_cmr(data, patterns, param_def_sublayer, param_dist):
+    """Test evaluation of CMR-D with multiple context sublayers."""
     param = param_dist.copy()
     param['B_enc_loc'] = .5
     param['B_enc_cat'] = .8
