@@ -77,6 +77,7 @@ patterns are used.
     }
     patterns = {'vector': {'loc': np.eye(768)}}
     param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
