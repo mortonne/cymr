@@ -63,8 +63,7 @@ clustering, etc.
 .. ipython:: python
 
     par = parameters.Parameters()
-    par.set_fixed(Afc=0, Acf=0, Aff=0, Dff=1, T=0.1,
-                  Lfc=0.15, Lcf=0.15, P1=0.2, P2=2,
+    par.set_fixed(T=0.1, Lfc=0.15, Lcf=0.15, P1=0.2, P2=2,
                   B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25)
     par.set_free(B_enc=(0, 1))
     par.set_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
@@ -78,10 +77,11 @@ represented by an identity matrix with one entry for each item. See
 .. ipython:: python
 
     n_items = 768
-    loc_patterns = np.eye(n_items)
-    patterns = {'vector': {'loc': loc_patterns}}
-    par.set_weights('fcf', {'loc': 'w_loc'})
-    par.set_fixed(w_loc=1)
+    patterns = {'vector': {'loc': np.eye(n_items)}}
+    par.set_sublayers(f=['task'], c=['task'])
+    weights = {(('task', 'item'), ('task', 'item')): 'loc'}
+    par.set_weights('fc', weights)
+    par.set_weights('cf', weights)
 
 We can print the parameter definition to get an overview of the settings.
 

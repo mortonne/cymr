@@ -4,6 +4,7 @@ import numpy as np
 from cymr.fit import Recall
 from cymr import fit
 from cymr import network
+from cymr import parameters
 
 
 def primacy(n_item, L, P1, P2):
@@ -64,43 +65,80 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
 
 def init_loc_cmr(n_item, param):
     """Initialize localist CMR for one list."""
-    segments = {'item': (n_item, n_item), 'start': (1, 1)}
-    net = network.Network(segments)
-    net.add_pre_weights('fc', ('item', 'item'), np.eye(n_item),
-                        param['Dfc'], param['Afc'])
-    net.add_pre_weights('cf', ('item', 'item'), np.eye(n_item),
-                        param['Dcf'], param['Acf'])
-    net.add_pre_weights('fc', ('start', 'start'), 1)
-    net.update('start', 0)
+    f_segment = {'task': {'item': n_item, 'start': 1}}
+    c_segment = {'task': {'item': n_item, 'start': 1}}
+
+    net = network.Network(f_segment, c_segment)
+    net.add_pre_weights('fc', ('task', 'item'), ('task', 'item'),
+                        np.eye(n_item), param['Dfc'], param['Afc'])
+    net.add_pre_weights('cf', ('task', 'item'), ('task', 'item'),
+                        np.eye(n_item), param['Dcf'], param['Acf'])
+    net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
+    net.update(('task', 'start', 0), 'task')
     return net
 
 
-def init_dist_cmr(item_index, patterns, param):
-    """Initialize distributed CMR for one list."""
-    n_c = patterns['fcf'].shape[1]
-    n_f = len(item_index)
-    segments = {'item': (n_f, n_c), 'start': (1, 1)}
-    net = network.Network(segments)
-    list_patterns = patterns['fcf'][item_index]
-    net.add_pre_weights('fc', ('item', 'item'), list_patterns,
-                        param['Dfc'], param['Afc'])
-    net.add_pre_weights('cf', ('item', 'item'), list_patterns,
-                        param['Dcf'], param['Acf'])
-    net.add_pre_weights('fc', ('start', 'start'), 1)
-    if 'ff' in patterns and patterns['ff'] is not None:
-        mat = patterns['ff'][np.ix_(item_index, item_index)]
-        net.add_pre_weights('ff', ('item', 'item'), mat,
-                            param['Dff'], param['Aff'])
-    net.update('start', 0)
+def init_network(param_def, patterns, param, item_index):
+    """Initialize a network with pattern weights."""
+    # set item weights
+    weights = param_def.eval_weights(patterns, param, item_index)
+
+    # set task units
+    for f_sublayer in param_def.sublayers['f']:
+        for c_sublayer in param_def.sublayers['c']:
+            region = ((f_sublayer, 'start'), (c_sublayer, 'start'))
+            weights['fc'][region] = np.array([[1]])
+            weights['cf'][region] = np.array([[1]])
+
+    # get all segment definitions
+    f_segments = {}
+    c_segments = {}
+    for region, mat in weights['fc'].items():
+        f_region, c_region = region
+        f_sublayer, f_segment = f_region
+        c_sublayer, c_segment = c_region
+        if f_sublayer not in f_segments:
+            f_segments[f_sublayer] = {}
+        if c_sublayer not in c_segments:
+            c_segments[c_sublayer] = {}
+        f_segments[f_sublayer][f_segment] = mat.shape[0]
+        c_segments[c_sublayer][c_segment] = mat.shape[1]
+
+    # initialize the network
+    net = network.Network(f_segments, c_segments)
+    for connect in weights.keys():
+        for region, mat in weights[connect].items():
+            if connect == 'ff':
+                f_segment = region
+                c_segment = None
+            else:
+                f_segment, c_segment = region
+            net.add_pre_weights(connect, f_segment, c_segment, mat)
     return net
 
 
-def prepare_list_param(n_item, param):
+def study_list(param_def, param, item_index, item_input, patterns):
+    """Simulate study of a list."""
+    net = init_network(param_def, patterns, param, item_index)
+    net.update(('task', 'start', 0), net.c_sublayers)
+    net.study(
+        ('task', 'item'), item_input, net.c_sublayers, param['B_enc'],
+        param['Lfc'], param['Lcf']
+    )
+    net.integrate(('task', 'start', 0), net.c_sublayers, param['B_start'])
+    return net
+
+
+def prepare_list_param(n_item, n_sub, param, param_def):
     """Prepare parameters that vary within list."""
-    Lfc = np.tile(param['Lfc'], n_item).astype(float)
-    Lcf = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+    Lfc = np.tile(param['Lfc'], (n_item, n_sub)).astype(float)
+    Lcf_trial = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+    Lcf = np.tile(Lcf_trial[:, None], (1, n_sub))
     p_stop = p_stop_op(n_item, param['X1'], param['X2'])
-    list_param = {'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop}
+    list_param = param.copy()
+    list_param.update({'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop})
+    if 'c' in param_def.sublayer_param:
+        list_param = param_def.eval_sublayer_param('c', list_param, n_item)
     return list_param
 
 
@@ -115,7 +153,11 @@ class CMR(Recall):
                            patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        trial_param = prepare_list_param(n_item, param)
+        n_sub = 1
+        if param_def is None:
+            param_def = parameters.Parameters()
+        param_def.set_sublayers(f=['task'], c=['task'])
+        trial_param = prepare_list_param(n_item, n_sub, param, param_def)
         net_init = init_loc_cmr(n_item, param)
         logl = 0
         n = 0
@@ -124,10 +166,14 @@ class CMR(Recall):
             list_param = param.copy()
             if param_def is not None:
                 list_param = param_def.get_dynamic(list_param, i)
-            net.study('item', study['input'][i], list_param['B_enc'],
-                      trial_param['Lfc'], trial_param['Lcf'])
-            p = net.p_recall('item', recall['input'][i], list_param['B_rec'],
-                             list_param['T'], trial_param['p_stop'])
+            net.study(
+                ('task', 'item'), study['input'][i], 'task',
+                list_param['B_enc'], trial_param['Lfc'], trial_param['Lcf']
+            )
+            p = net.p_recall(
+                ('task', 'item'), recall['input'][i], 'task', list_param['B_rec'],
+                list_param['T'], trial_param['p_stop']
+            )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
                 break
@@ -140,7 +186,11 @@ class CMR(Recall):
         # study = fit.prepare_study(study_data, study_keys=['position'])
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        trial_param = prepare_list_param(n_item, param)
+        n_sub = 1
+        if param_def is None:
+            param_def = parameters.Parameters()
+        param_def.set_sublayers(f=['task'], c=['task'])
+        trial_param = prepare_list_param(n_item, n_sub, param, param_def)
 
         net_init = init_loc_cmr(n_item, param)
         recalls_list = []
@@ -149,10 +199,13 @@ class CMR(Recall):
             list_param = param.copy()
             if param_def is not None:
                 list_param = param_def.get_dynamic(list_param, i)
-            net.study('item', study['input'][i], list_param['B_enc'],
-                      trial_param['Lfc'], trial_param['Lcf'])
+            net.study(
+                ('task', 'item'), study['input'][i], 'task', list_param['B_enc'],
+                trial_param['Lfc'], trial_param['Lcf']
+            )
             recall_vec = net.generate_recall(
-                'item', list_param['B_rec'], list_param['T'], trial_param['p_stop']
+                ('task', 'item'), 'task', list_param['B_rec'],
+                list_param['T'], trial_param['p_stop']
             )
             recalls_list.append(recall_vec)
         return recalls_list
@@ -160,7 +213,10 @@ class CMR(Recall):
     def record_network(self, data, param):
         study, recall = self.prepare_sim(data)
         n_item = len(study['input'][0])
-        list_param = prepare_list_param(n_item, param)
+        n_sub = 1
+        param_def = parameters.Parameters()
+        param_def.set_sublayers(f=['task'], c=['task'])
+        list_param = prepare_list_param(n_item, n_sub, param, param_def)
         net_init = init_loc_cmr(n_item, param)
         n_list = len(study['input'])
 
@@ -168,10 +224,14 @@ class CMR(Recall):
         for i in range(n_list):
             net = net_init.copy()
             item_list = study['input'][i].astype(int)
-            state = net.record_study('item', item_list, param['B_enc'],
-                                     list_param['Lfc'], list_param['Lcf'])
-            rec = net.record_recall('item', recall['input'][i],
-                                    param['B_rec'], param['T'])
+            state = net.record_study(
+                ('task', 'item'), item_list, 'task', param['B_enc'],
+                list_param['Lfc'], list_param['Lcf']
+            )
+            rec = net.record_recall(
+                ('task', 'item'), recall['input'][i], 'task',
+                param['B_rec'], param['T']
+            )
             state.extend(rec)
             net_state.append(state)
         return net_state
@@ -181,25 +241,7 @@ class CMRDistributed(Recall):
     """
     Context Maintenance and Retrieval-Distributed model.
 
-    **Model Parameter Definitions**
-
-    Afc : float
-        Intercept of pre-experimental item-context weights.
-
-    Acf : float
-        Intercept of pre-experimental context-item weights.
-
-    Aff : float
-        Intercept of pre-experimental item-item weights.
-
-    Dfc : float
-        Slope of pre-experimental item-context weights.
-
-    Dcf : float
-        Slope of pre-experimental context-item weights.
-
-    Dff : float
-        Slope of pre-experimental item-item weights.
+    **Model Parameters**
 
     Lfc : float
         Learning rate of item-context weights.
@@ -229,24 +271,19 @@ class CMRDistributed(Recall):
         Shape parameter of exponential function increasing stop
         probability by output position.
 
-    **Search Parameters**
+    **Parameter definition objects**
 
-    All parameters listed above must be defined to evaluate a model.
-    In the context of fitting a model using a parameter search,
-    parameters may be fixed (i.e., not searched over), free (included
-    in the search), or dependent (derived from the other parameters).
+    Parameters objects are used to indicate sublayers to include
+    in the network and to indicate how network weights should be
+    initialized. The :code:`sublayers` and :code:`weights` attributes
+    must be set.
 
-    fixed : dict of (str: float)
-        Values of fixed parameters.
-        Example: :code:`{'Lfc': .8, 'Lcf': .5}`
+    Parameters objects may also be used to define parameters that depend
+    on other parameters and/or dynamic parameters that depend on columns
+    of the input data.
 
-    free : dict of (str: (float, float))
-        Allowed range of free parameters.
-        Example: :code:`{'B_enc': (0, 1)}`
-
-    dependent : dict of (str: str), optional
-        Expressions to evaluate to set dependent parameters.
-        Example: :code:`{'Dfc': '1 - Lfc', 'Dcf': '1 - Lcf'}`
+    Finally, Parameters objects are used to define searches, using the
+    :code:`fixed` and :code:`free` attributes.
 
     **Model Patterns**
 
@@ -255,24 +292,15 @@ class CMRDistributed(Recall):
     may be orthonormal as in many published variants of CMR, or they
     may be distributed, overlapping patterns.
 
-    patterns : dict
-        May include keys: :code:`'vector'` and/or :code:`'similarity'`.
-        Vectors are used to set distributed model representations.
-        Similarity matrices are used to set item connections. Vector
-        and similarity values are dicts of (feature: array) specifying
-        an array for one or more named features, with an
-        [items x units] array for vector representations, or
-        [items x items] for similarity matrices.
-        Example: :code:`{'vector': {'loc': np.eye(24)}}`
+    Patterns may include :code:`'vector'` and/or :code:`'similarity'` matrices.
+    Vector representations are used to set the :math:`M^{FC}_{pre}`
+    and :math:`M^{CF}_{pre}` matrices, while similarity matrices are
+    used to set the :math:`M^{FF}_{pre}` matrix.
 
-    weights : dict
-        Keys indicate which model connections to apply weighting
-        to. These may include :code:`'fcf'` (applied to
-        :math:`M^{FC}_{pre}` and :math:`M^{CF}_{pre}`) and
-        :code:`'ff'` (applied to :math:`M^{FF}_{pre}`). Values are
-        dicts of (feature: w), where :code:`w` is the name of the
-        parameter indicating the scale to apply to a given feature.
-        Example: :code:`{'fcf': {'loc': 'w_loc', 'cat': 'w_cat'}}`
+    Vector and similarity values are dicts of (feature: array) specifying
+    an array for one or more named features, with an
+    [items x units] array for vector representations, or
+    [items x items] for similarity matrices.
     """
 
     def prepare_sim(self, data, study_keys=None, recall_keys=None):
@@ -301,26 +329,28 @@ class CMRDistributed(Recall):
                            patterns=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        trial_param = prepare_list_param(n_item, param)
+        if param_def is None:
+            raise ValueError('Must provide a Parameters object.')
+        n_sub = len(param_def.sublayers['c'])
+        param = prepare_list_param(n_item, n_sub, param, param_def)
 
-        weights_param = network.unpack_weights(param_def.weights, param)
-        scaled = network.prepare_patterns(patterns, weights_param)
         logl = 0
         n = 0
         for i in range(n_list):
             # access the dynamic parameters needed for this list
             list_param = param.copy()
-            if param_def is not None:
-                list_param = param_def.get_dynamic(list_param, i)
+            list_param = param_def.get_dynamic(list_param, i)
 
-            # get the study and recall events for this list
-            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
-            net.study('item', study['input'][i], list_param['B_enc'],
-                      trial_param['Lfc'], trial_param['Lcf'])
-            net.integrate('start', 0, list_param['B_start'])
+            # simulate study
+            net = study_list(
+                param_def, list_param, study['item_index'][i],
+                study['input'][i], patterns
+            )
+
+            # get recall probabilities
             p = net.p_recall(
-                'item', recall['input'][i], list_param['B_rec'],
-                list_param['T'], trial_param['p_stop']
+                ('task', 'item'), recall['input'][i], net.c_sublayers,
+                list_param['B_rec'], list_param['T'], list_param['p_stop']
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
@@ -334,48 +364,58 @@ class CMRDistributed(Recall):
 
         n_item = len(study['input'][0])
         n_list = len(study['input'])
-        trial_param = prepare_list_param(n_item, param)
+        if param_def is None:
+            raise ValueError('Must provide a Parameters object.')
+        n_sub = len(param_def.sublayers['c'])
+        param = prepare_list_param(n_item, n_sub, param, param_def)
 
-        weights_param = network.unpack_weights(param_def.weights, param)
-        scaled = network.prepare_patterns(patterns, weights_param)
         recalls_list = []
         for i in range(n_list):
             # access the dynamic parameters needed for this list
             list_param = param.copy()
-            if param_def is not None:
-                list_param = param_def.get_dynamic(list_param, i)
+            list_param = param_def.get_dynamic(list_param, i)
 
-            net = init_dist_cmr(study['item_index'][i], scaled, list_param)
-            net.study('item', study['input'][i], list_param['B_enc'],
-                      trial_param['Lfc'], trial_param['Lcf'])
-            net.integrate('start', 0, list_param['B_start'])
+            # simulate study
+            net = study_list(
+                param_def, list_param, study['item_index'][i],
+                study['input'][i], patterns
+            )
+
+            # simulate recall
             recall_vec = net.generate_recall(
-                'item', list_param['B_rec'], list_param['T'], trial_param['p_stop']
+                ('task', 'item'), 'task', list_param['B_rec'],
+                list_param['T'], list_param['p_stop']
             )
             recalls_list.append(recall_vec)
         return recalls_list
 
-    def record_network(self, data, param, patterns=None, weights=None,
+    def record_network(self, data, param, param_def=None, patterns=None,
                        remove_blank=False):
         study, recall = self.prepare_sim(data)
         n_item = len(study['input'][0])
-        list_param = prepare_list_param(n_item, param)
+        if param_def is None:
+            raise ValueError('Must provide a Parameters object.')
+        n_sub = len(param_def.sublayers['c'])
+        list_param = prepare_list_param(n_item, n_sub, param, param_def)
         n_list = len(study['input'])
 
         net_state = []
-        weights_param = network.unpack_weights(weights, param)
-        scaled = network.prepare_patterns(patterns, weights_param)
         for i in range(n_list):
             if remove_blank:
-                include = np.any(scaled['fcf'][study['item_index'][i]] != 0, 0)
-                scaled['fcf'] = scaled['fcf'][:, include]
-            net = init_dist_cmr(study['item_index'][i], scaled, param)
+                # include = np.any(scaled['fcf'][study['item_index'][i]] != 0, 0)
+                # scaled['fcf'] = scaled['fcf'][:, include]
+                raise ValueError('remove_blank option currently unsupported.')
+            net = init_network(param_def, patterns, param, study['item_index'][i])
             item_list = study['input'][i].astype(int)
-            state = net.record_study('item', item_list, param['B_enc'],
-                                     list_param['Lfc'], list_param['Lcf'])
-            net.integrate('start', 0, param['B_start'])
-            rec = net.record_recall('item', recall['input'][i],
-                                    param['B_rec'], param['T'])
+            state = net.record_study(
+                ('task', 'item'), item_list, 'task', param['B_enc'],
+                list_param['Lfc'], list_param['Lcf']
+            )
+            net.integrate(('task', 'start', 0), 'task', param['B_start'])
+            rec = net.record_recall(
+                ('task', 'item'), recall['input'][i], 'task',
+                param['B_rec'], param['T']
+            )
             state.extend(rec)
             net_state.append(state)
         return net_state

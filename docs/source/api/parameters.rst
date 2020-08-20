@@ -32,13 +32,15 @@ Dynamic parameters
     Parameters.set_dynamic
     Parameters.eval_dynamic
 
-Pattern weights
-~~~~~~~~~~~~~~~
+Network definition
+~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
     :toctree: api/
 
+    Parameters.set_sublayers
     Parameters.set_weights
+    Parameters.set_sublayer_param
 
 Parameter sets
 ~~~~~~~~~~~~~~
@@ -46,4 +48,6 @@ Parameter sets
 .. autosummary::
     :toctree: api/
 
+    Parameters.copy
     Parameters.to_json
+    read_json

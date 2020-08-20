@@ -1,4 +1,4 @@
-# cython: language_level=3, profile=False
+# cython: language_level=3, profile=False, boundscheck=False, wraparound=False
 
 cimport cython
 from libc.math cimport sqrt, exp
@@ -10,32 +10,32 @@ cdef inline double calc_rho(double cdot, double B):
     return rho
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cpdef integrate_context(double [:] c, double[:] c_in, double B):
-    cdef Py_ssize_t n = c.shape[0]
+cpdef integrate_context(double [:] c,
+                        double[:] c_in,
+                        double B,
+                        int [:] c_ind):
     cdef double cdot = 0
     cdef int i
-    for i in range(n):
+    for i in range(c_ind[0], c_ind[1]):
         cdot += c[i] * c_in[i]
     rho = calc_rho(cdot, B)
 
-    for i in range(n):
+    for i in range(c_ind[0], c_ind[1]):
         c[i] = rho * c[i] + B * c_in[i]
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef integrate(double [:, :] w_fc_exp,
                 const double [:, :] w_fc_pre,
                 double [:] c,
                 double [:] c_in,
                 double [:] f,
                 int item,
-                double B):
+                int [:, :] c_ind,
+                double [:] B):
     cdef Py_ssize_t n_f = f.shape[0]
-    cdef Py_ssize_t n_c = c.shape[0]
+    cdef Py_ssize_t n_s = c_ind.shape[0]
     cdef int i
+    cdef int j
 
     # set item unit
     for i in range(n_f):
@@ -45,23 +45,23 @@ cpdef integrate(double [:, :] w_fc_exp,
             f[i] = 0
 
     # set c_in
-    for i in range(n_c):
-        c_in[i] = w_fc_exp[item, i] + w_fc_pre[item, i]
+    cdef double sum_squares
+    cdef double norm
+    for i in range(n_s):
+        sum_squares = 0
+        for j in range(c_ind[i, 0], c_ind[i, 1]):
+            c_in[j] = w_fc_exp[item, j] + w_fc_pre[item, j]
+            sum_squares += c_in[j] * c_in[j]
 
-    # get the vector length of the input to context
-    cdef double sum_squares = 0
-    for i in range(n_c):
-        sum_squares += c_in[i] * c_in[i]
-    cdef double norm = sqrt(sum_squares)
-    for i in range(n_c):
-        c_in[i] /= norm
+        # normalize the vector to have an L2 norm of 1
+        norm = sqrt(sum_squares)
+        for j in range(c_ind[i, 0], c_ind[i, 1]):
+            c_in[j] /= norm
 
-    # integrate
-    integrate_context(c, c_in, B)
+        # integrate
+        integrate_context(c, c_in, B[i], c_ind[i])
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef present(double [:, :] w_fc_exp,
               const double [:, :] w_fc_pre,
               double [:, :] w_cf_exp,
@@ -69,53 +69,74 @@ cpdef present(double [:, :] w_fc_exp,
               double [:] c_in,
               double [:] f,
               int item,
-              double B,
-              double Lfc,
-              double Lcf):
+              int [:, :] c_ind,
+              double [:] B,
+              double [:] Lfc,
+              double [:] Lcf):
     cdef Py_ssize_t n_f = f.shape[0]
-    cdef Py_ssize_t n_c = c.shape[0]
+    cdef Py_ssize_t n_s = c_ind.shape[0]
     cdef int i
+    cdef int j
+
     # retrieve item context and integrate into current context
-    integrate(w_fc_exp, w_fc_pre, c, c_in, f, item, B)
+    integrate(w_fc_exp, w_fc_pre, c, c_in, f, item, c_ind, B)
 
     # learn the association between f and c
-    if Lfc > 0:
-        for i in range(n_c):
-            w_fc_exp[item, i] += Lfc * c[i]
+    for i in range(n_s):
+        if Lfc[i] > 0:
+            for j in range(c_ind[i, 0], c_ind[i, 1]):
+                w_fc_exp[item, j] += Lfc[i] * c[j]
 
-    if Lcf > 0:
-        for i in range(n_c):
-            w_cf_exp[item, i] += Lcf * c[i]
+    for i in range(n_s):
+        if Lcf[i] > 0:
+            for j in range(c_ind[i, 0], c_ind[i, 1]):
+                w_cf_exp[item, j] += Lcf[i] * c[j]
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cpdef study(double [:, :] w_fc_exp,
-            const double [:, :] w_fc_pre,
-            double [:, :] w_cf_exp,
-            double [:] c,
-            double [:] c_in,
-            double [:] f,
-            const int [:] item_list,
-            double [:] B,
-            double [:] Lfc,
-            double [:] Lcf,
-            const int [:] distract_list,
-            double [:] distract_B):
+cpdef study(
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_cf_exp,
+    double [:] c,
+    double [:] c_in,
+    double [:] f,
+    const int [:] item_list,
+    int [:, :] c_ind,
+    double [:, :] B,
+    double [:, :] Lfc,
+    double [:, :] Lcf,
+):
     cdef Py_ssize_t n = item_list.shape[0]
     for i in range(n):
-        if distract_B[i] > 0:
-            integrate(w_fc_exp, w_fc_pre, c, c_in, f,
-                      distract_list[i], distract_B[i])
         present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
-                item_list[i], B[i], Lfc[i], Lcf[i])
-    if distract_B[n] > 0:
+                item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
+
+
+cpdef study_distract(
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_cf_exp,
+    double [:] c,
+    double [:] c_in,
+    double [:] f,
+    const int [:] item_list,
+    int [:, :] c_ind,
+    double [:, :] B,
+    double [:, :] Lfc,
+    double [:, :] Lcf,
+    const int [:] distract_list,
+    double [:, :] distract_B
+):
+    cdef Py_ssize_t n = item_list.shape[0]
+    for i in range(n):
         integrate(w_fc_exp, w_fc_pre, c, c_in, f,
-                  distract_list[n], distract_B[n])
+                  distract_list[i], c_ind, distract_B[i])
+        present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
+                item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
+    integrate(w_fc_exp, w_fc_pre, c, c_in, f,
+              distract_list[n], c_ind, distract_B[n])
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef cue_item(int n,
                int n_f,
                const double [:, :] w_cf_pre,
@@ -146,8 +167,6 @@ cpdef cue_item(int n,
                             w_ff_pre[n + recalls[output - 1], n + i])
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef apply_softmax(int n,
                     int n_f,
                     double [:] f_in,
@@ -167,8 +186,6 @@ cpdef apply_softmax(int n,
         f_in[n + i] = exp((2 * f_in[n + i]) / T)
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 def p_recall(int start,
              int n_f,
              int [:] recalls,
@@ -182,19 +199,17 @@ def p_recall(int start,
              double [:] f_in,
              double [:] c,
              double [:] c_in,
+             int [:, :] c_ind,
              int [:] exclude,
              double amin,
-             double [:] B,
+             double [:, :] B,
              double T,
              const double [:] p_stop,
              double [:] p):
     cdef Py_ssize_t n_r = recalls.shape[0]
-    cdef Py_ssize_t n_c = w_cf_exp.shape[1]
     cdef int i
     cdef int j
-    cdef int k
-    cdef double total = 0
-    cdef double norm
+    cdef double total
 
     for i in range(n_r):
         # calculate support for each item
@@ -208,9 +223,9 @@ def p_recall(int start,
 
         # calculate probability of this recall
         p[i] = (f_in[start + recalls[i]] / total) * (1 - p_stop[i])
-        exclude[recalls[i]] = 1
 
         # update context
         if i < (n_r - 1):
-            integrate(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], B[i])
+            exclude[recalls[i]] = 1
+            integrate(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], c_ind, B[i])
     p[n_r] = p_stop[n_r]

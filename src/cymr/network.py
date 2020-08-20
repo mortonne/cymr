@@ -117,10 +117,40 @@ def unpack_weights(weight_template, weight_param):
     return weights
 
 
-def expand_param(param, n):
-    """Expand a scalar parameter to array format."""
+def expand_param(param, size):
+    """
+    Expand a scalar parameter to array format.
+
+    Parameters
+    ----------
+    param : float or numpy.ndarray
+        Parameter to expand.
+
+    size : iterable or numpy.ndarray
+        Size of the expanded parameter.
+
+    Returns
+    -------
+    param : numpy.ndarray
+        Expanded parameter.
+    """
+    size = np.asarray(size)
     if not isinstance(param, np.ndarray):
-        param = np.tile(param, n).astype(float)
+        # expand scalar to full array
+        param = np.tile(param, size).astype(float)
+    elif size.shape and param.ndim < len(size):
+        # expand array to have to correct number of dimensions
+        axis = tuple(size[param.ndim:])
+        param = np.expand_dims(param, axis)
+        if param.shape != tuple(size):
+            # expand singleton dimensions as needed
+            rep = np.ones(size.shape)
+            for i, n in enumerate(param.shape):
+                if n == 1:
+                    rep[i] = size[i]
+                elif n != size[i] and n < size[i]:
+                    raise ValueError('Cannot expand parameter.')
+            param = np.tile(param, rep).astype(float)
     return param
 
 
@@ -153,35 +183,74 @@ def init_plot(**kwargs):
     return fig, ax
 
 
+class LayerIndex(object):
+    def __init__(self, layer_segments):
+        self.size = 0
+        self.size_sublayer = {}
+        self.size_segment = layer_segments.copy()
+        self.sublayer = {}
+        self.segment = {}
+        for sub, segs in layer_segments.items():
+            self.segment[sub] = {}
+            self.size_sublayer[sub] = 0
+            start = self.size
+            for seg, s in segs.items():
+                self.segment[sub][seg] = np.array(
+                    [self.size, self.size + s], dtype=np.dtype('i')
+                )
+                self.size += s
+                self.size_sublayer[sub] += s
+            self.sublayer[sub] = np.array(
+                [start, start + self.size_sublayer[sub]], dtype=np.dtype('i')
+            )
+
+    def __repr__(self):
+        s = ''
+        for sublayer, segments in self.size_segment.items():
+            size_sublayer = self.size_sublayer[sublayer]
+            s += f'{sublayer}: {size_sublayer} units\n'
+            for segment, size_segment in segments.items():
+                s += f'    {segment}: {size_segment} units\n'
+        return s
+
+    def copy(self):
+        return self.__init__(self.size_segment)
+
+    def get_sublayer(self, sublayer):
+        return self.sublayer[sublayer]
+
+    def get_segment(self, sublayer, segment):
+        return self.segment[sublayer][segment]
+
+    def get_unit(self, sublayer, segment, index):
+        return self.segment[sublayer][segment][0] + index
+
+
 class Network(object):
     """
     Representation of interacting item and context layers.
 
     Parameters
     ----------
-    segments : dict of {str: (int, int)}
-        Definition of network segments. For example, may have a segment
-        representing learned items and a segment representing
-        distraction trials. Each entry contains an (n_f, n_c) pair
-        indicating the number of item and context units to allocate for
-        that segment.
+    f_segment : dict of str: (dict of str: int)
+        For each item sublayer, the number of units in each segment.
+
+    c_segment : dict of str: (dict of str: int)
+        For each context sublayer, the number of units in each segment.
 
     Attributes
     ----------
-    segments : dict of {str: (int, int)}
-        Number of item and context units for each named segment.
-
-    n_f_segment : dict of {str: int}
+    f_segment : dict of str: (dict of str: int)
         Number of item units for each segment.
 
-    n_c_segment : dict of {str: int}
+    c_segment : dict of str: (dict of str: int)
         Number of context units for each segment.
 
-    f_ind : dict of {str: slice}
-        Slice object for item units for each segment.
+    f_ind : cymr.network.LayerIndex
+        Index of units in the item layer.
 
-    c_ind : dict of {str: slice}
-        Slice object for context units for each segment
+    c_ind : cymr.network.LayerIndex
+        Index of units in the context layer.
 
     n_f : int
         Total number of item units.
@@ -215,24 +284,15 @@ class Network(object):
     w_ff_exp : numpy.array
         Weights learned during the experiment connecting f to f.
     """
-    def __init__(self, segments):
-        n_f = 0
-        n_c = 0
-        self.segments = segments
-        self.n_f_segment = {}
-        self.n_c_segment = {}
-        self.f_ind = {}
-        self.c_ind = {}
-        for name, (s_f, s_c) in segments.items():
-            self.n_f_segment[name] = s_f
-            self.n_c_segment[name] = s_c
-            self.f_ind[name] = slice(n_f, n_f + s_f)
-            self.c_ind[name] = slice(n_c, n_c + s_c)
-            n_f += s_f
-            n_c += s_c
-        self.f_ind['all'] = slice(0, n_f)
-        self.c_ind['all'] = slice(0, n_c)
-
+    def __init__(self, f_segment, c_segment):
+        self.f_segment = f_segment.copy()
+        self.c_segment = c_segment.copy()
+        self.f_sublayers = list(self.f_segment.keys())
+        self.c_sublayers = list(self.c_segment.keys())
+        self.f_ind = LayerIndex(self.f_segment)
+        self.c_ind = LayerIndex(self.c_segment)
+        n_f = self.f_ind.size
+        n_c = self.c_ind.size
         self.n_f = n_f
         self.n_c = n_c
         self.f = np.zeros(n_f)
@@ -247,17 +307,7 @@ class Network(object):
         self.w_ff_exp = np.zeros((n_f, n_f))
 
     def __repr__(self):
-        np.set_printoptions(precision=4, floatmode='fixed', sign=' ')
-        s_f = 'f:\n' + self.f.__str__()
-        s_c = 'c:\n' + self.c.__str__()
-        s_fc_pre = 'W pre [fc]:\n' + self.w_fc_pre.__str__()
-        s_fc_exp = 'W exp [fc]:\n' + self.w_fc_exp.__str__()
-        s_cf_pre = 'W pre [cf]:\n' + self.w_cf_pre.__str__()
-        s_cf_exp = 'W exp [cf]:\n' + self.w_cf_exp.__str__()
-        s_ff_pre = 'W pre [ff]:\n' + self.w_ff_pre.__str__()
-        s_ff_exp = 'W exp [ff]:\n' + self.w_ff_exp.__str__()
-        s = '\n\n'.join([s_f, s_c, s_fc_pre, s_fc_exp, s_cf_pre, s_cf_exp,
-                         s_ff_pre, s_ff_exp])
+        s = f'f:\n{self.f_ind}\nc:\n{self.c_ind}'
         return s
 
     def reset(self):
@@ -281,11 +331,7 @@ class Network(object):
         net : cymr.Network
             Network with the same segments, weights, and activations.
         """
-        net = Network(self.segments)
-        net.f_ind = self.f_ind
-        net.c_ind = self.c_ind
-        net.n_f = self.n_f
-        net.n_c = self.n_c
+        net = Network(self.f_segment, self.c_segment)
         net.f = self.f.copy()
         net.f_in = self.f_in.copy()
         net.c = self.c.copy()
@@ -298,7 +344,26 @@ class Network(object):
         net.w_ff_pre = self.w_ff_pre.copy()
         return net
 
-    def get_slices(self, region):
+    def get_sublayer(self, layer, sublayer):
+        """Get indices for a sublayer."""
+        if layer == 'f':
+            ind = self.f_ind.get_sublayer(sublayer)
+        elif layer == 'c':
+            ind = self.c_ind.get_sublayer(sublayer)
+        else:
+            raise ValueError(f'Invalid layer: {layer}')
+        return ind
+
+    def get_sublayers(self, layer, sublayers):
+        """Get an array of indices for multiple sublayers."""
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        ind_list = []
+        for sublayer in sublayers:
+            ind_list.append(self.get_sublayer(layer, sublayer))
+        return np.array(ind_list, dtype=np.dtype('i'))
+
+    def get_region(self, f_segment, c_segment):
         """
         Return slices for a region.
 
@@ -310,39 +375,71 @@ class Network(object):
         c_ind : slice
             Span of the region in the context dimension.
         """
-        f_ind = self.f_ind[region[0]]
-        c_ind = self.c_ind[region[1]]
+        f_ind = slice(*tuple(self.f_ind.get_segment(*f_segment)))
+        c_ind = slice(*tuple(self.c_ind.get_segment(*c_segment)))
         return f_ind, c_ind
 
-    def get_ind(self, layer, segment, item):
+    def get_segment(self, layer, sublayer, segment):
         """
-        Get the absolute index for an item.
+        Get indices for a segment.
 
         Parameters
         ----------
         layer : {'f', 'c'}
             Layer to access.
 
+        sublayer : str
+            Sublayer to access.
+
         segment : str
             Segment to access.
 
-        item : int
-            Index relative to the start of the segment.
-
         Returns
         -------
-        ind : int
-            Absolute index.
+        ind : numpy.array
+            Segment indices.
         """
         if layer == 'f':
-            ind = self.f_ind[segment].start + item
+            ind = self.f_ind.get_segment(sublayer, segment)
         elif layer == 'c':
-            ind = self.c_ind[segment].start + item
+            ind = self.c_ind.get_segment(sublayer, segment)
         else:
             raise ValueError(f'Invalid layer: {layer}')
         return ind
 
-    def add_pre_weights(self, connect, region, weights, slope=1, intercept=0):
+    def get_unit(self, layer, sublayer, segment, unit):
+        """
+        Get indices for a unit.
+
+        Parameters
+        ----------
+        layer : {'f', 'c'}
+            Layer to access.
+
+        sublayer : str
+            Sublayer to access.
+
+        segment : str
+            Segment to access.
+
+        unit : int
+            Index of the unit within the segment.
+
+        Returns
+        -------
+        ind : int
+            Absolute index of the unit within the layer.
+        """
+        if layer == 'f':
+            ind = self.f_ind.get_unit(sublayer, segment, unit)
+        elif layer == 'c':
+            ind = self.c_ind.get_unit(sublayer, segment, unit)
+        else:
+            raise ValueError(f'Invalid layer: {layer}')
+        return ind
+
+    def add_pre_weights(self, connect, f_segment, c_segment, weights,
+                        slope=1, intercept=0):
         """
         Add pre-experimental weights to a network.
 
@@ -351,8 +448,11 @@ class Network(object):
         connect : {'fc', 'cf'}
             Connections to add weights to.
 
-        region : tuple of str, str
-            Combination of segments to add the weights to.
+        f_segment : tuple of str, str
+            Sublayer and segment to use for the item layer.
+
+        c_segment : tuple of str, str
+            Sublayer and segment to use for the context layer.
 
         weights : numpy.array
             Items x context array of weights.
@@ -364,17 +464,21 @@ class Network(object):
             Intercept to add to weights.
         """
         scaled = intercept + slope * weights
-        f_ind, c_ind = self.get_slices(region)
+        if connect == 'ff':
+            f_slice = slice(*tuple(self.f_ind.get_segment(*f_segment)))
+            c_slice = None
+        else:
+            f_slice, c_slice = self.get_region(f_segment, c_segment)
         if connect == 'fc':
-            self.w_fc_pre[f_ind, c_ind] = scaled
+            self.w_fc_pre[f_slice, c_slice] = scaled
         elif connect == 'cf':
-            self.w_cf_pre[f_ind, c_ind] = scaled
+            self.w_cf_pre[f_slice, c_slice] = scaled
         elif connect == 'ff':
-            self.w_ff_pre[f_ind, f_ind] = scaled
+            self.w_ff_pre[f_slice, f_slice] = scaled
         else:
             raise ValueError(f'Invalid connection type: {connect}')
 
-    def update(self, segment, item):
+    def update(self, item, sublayers):
         """
         Update context completely with input from the item layer.
 
@@ -383,65 +487,77 @@ class Network(object):
 
         Parameters
         ----------
-        segment : str
-            Segment of the item layer to cue with.
+        item : tuple of str, str, int
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Item index within the segment to present.
+        sublayers : str of list of str
+            Sublayer(s) of context to update.
         """
-        ind = self.f_ind[segment].start + item
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayers('c', sublayers)
+        B = np.ones(len(sublayers))
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
-                             self.f, ind, B=1)
+                             self.f, f_ind, c_ind, B)
 
-    def integrate(self, segment, item, B):
+    def integrate(self, item, sublayers, B):
         """
         Integrate input from the item layer into context.
 
         Parameters
         ----------
-        segment : str
-            Segment of the item layer to cue with.
+        item : tuple of str, str, int
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Item index within the segment to present.
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
 
-        B : float
-            Integration scaling factor; higher values update context
-            to more strongly reflect the input.
+        B : float or numpy.array
+            Integration scaling factor for each sublayer; higher values
+            update context to more strongly reflect the input.
         """
-        ind = self.f_ind[segment].start + item
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        B = expand_param(B, np.array(len(sublayers)))
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayers('c', sublayers)
         operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
-                             self.f, ind, B)
+                             self.f, f_ind, c_ind, B)
 
-    def present(self, segment, item, B, Lfc=0, Lcf=0):
+    def present(self, item, sublayers, B, Lfc=0, Lcf=0):
         """
         Present an item and learn context-item associations.
 
         Parameters
         ----------
-        segment : str
-            Segment of the item layer to cue with.
+        item : tuple of str, str, int
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Item index within the segment to present.
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
 
-        B : float
-            Integration scaling factor; higher values update context
+        B : float or numpy.ndarray
+            Integration scaling factors; higher values update context
             to more strongly reflect the input.
 
-        Lfc : float, optional
-            Learning rate for item to context associations.
+        Lfc : float or numpy.ndarray, optional
+            Learning rates for item to context associations.
 
-        Lcf : float, optional
-            Learning rate for context to item associations.
+        Lcf : float or numpy.ndarray, optional
+            Learning rates for context to item associations.
         """
-        ind = self.f_ind[segment].start + item
-        operations.present(self.w_fc_exp, self.w_fc_pre,
-                           self.w_cf_exp,
-                           self.c, self.c_in, self.f, ind, B,
-                           Lfc, Lcf)
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        n_sub = np.array(len(sublayers))
+        B = expand_param(B, n_sub)
+        Lfc = expand_param(Lfc, n_sub)
+        Lcf = expand_param(Lcf, n_sub)
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayers('c', sublayers)
+        operations.present(self.w_fc_exp, self.w_fc_pre, self.w_cf_exp,
+                           self.c, self.c_in, self.f, f_ind, c_ind,
+                           B, Lfc, Lcf)
 
-    def learn(self, connect, segment, item, L):
+    def learn(self, connect, item, sublayers, L):
         """
         Learn an association between the item and context layers.
 
@@ -450,35 +566,85 @@ class Network(object):
         connect : {'fc', 'cf'}
             Connection matrix to update.
 
-        segment : str
-            Segment of context to update.
+        item : tuple of str, str, int
+            Sublayer, segment, and unit of the item to present.
 
-        item : int
-            Absolute index of the item in the network.
+        sublayers : str
+            Sublayers of context to update.
 
         L : double
             Learning rate.
         """
-        ind = self.c_ind[segment]
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        L = expand_param(L, len(sublayers))
+        f_ind = self.get_unit('f', *item)
+        c_ind = self.get_sublayers('c', sublayers)
         if connect == 'fc':
-            self.w_fc_exp[item, ind] += self.c[ind] * L
+            mat = self.w_fc_exp
         elif connect == 'cf':
-            self.w_cf_exp[item, ind] += self.c[ind] * L
+            mat = self.w_cf_exp
         else:
             raise ValueError(f'Invalid connection: {connect}')
+        for i, s_ind in enumerate(c_ind):
+            s_slice = slice(*tuple(s_ind))
+            mat[f_ind, s_slice] += self.c[s_slice] * L[i]
 
-    def study(self, segment, item_list, B, Lfc, Lcf, distract_segment=None,
-              distract_list=None, distract_B=None):
+    def study(self, segment, item_list, sublayers, B, Lfc, Lcf):
         """
         Study a list of items.
 
         Parameters
         ----------
-        segment : str
-            Segment representing the items to be presented.
+        segment : tuple of str, str
+            Sublayer and segment of items to present.
 
         item_list : numpy.array
             Item indices relative to the segment.
+
+        sublayers : str or list of str
+            Sublayers of context to update.
+
+        B : float or numpy.array
+            Context updating rate. If an array, specifies a rate for
+            each individual study trial.
+
+        Lfc : float or numpy.array
+            Learning rate for item to context associations. If an
+            array, specifies a learning rate for each individual trial.
+
+        Lcf : float or numpy.array
+            Learning rate for context to item associations.
+        """
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        n_item = item_list.shape[0]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
+        Lfc = expand_param(Lfc, (n_item, n_sub))
+        Lcf = expand_param(Lcf, (n_item, n_sub))
+        f_ind = self.get_segment('f', *segment)
+        item_ind = (f_ind[0] + item_list).astype(np.dtype('i'))
+        c_ind = self.get_sublayers('c', sublayers)
+        operations.study(self.w_fc_exp, self.w_fc_pre,
+                         self.w_cf_exp, self.c, self.c_in,
+                         self.f, item_ind, c_ind, B, Lfc, Lcf)
+
+    def study_distract(self, segment, item_list, sublayers, B, Lfc, Lcf,
+                       distract_segment, distract_list, distract_B):
+        """
+        Study a list of items.
+
+        Parameters
+        ----------
+        segment : tuple of str, str
+            Sublayer and segment representing the items to be presented.
+
+        item_list : numpy.array
+            Item indices relative to the segment.
+
+        sublayers : str or list of str
+            Sublayers to update during study.
 
         B : float or numpy.array
             Context updating rate. If an array, specifies a rate for
@@ -491,10 +657,10 @@ class Network(object):
         Lcf : float or numpy.array
             Learning rate for context to item associations.
 
-        distract_segment : str, optional
-            Segment representing distraction trials.
+        distract_segment : str, str
+            Sublayer and segment representing distraction trials.
 
-        distract_list : numpy.array, optional
+        distract_list : numpy.array
             Distraction item indices relative to the segment.
 
         distract_B : float or numpy.array
@@ -503,140 +669,90 @@ class Network(object):
             n_items + 1. Distraction will not be presented on trials i
             where distract_B[i] is zero.
         """
-        ind = self.f_ind[segment].start + item_list
-        ind = ind.astype(np.dtype('i'))
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, item_list.shape).astype(float)
-        if not isinstance(Lfc, np.ndarray):
-            Lfc = np.tile(Lfc, item_list.shape).astype(float)
-        if not isinstance(Lcf, np.ndarray):
-            Lcf = np.tile(Lcf, item_list.shape).astype(float)
+        f_ind = self.get_segment('f', *segment)
+        item_ind = (f_ind[0] + item_list).astype(np.dtype('i'))
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        n_item = item_list.shape[0]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
+        Lfc = expand_param(Lfc, (n_item, n_sub))
+        Lcf = expand_param(Lcf, (n_item, n_sub))
 
-        if distract_segment is None or distract_list is None:
-            distract_ind = np.ndarray(shape=(0,), dtype=np.dtype('i'))
-        else:
-            distract_ind = self.f_ind[distract_segment].start + distract_list
-            distract_ind = distract_ind.astype(np.dtype('i'))
+        f_ind = self.get_segment('f', *distract_segment)
+        distract_ind = (f_ind[0] + distract_list).astype(np.dtype('i'))
 
-        if distract_B is None:
-            distract_B = np.zeros(item_list.shape[0] + 1, dtype=float)
-        elif not isinstance(distract_B, np.ndarray):
-            distract_B = np.tile(distract_B,
-                                 item_list.shape[0] + 1).astype(float)
+        if not isinstance(distract_B, np.ndarray):
+            distract_B = np.tile(distract_B, (n_item + 1, n_sub)).astype(float)
 
-        operations.study(self.w_fc_exp, self.w_fc_pre,
-                         self.w_cf_exp, self.c, self.c_in,
-                         self.f, ind, B, Lfc, Lcf, distract_ind, distract_B)
+        c_ind = self.get_sublayers('c', sublayers)
+        operations.study_distract(
+            self.w_fc_exp, self.w_fc_pre, self.w_cf_exp, self.c, self.c_in,
+            self.f, item_ind, c_ind, B, Lfc, Lcf, distract_ind, distract_B
+        )
 
-    def record_study(self, segment, item_list, B, Lfc, Lcf,
-                     distract_segment=None, distract_list=None,
-                     distract_B=None):
-        n = len(item_list)
-        B = expand_param(B, n)
-        Lfc = expand_param(Lfc, n)
-        Lcf = expand_param(Lcf, n)
+    def record_study(self, segment, item_list, sublayers, B, Lfc, Lcf):
+        n_item = len(item_list)
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
+        Lfc = expand_param(Lfc, (n_item, n_sub))
+        Lcf = expand_param(Lcf, (n_item, n_sub))
         state = []
-        if distract_B is not None:
-            distract_B = expand_param(distract_B, n + 1)
         for i in range(len(item_list)):
-            if distract_B is not None and distract_B[i] > 0:
-                self.integrate(distract_segment, distract_list[i],
-                               distract_B[i])
-            self.present(segment, item_list[i], B[i], Lfc[i], Lcf[i])
+            item = (*segment, item_list[i])
+            self.present(item, sublayers, B[i], Lfc[i], Lcf[i])
             state.append(self.copy())
-        if distract_B is not None and distract_B[n] > 0:
-            self.integrate(distract_segment, distract_list[n], distract_B[n])
         state.append(self.copy())
         return state
 
-    def record_recall(self, segment, recalls, B, T, amin=0.000001):
-        rec_ind = self.f_ind[segment]
-        w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
+    def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001):
+        rec_ind = self.get_segment('f', *segment)
+        rec_slice = slice(rec_ind[0], rec_ind[1])
+        w_cf = self.w_cf_exp[rec_slice, :] + self.w_cf_pre[rec_slice, :]
         exclude = np.zeros(self.n_f, dtype=bool)
         state = [self.copy()]
         for output, recall in enumerate(recalls):
             # project the current state of context; assume nonzero support
-            self.f_in[rec_ind] = np.dot(w_cf, self.c)
+            self.f_in[rec_slice] = np.dot(w_cf, self.c)
             if output > 0:
-                item_cue = (self.w_ff_pre[rec_ind, recalls[output - 1]] +
-                            self.w_ff_exp[rec_ind, recalls[output - 1]])
-                self.f_in[rec_ind] += item_cue
+                item_cue = (self.w_ff_pre[rec_slice, recalls[output - 1]] +
+                            self.w_ff_exp[rec_slice, recalls[output - 1]])
+                self.f_in[rec_slice] += item_cue
             self.f_in[self.f_in < amin] = amin
 
             # scale based on choice parameter, set recalled items to zero
-            self.f_in[rec_ind] = np.exp((2 * self.f_in[rec_ind]) / T)
+            self.f_in[rec_slice] = np.exp((2 * self.f_in[rec_slice]) / T)
             self.f_in[exclude] = 0
 
             # remove recalled item from competition
             exclude[recall] = True
 
             # update context
-            ind = self.f_ind[segment].start + recall
+            ind = rec_ind[0] + recall
             self.f[:] = 0
             self.f[ind] = 1
             state.append(self.copy())
-            self.present(segment, recall, B)
+            item = (*segment, recall)
+            self.present(item, sublayers, B)
         state.append(self.copy())
         return state
 
-    def _p_recall_cython(self, segment, recalls, B, T, p_stop, amin=0.000001):
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, len(recalls)).astype(float)
-        rec_ind = self.f_ind[segment]
-        n_item = rec_ind.stop - rec_ind.start
-        exclude = np.zeros(n_item, dtype=np.dtype('i'))
-        p = np.zeros(len(recalls) + 1)
-        recalls = np.array(recalls, dtype=np.dtype('i'))
-        operations.p_recall(rec_ind.start, n_item, recalls,
-                            self.w_fc_exp, self.w_fc_pre,
-                            self.w_cf_exp, self.w_cf_pre,
-                            self.w_ff_exp, self.w_ff_pre,
-                            self.f, self.f_in, self.c, self.c_in,
-                            exclude, amin, B, T, p_stop, p)
-        return p
-
-    def _p_recall_python(self, segment, recalls, B, T, p_stop, amin=0.000001):
-        # weights to use for recall (assume fixed during recall)
-        rec_ind = self.f_ind[segment]
-        w_cf = self.w_cf_exp[rec_ind, :] + self.w_cf_pre[rec_ind, :]
-
-        exclude = np.zeros(w_cf.shape[0], dtype=bool)
-        p = np.zeros(len(recalls) + 1)
-        for output, recall in enumerate(recalls):
-            # project the current state of context; assume nonzero support
-            support = np.dot(w_cf, self.c)
-            support[support < amin] = amin
-
-            # scale based on choice parameter, set recalled items to zero
-            strength = np.exp((2 * support) / T)
-            strength[exclude] = 0
-
-            # probability of this recall, conditional on not stopping
-            p[output] = ((strength[recall] / np.sum(strength)) *
-                         (1 - p_stop[output]))
-
-            # remove recalled item from competition
-            exclude[recall] = True
-
-            # update context
-            self.present(segment, recall, B)
-
-        # probability of the stopping event
-        p[len(recalls)] = p_stop[len(recalls)]
-        return p
-
-    def p_recall(self, segment, recalls, B, T, p_stop, amin=0.000001,
-                 compiled=True):
+    def p_recall(self, segment, recalls, sublayers, B, T, p_stop, amin=0.000001):
         """
         Calculate the probability of a specific recall sequence.
 
         Parameters
         ----------
-        segment : str
-            Segment from which items are recalled.
+        segment : tuple of str, str
+            Sublayer and segment from which items are recalled.
 
         recalls : numpy.array
             Index of each recalled item relative to the segment.
+
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
 
         B : float
             Context updating rate after each recalled item.
@@ -650,28 +766,43 @@ class Network(object):
         amin : float, optional
             Minimum activation for each not-yet-recalled item on each
             recall attempt.
-
-        compiled : bool, optional
-            If true, the compiled version of the function will be used.
         """
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        recalls = np.array(recalls, dtype=np.dtype('i'))
+        n_item = recalls.shape[0]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
         if T < amin:
             T = amin
-        if compiled:
-            p = self._p_recall_cython(segment, recalls, B, T, p_stop, amin)
-        else:
-            p = self._p_recall_python(segment, recalls, B, T, p_stop, amin)
+        f_ind = self.get_segment('f', *segment)
+        start = f_ind[0]
+        n_f = f_ind[1] - f_ind[0]
+        c_ind = self.get_sublayers('c', sublayers)
+
+        exclude = np.zeros(n_f, dtype=np.dtype('i'))
+        p = np.zeros(len(recalls) + 1)
+        operations.p_recall(
+            start, n_f, recalls, self.w_fc_exp, self.w_fc_pre,
+            self.w_cf_exp, self.w_cf_pre, self.w_ff_exp, self.w_ff_pre,
+            self.f, self.f_in, self.c, self.c_in, c_ind, exclude,
+            amin, B, T, p_stop, p
+        )
         return p
 
-    def generate_recall(self, segment, B, T, p_stop, amin=0.000001):
+    def generate_recall(self, segment, sublayers, B, T, p_stop, amin=0.000001):
         """
         Generate a sequence of simulated free recall events.
 
         Parameters
         ----------
-        segment : str
-            Segment to retrieve items from.
+        segment : tuple of str, str
+            Sublayer and segment to retrieve items from.
 
-        B : float
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
+
+        B : float or numpy.ndarray
             Context updating rate after each recall.
 
         T : float
@@ -684,13 +815,13 @@ class Network(object):
             Minimum activation of each not-yet-recalled item on each
             recall attempt.
         """
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
         # weights to use for recall (assume fixed during recall)
-        rec_ind = self.f_ind[segment]
-        n_item = self.n_f_segment[segment]
-        if not isinstance(B, np.ndarray):
-            B = np.tile(B, n_item).astype(float)
-        if not isinstance(T, np.ndarray):
-            T = np.tile(T, n_item).astype(float)
+        rec_ind = self.get_segment('f', *segment)
+        n_item = rec_ind[1] - rec_ind[0]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
 
         recalls = []
         exclude = np.zeros(n_item, dtype=np.dtype('i'))
@@ -702,15 +833,15 @@ class Network(object):
 
             # calculate item support
             operations.cue_item(
-                rec_ind.start, n_item, self.w_cf_pre, self.w_cf_exp,
+                rec_ind[0], n_item, self.w_cf_pre, self.w_cf_exp,
                 self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
                 np.asarray(recalls, dtype=np.dtype('i')), i
             )
-            operations.apply_softmax(rec_ind.start, n_item, self.f_in,
-                                     exclude, amin, T[i])
+            operations.apply_softmax(rec_ind[0], n_item, self.f_in,
+                                     exclude, amin, T)
 
             # select item for recall proportionate to support
-            support = self.f_in[rec_ind]
+            support = self.f_in[rec_ind[0]:rec_ind[1]]
             p_recall = support / np.sum(support)
             if np.any(np.isnan(p_recall)):
                 n = np.count_nonzero(exclude == 0)
@@ -723,13 +854,18 @@ class Network(object):
             exclude[recall] = 1
 
             # integrate context associated with the item into context
-            self.integrate(segment, recall, B[i])
+            item = (*segment, recall)
+            self.integrate(item, sublayers, B[i])
         return recalls
 
-    def generate_recall_lba(self, segment, time_limit, B, A, b, s, tau):
+    def generate_recall_lba(self, segment, sublayers, time_limit, B, A, b, s, tau):
         """Generate timed free recall using the LBA model."""
-        rec_ind = self.f_ind[segment]
-        n_item = self.n_f_segment[segment]
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        rec_ind = self.get_segment('f', *segment)
+        n_item = rec_ind[1] - rec_ind[0]
+        n_sub = len(sublayers)
+        B = expand_param(B, (n_item, n_sub))
 
         recalls = []
         times = []
@@ -741,11 +877,11 @@ class Network(object):
 
             # calculate item support
             operations.cue_item(
-                rec_ind.start, n_item, self.w_cf_pre, self.w_cf_exp,
+                rec_ind[0], n_item, self.w_cf_pre, self.w_cf_exp,
                 self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
                 np.asarray(recalls, dtype=np.dtype('i')), i
             )
-            support = self.f_in[rec_ind]
+            support = self.f_in[rec_ind[0]:rec_ind[1]]
 
             # simulate response competition
             recall, irt = sample_response_lba(A, b, support, s, tau)
@@ -758,7 +894,8 @@ class Network(object):
                 exclude[recall] = 1
 
                 # integrate context associated with the item into context
-                self.integrate(segment, recall, B)
+                item = (*segment, recall)
+                self.integrate(item, sublayers, B[i])
         return recalls, times
 
     def plot(self, ax=None):
