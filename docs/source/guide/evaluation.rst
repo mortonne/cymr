@@ -62,29 +62,38 @@ Parameters
 ~~~~~~~~~~
 
 :py:class:`~cymr.parameters.Parameters` objects define how parameter values will be
-interpreted. One use of them is to define how weights in the model network
-are set.
-
-Patterns may include multiple components that may be weighted differently.
-Weight parameters are used to set the weighting of each component. Here,
-we only have one component, which we assign a weight based on the value
-of the :code:`w_loc` parameter.
+interpreted. One use of them is to define the layers and sublayers of a network.
 
 Each pattern is placed in a *region* of the connection matrix.
 The region is defined by the sublayer and segment of the :math:`f` and
 :math:`c` layers. Conventionally, the :math:`f` layer
 has only one *sublayer* called :code:`'task'`. The :math:`c` layer may
 have multiple sublayers with different names. Here, we'll just use one,
-also called :code:`'task'`. Each of these sublayers has one *segment*
-corresponding to item representations. Segments for simulating the start
-of the list will also be added automatically.
+also called :code:`'task'`.
+
+First, we indicate what sublayers will be included in the network.
 
 .. ipython:: python
 
     param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['task'])
+
+Patterns may include multiple components that may be weighted differently.
+Weight parameters are used to set the weighting of each component. Here,
+we only have one component, which we assign a weight based on the value
+of the :code:`w_loc` parameter.
+
+When setting the weights, we first indicate the region to apply weights to,
+followed by an expression. This expression may reference parameters and/or
+patterns.
+
+.. ipython:: python
+
     weights = {(('task', 'item'), ('task', 'item')): 'w_loc * loc'}
     param_def.set_weights('fc', weights)
     param_def.set_weights('cf', weights)
+
+Segments for simulating the start of the list will also be added automatically.
 
 Finally, we define the parameters that we want to evaluate, by creating
 a dictionary with a name and value for each parameter. We'll get a
