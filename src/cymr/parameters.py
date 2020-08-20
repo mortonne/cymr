@@ -203,6 +203,26 @@ class Parameters(object):
         param._dynamic_names = self._dynamic_names.copy()
         return param
 
+    def to_json(self, json_file):
+        """
+        Write parameter definitions to a JSON file.
+
+        Parameters
+        ----------
+        json_file : str
+            Path to file to save json data.
+        """
+        data = {'fixed': self.fixed, 'free': self.free,
+                'dependent': self.dependent, 'dynamic': self.dynamic,
+                'weights': {}}
+        for layer, regions in self.weights.items():
+            data['weights'][layer] = {}
+            for region, expr in regions.items():
+                region_str = encode_region(region)
+                data['weights'][layer][region_str] = expr
+        with open(json_file, 'w') as f:
+            json.dump(data, f, indent=4)
+
     def set_fixed(self, *args, **kwargs):
         """
         Set fixed parameter values.
@@ -242,86 +262,6 @@ class Parameters(object):
         """
         self.dependent.update(*args, **kwargs)
 
-    def set_dynamic(self, trial_type, *args, **kwargs):
-        """
-        Set dynamic parameters in terms of parameters and data.
-
-        Parameters
-        ----------
-        trial_type : str
-            Type of trial that the parameter will vary over.
-
-        Examples
-        --------
-        >>> from cymr import parameters
-        >>> param_def = parameters.Parameters()
-        >>> param_def.set_dynamic('study', a='b * input')
-        >>> param_def.set_dynamic('recall', {'c': 'd * op'})
-        """
-        if trial_type in self.dynamic:
-            self.dynamic[trial_type].update(*args, **kwargs)
-        else:
-            self.dynamic[trial_type] = dict(*args, **kwargs)
-        for key in self.dynamic[trial_type].keys():
-            self._dynamic_names.add(key)
-
-    def set_sublayers(self, *args, **kwargs):
-        """
-        Set layers and sublayers of a network.
-
-        Examples
-        --------
-        >>> from cymr import parameters
-        >>> param_def = parameters.Parameters()
-        >>> param_def.set_sublayers(f=['task'], c=['task'])
-        """
-        self.sublayers.update(*args, **kwargs)
-
-    def set_sublayer_param(self, layer, *args, **kwargs):
-        """
-        Set sublayer parameters.
-
-        Parameters
-        ----------
-        layer : str
-            Layer containing the sublayers.
-
-        Examples
-        --------
-        >>> from cymr import parameters
-        >>> param_def = parameters.Parameters()
-        >>> param_def.set_sublayer_param('c', sub1={'a': 1}, sub2={'a': 2})
-        >>> param_def.set_sublayer_param('c', {'sub1': {'b': 2}, 'sub2': {'b': 1}})
-        """
-        if layer in self.sublayer_param:
-            self.sublayer_param[layer].update(*args, **kwargs)
-        else:
-            self.sublayer_param[layer] = dict(*args, **kwargs)
-
-    def set_weights(self, connect, regions):
-        """
-        Set weights on model patterns.
-
-        Parameters
-        ----------
-        connect : str
-            Network connection to set weights for.
-
-        regions : dict of (tuple of (tuple of str)): str
-            Weights for each region to set.
-
-        Examples
-        --------
-        >>> from cymr import parameters
-        >>> param_def = parameters.Parameters()
-        >>> region = (('f_sub', 'f_reg'), ('c_sub', 'c_reg'))
-        >>> param_def.set_weights('fc', {region: 'b * pattern'})
-        """
-        if connect in self.weights:
-            self.weights[connect].update(regions)
-        else:
-            self.weights[connect] = regions
-
     def eval_dependent(self, param):
         """
         Evaluate dependent parameters based on input parameters.
@@ -345,6 +285,29 @@ class Parameters(object):
         {'a': 0.5, 'b': 1.0}
         """
         return set_dependent(param, self.dependent)
+
+    def set_dynamic(self, trial_type, *args, **kwargs):
+        """
+        Set dynamic parameters in terms of parameters and data.
+
+        Parameters
+        ----------
+        trial_type : str
+            Type of trial that the parameter will vary over.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> param_def.set_dynamic('study', a='b * input')
+        >>> param_def.set_dynamic('recall', {'c': 'd * op'})
+        """
+        if trial_type in self.dynamic:
+            self.dynamic[trial_type].update(*args, **kwargs)
+        else:
+            self.dynamic[trial_type] = dict(*args, **kwargs)
+        for key in self.dynamic[trial_type].keys():
+            self._dynamic_names.add(key)
 
     def eval_dynamic(self, param, study=None, recall=None):
         """
@@ -404,45 +367,41 @@ class Parameters(object):
             indexed[name] = param[name][index]
         return indexed
 
-    def eval_sublayer_param(self, layer, param, n_trial=None):
+    def set_sublayers(self, *args, **kwargs):
         """
-        Evaluate sublayer parameters.
+        Set layers and sublayers of a network.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> param_def.set_sublayers(f=['task'], c=['task'])
+        """
+        self.sublayers.update(*args, **kwargs)
+
+    def set_weights(self, connect, regions):
+        """
+        Set weights on model patterns.
 
         Parameters
         ----------
-        layer : str
-            Layer to evaluate.
+        connect : str
+            Network connection to set weights for.
 
-        param : dict
-            Parameters to use when evaluating sublayer parameters.
+        regions : dict of (tuple of (tuple of str)): str
+            Weights for each region to set.
 
-        n_trial : int, optional
-            Number of trials. If indicated, parameters will be tiled
-            over all trials.
-
-        Returns
-        -------
-        eval_param : dict
-            Input parameters with sublayer-specific parameters set.
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> region = (('f_sub', 'f_reg'), ('c_sub', 'c_reg'))
+        >>> param_def.set_weights('fc', {region: 'b * pattern'})
         """
-        eval_param = param.copy()
-
-        # get parameter values for each sublayer
-        param_lists = {}
-        for sublayer in self.sublayers[layer]:
-            for par, expr in self.sublayer_param[layer][sublayer].items():
-                if par not in param_lists:
-                    param_lists[par] = []
-                value = eval(expr, np.__dict__, param)
-                param_lists[par].append(value)
-
-        # prepare parameter arrays
-        for par, values in param_lists.items():
-            if n_trial is not None:
-                eval_param[par] = np.tile(np.asarray(values), (n_trial, 1))
-            else:
-                eval_param[par] = np.array(values)
-        return eval_param
+        if connect in self.weights:
+            self.weights[connect].update(regions)
+        else:
+            self.weights[connect] = regions
 
     def eval_weights(self, patterns, param=None, item_index=None):
         """
@@ -491,22 +450,63 @@ class Parameters(object):
                 weights[connect][region] = eval(expr, np.__dict__, data)
         return weights
 
-    def to_json(self, json_file):
+    def set_sublayer_param(self, layer, *args, **kwargs):
         """
-        Write parameter definitions to a JSON file.
+        Set sublayer parameters.
 
         Parameters
         ----------
-        json_file : str
-            Path to file to save json data.
+        layer : str
+            Layer containing the sublayers.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> param_def.set_sublayer_param('c', sub1={'a': 1}, sub2={'a': 2})
+        >>> param_def.set_sublayer_param('c', {'sub1': {'b': 2}, 'sub2': {'b': 1}})
         """
-        data = {'fixed': self.fixed, 'free': self.free,
-                'dependent': self.dependent, 'dynamic': self.dynamic,
-                'weights': {}}
-        for layer, regions in self.weights.items():
-            data['weights'][layer] = {}
-            for region, expr in regions.items():
-                region_str = encode_region(region)
-                data['weights'][layer][region_str] = expr
-        with open(json_file, 'w') as f:
-            json.dump(data, f, indent=4)
+        if layer in self.sublayer_param:
+            self.sublayer_param[layer].update(*args, **kwargs)
+        else:
+            self.sublayer_param[layer] = dict(*args, **kwargs)
+
+    def eval_sublayer_param(self, layer, param, n_trial=None):
+        """
+        Evaluate sublayer parameters.
+
+        Parameters
+        ----------
+        layer : str
+            Layer to evaluate.
+
+        param : dict
+            Parameters to use when evaluating sublayer parameters.
+
+        n_trial : int, optional
+            Number of trials. If indicated, parameters will be tiled
+            over all trials.
+
+        Returns
+        -------
+        eval_param : dict
+            Input parameters with sublayer-specific parameters set.
+        """
+        eval_param = param.copy()
+
+        # get parameter values for each sublayer
+        param_lists = {}
+        for sublayer in self.sublayers[layer]:
+            for par, expr in self.sublayer_param[layer][sublayer].items():
+                if par not in param_lists:
+                    param_lists[par] = []
+                value = eval(expr, np.__dict__, param)
+                param_lists[par].append(value)
+
+        # prepare parameter arrays
+        for par, values in param_lists.items():
+            if n_trial is not None:
+                eval_param[par] = np.tile(np.asarray(values), (n_trial, 1))
+            else:
+                eval_param[par] = np.array(values)
+        return eval_param
