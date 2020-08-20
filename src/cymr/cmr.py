@@ -129,32 +129,6 @@ def study_list(param_def, param, item_index, item_input, patterns):
     return net
 
 
-def init_dist_cmr(item_index, patterns, param):
-    """Initialize distributed CMR for one list."""
-    n_c = patterns['fcf'].shape[1]
-    n_f = len(item_index)
-    f_segment = {'task': {'item': n_f, 'start': 1}}
-    c_segment = {'task': {'item': n_c, 'start': 1}}
-    net = network.Network(f_segment, c_segment)
-    list_patterns = patterns['fcf'][item_index]
-    net.add_pre_weights(
-        'fc', ('task', 'item'), ('task', 'item'), list_patterns,
-        param['Dfc'], param['Afc']
-    )
-    net.add_pre_weights(
-        'cf', ('task', 'item'), ('task', 'item'), list_patterns,
-        param['Dcf'], param['Acf']
-    )
-    net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
-    if 'ff' in patterns and patterns['ff'] is not None:
-        mat = patterns['ff'][np.ix_(item_index, item_index)]
-        net.add_pre_weights(
-            'ff', ('task', 'item'), None, mat, param['Dff'], param['Aff']
-        )
-    net.update(('task', 'start', 0), 'task')
-    return net
-
-
 def prepare_list_param(n_item, n_sub, param, param_def):
     """Prepare parameters that vary within list."""
     Lfc = np.tile(param['Lfc'], (n_item, n_sub)).astype(float)
