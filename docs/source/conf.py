@@ -58,7 +58,7 @@ html_theme = 'pydata_sphinx_theme'
 html_logo = "_static/logo.png"
 
 html_theme_options = {
-    "github_url": "https://github.com/mortonne/psifr",
+    "github_url": "https://github.com/mortonne/cymr",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
