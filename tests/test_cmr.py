@@ -302,3 +302,15 @@ def test_sublayer_cmr(data, patterns, param_def_sublayer, param_dist):
         data, param, None, param_def_sublayer, patterns=patterns
     )
     np.testing.assert_allclose(logl, -5.8694368046085215)
+
+
+def test_sublayer_generate(data, patterns, param_def_sublayer, param_dist):
+    """Test using CMR-D with sublayers to generate data."""
+    param = param_dist.copy()
+    param['B_enc_loc'] = .5
+    param['B_enc_cat'] = .8
+    model = cmr.CMRDistributed()
+    sim = model.generate(
+        data, param, None, param_def_sublayer, patterns=patterns
+    )
+    assert isinstance(sim, pd.DataFrame)
