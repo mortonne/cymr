@@ -183,7 +183,8 @@ class Parameters(object):
 
     def __repr__(self):
         names = [
-            'fixed', 'free', 'dependent', 'dynamic', 'weights', 'sublayers'
+            'fixed', 'free', 'dependent', 'dynamic', 'sublayers', 'weights',
+            'sublayer_param',
         ]
         parts = {}
         for name in names:
