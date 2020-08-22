@@ -383,7 +383,7 @@ class CMRDistributed(Recall):
 
             # simulate recall
             recall_vec = net.generate_recall(
-                ('task', 'item'), 'task', list_param['B_rec'],
+                ('task', 'item'), net.c_sublayers, list_param['B_rec'],
                 list_param['T'], list_param['p_stop']
             )
             recalls_list.append(recall_vec)
