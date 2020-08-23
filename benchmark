@@ -14,7 +14,13 @@ def main(benchmark):
     m = test()
     m.setup()
     sub_test = getattr(m, method_name)
-    cProfile.runctx('sub_test()', globals(), locals(), filename='.profile')
+
+    pr = cProfile.Profile()
+    pr.enable()
+    sub_test()
+    pr.disable()
+    pr.dump_stats('.profile')
+
     subprocess.Popen(['snakeviz', '.profile'])
 
 
