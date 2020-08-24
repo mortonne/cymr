@@ -73,7 +73,13 @@
     //
     "matrix": {
         "numpy": [],
+        "scipy": [],
         "cython": [],
+        "pandas": [],
+        "joblib": [],
+        "h5py": [],
+        "matplotlib": [],
+        "pip+psifr": []
     },
     // "matrix": {
     //     "numpy": ["1.6", "1.7"],
