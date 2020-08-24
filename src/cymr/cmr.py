@@ -131,14 +131,38 @@ def study_list(param_def, param, item_index, item_input, patterns):
 
 def prepare_list_param(n_item, n_sub, param, param_def):
     """Prepare parameters that vary within list."""
-    Lfc = np.tile(param['Lfc'], (n_item, n_sub)).astype(float)
-    Lcf_trial = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
-    Lcf = np.tile(Lcf_trial[:, None], (1, n_sub))
+    if 'c' in param_def.sublayer_param:
+        # evaluate sublayer parameters
+        param = param_def.eval_sublayer_param('c', param, n_item)
+
+        # get the set of all sublayer parameters
+        sub_param = set()
+        for sublayer in param_def.sublayers['c']:
+            for par in param_def.sublayer_param['c'][sublayer].keys():
+                sub_param.add(par)
+    else:
+        sub_param = set()
+
+    if 'Lfc' in sub_param:
+        Lfc = param['Lfc']
+    else:
+        Lfc = np.tile(param['Lfc'], (n_item, n_sub)).astype(float)
+
+    # apply primacy gradient to Lcf
+    if 'Lcf' in sub_param:
+        n_sub = param['Lcf'].shape[1]
+        Lcf = np.zeros(param['Lcf'].shape)
+        for i in range(n_sub):
+            Lcf[:, i] = primacy(
+                n_item, param['Lcf'][0, i], param['P1'], param['P2']
+            )
+    else:
+        Lcf_trial = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
+        Lcf = np.tile(Lcf_trial[:, None], (1, n_sub))
+
     p_stop = p_stop_op(n_item, param['X1'], param['X2'])
     list_param = param.copy()
     list_param.update({'Lfc': Lfc, 'Lcf': Lcf, 'p_stop': p_stop})
-    if 'c' in param_def.sublayer_param:
-        list_param = param_def.eval_sublayer_param('c', list_param, n_item)
     return list_param
 
 
