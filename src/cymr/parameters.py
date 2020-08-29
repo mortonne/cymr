@@ -195,7 +195,7 @@ class Parameters(object):
 
     def copy(self):
         """Copy the parameters definition."""
-        param = Parameters()
+        param = type(self).__new__(self.__class__)
         param.fixed = self.fixed.copy()
         param.free = self.free.copy()
         param.dependent = self.dependent.copy()
