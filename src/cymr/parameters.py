@@ -459,26 +459,32 @@ class Parameters(object):
                 weights[connect][region] = eval(expr, np.__dict__, data)
         return weights
 
-    def set_sublayer_param(self, layer, *args, **kwargs):
+    def set_sublayer_param(self, layer, sublayer, *args, **kwargs):
         """
         Set sublayer parameters.
 
         Parameters
         ----------
         layer : str
-            Layer containing the sublayers.
+            Layer containing the sublayer to set.
+
+        sublayer : str
+            Sublayer to set parameters for.
 
         Examples
         --------
         >>> from cymr import parameters
         >>> param_def = parameters.Parameters()
-        >>> param_def.set_sublayer_param('c', sub1={'a': 1}, sub2={'a': 2})
-        >>> param_def.set_sublayer_param('c', {'sub1': {'b': 2}, 'sub2': {'b': 1}})
+        >>> param_def.set_sublayer_param('c', 'sub1', a=1})
+        >>> param_def.set_sublayer_param('c', 'sub1', {'b': 2})
         """
         if layer in self.sublayer_param:
-            self.sublayer_param[layer].update(*args, **kwargs)
+            if sublayer in self.sublayer_param[layer]:
+                self.sublayer_param[layer][sublayer].update(*args, **kwargs)
+            else:
+                self.sublayer_param[layer][sublayer] = dict(*args, **kwargs)
         else:
-            self.sublayer_param[layer] = dict(*args, **kwargs)
+            self.sublayer_param[layer] = {sublayer: dict(*args, **kwargs)}
 
     def eval_sublayer_param(self, layer, param, n_trial=None):
         """
