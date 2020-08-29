@@ -233,10 +233,8 @@ def param_def_sublayer():
     """Generate parameter definitions for multiple context sublayers."""
     param_def = parameters.Parameters()
     param_def.set_sublayers(f=['task'], c=['loc', 'cat'])
-    param_def.set_sublayer_param('c', {
-        'loc': {'B_enc': 'B_enc_loc'},
-        'cat': {'B_enc': 'B_enc_cat'}
-    })
+    param_def.set_sublayer_param('c', 'loc', {'B_enc': 'B_enc_loc'})
+    param_def.set_sublayer_param('c', 'cat', {'B_enc': 'B_enc_cat'})
     weights = {
         (('task', 'item'), ('loc', 'item')): 'loc',
         (('task', 'item'), ('cat', 'item')): 'cat',

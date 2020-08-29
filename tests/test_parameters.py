@@ -56,10 +56,8 @@ def param_def():
     param.set_weights('ff', {('task', 'item'): 'loc + cat'})
 
     # sublayer-varying parameters
-    param.set_sublayer_param('c', {
-        'loc': {'B_enc': 'B_enc_loc'},
-        'cat': {'B_enc': 'B_enc_cat'},
-    })
+    param.set_sublayer_param('c', 'loc', {'B_enc': 'B_enc_loc'})
+    param.set_sublayer_param('c', 'cat', {'B_enc': 'B_enc_cat'})
     return param
 
 
