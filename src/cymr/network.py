@@ -692,6 +692,31 @@ class Network(object):
         )
 
     def record_study(self, segment, item_list, sublayers, B, Lfc, Lcf):
+        """
+        Study a list of items and record network states.
+
+        Parameters
+        ----------
+        segment : tuple of str, str
+            Sublayer and segment of items to present.
+
+        item_list : numpy.array
+            Item indices relative to the segment.
+
+        sublayers : str or list of str
+            Sublayers of context to update.
+
+        B : float or numpy.array
+            Context updating rate. If an array, specifies a rate for
+            each individual study trial.
+
+        Lfc : float or numpy.array
+            Learning rate for item to context associations. If an
+            array, specifies a learning rate for each individual trial.
+
+        Lcf : float or numpy.array
+            Learning rate for context to item associations.
+        """
         n_item = len(item_list)
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
