@@ -730,12 +730,11 @@ class Network(object):
         B = expand_param(B, (n_item, n_sub))
         Lfc = expand_param(Lfc, (n_item, n_sub))
         Lcf = expand_param(Lcf, (n_item, n_sub))
-        state = []
+        state = [self.copy()]
         for i in range(len(item_list)):
             item = (*segment, item_list[i])
             self.present(item, sublayers, B[i], Lfc[i], Lcf[i])
             state.append(self.copy())
-        state.append(self.copy())
         return state
 
     def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001):
