@@ -85,6 +85,26 @@ def net_study_distract():
     return net
 
 
+def test_study_record(net_pre):
+    net = net_pre.copy()
+    net.update(('task', 'start', 0), 'task')
+    B = .5
+    L = 1
+    n_item = net.f_segment['task']['item']
+    item_list = np.arange(n_item)
+    state = net.record_study(('task', 'item'), item_list, ['task'], B, L, L)
+
+    np.testing.assert_allclose(state[0].c, np.array(
+        [0., 0.09128709, 0.18257419, 0.27386128, 0.36514837, 0.8660254]
+    ))
+    np.testing.assert_allclose(state[1].c, np.array(
+        [0.15655607, 0.24875946, 0.34096284, 0.43316622, 0.52536961, 0.57767384],
+    ))
+    np.testing.assert_allclose(state[2].c, np.array(
+        [0.27217749, 0.341992, 0.4118065, 0.481621, 0.55143551, 0.32145976],
+    ))
+
+
 @pytest.fixture()
 def net_sublayers():
     f_segments = {'task': {'item': 3, 'start': 1}}
