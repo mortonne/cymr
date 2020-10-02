@@ -738,6 +738,30 @@ class Network(object):
         return state
 
     def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001):
+        """
+        Calculate the probability of a specific recall sequence.
+
+        Parameters
+        ----------
+        segment : tuple of str, str
+            Sublayer and segment from which items are recalled.
+
+        recalls : numpy.array
+            Index of each recalled item relative to the segment.
+
+        sublayers : str or list of str
+            Sublayer(s) of context to update.
+
+        B : float
+            Context updating rate after each recalled item.
+
+        T : float
+            Decision parameter for choice rule.
+
+        amin : float, optional
+            Minimum activation for each not-yet-recalled item on each
+            recall attempt.
+        """
         rec_ind = self.get_segment('f', *segment)
         rec_slice = slice(rec_ind[0], rec_ind[1])
         w_cf = self.w_cf_exp[rec_slice, :] + self.w_cf_pre[rec_slice, :]
