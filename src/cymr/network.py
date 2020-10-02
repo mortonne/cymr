@@ -716,6 +716,12 @@ class Network(object):
 
         Lcf : float or numpy.array
             Learning rate for context to item associations.
+
+        Returns
+        -------
+        state : list of cymr.network.Network
+            Copy of the network state before and after each item
+            presentation. The state[0] is before the first presentation.
         """
         n_item = len(item_list)
         if not isinstance(sublayers, list):
