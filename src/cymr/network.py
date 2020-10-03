@@ -878,6 +878,11 @@ class Network(object):
         amin : float, optional
             Minimum activation of each not-yet-recalled item on each
             recall attempt.
+
+        Returns
+        -------
+        recalls : list of int
+            Indices of items recalled at each output position.
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]

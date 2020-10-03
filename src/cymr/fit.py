@@ -529,6 +529,11 @@ class Recall(ABC):
 
         patterns : dict of (str: dict of (str: numpy.array)), optional
             Patterns to use in the model.
+
+        Returns
+        -------
+        recalls_list : list of (list of int)
+            Recalled item indices for each simulated list.
         """
         pass
 
