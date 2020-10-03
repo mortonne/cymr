@@ -277,7 +277,8 @@ class Network(object):
         Pre-experimental weights connecting c to f.
 
     w_cf_exp : numpy.array
-        Weights learned during the experiment connect c to f.
+        Weights learned during the experiment connecting c to f.
+
     w_ff_pre : numpy.array
         Pre-experimental weights connecting f to f.
 
