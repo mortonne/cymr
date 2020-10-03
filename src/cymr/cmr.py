@@ -165,9 +165,9 @@ def prepare_list_param(n_item, n_sub, param, param_def):
     return list_param
 
 
-class CMRDistributed(Recall):
+class CMR(Recall):
     """
-    Context Maintenance and Retrieval-Distributed model.
+    Context Maintenance and Retrieval model.
 
     **Model Parameters**
 

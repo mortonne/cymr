@@ -31,7 +31,7 @@ class TimeLikelihood(object):
             'T': 10, 'X1': .05, 'X2': .2
         }
         self.param = param_def.eval_dependent(param)
-        self.model = cmr.CMRDistributed()
+        self.model = cmr.CMR()
 
     def time_likelihood(self):
         self.model.likelihood(

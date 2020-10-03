@@ -60,7 +60,7 @@ def test_prepare_study(data):
 
 def test_cmr(data):
     """Test CMR likelihood evaluation."""
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     param = {'B_enc': .5, 'B_rec': .8, 'B_start': 0,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
@@ -94,7 +94,7 @@ def param():
 
 def test_cmr_fit(data, param):
     """Test fit of CMR parameters to sample data."""
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     n_item = data['item_index'].nunique()
     param_def, patterns = cmr.config_loc_cmr(n_item)
     param_def.set_fixed(param)
@@ -187,7 +187,7 @@ def param_dist():
 
 def test_dist_cmr(data, patterns, param_def_dist, param_dist):
     """Test localist CMR using the CMR-D implementation."""
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     logl, n = model.likelihood(
         data, param_dist, None, param_def_dist, patterns=patterns
     )
@@ -197,7 +197,7 @@ def test_dist_cmr(data, patterns, param_def_dist, param_dist):
 def test_dist_cmr_fit(data, patterns, param_def_dist):
     """Test fitted parameter values for CMR-D."""
     param_def = param_def_dist.copy()
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     param_def.set_fixed(w_loc=1)
     param_def.set_free(B_enc=(0, 1))
     results = model.fit_indiv(data, param_def, patterns=patterns, n_jobs=2)
@@ -207,7 +207,7 @@ def test_dist_cmr_fit(data, patterns, param_def_dist):
 
 def test_dist_cmr_generate(data, patterns, param_def_dist, param_dist):
     """Test that CMR-D generation runs."""
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     sim = model.generate(data, param_dist, None, param_def_dist, patterns=patterns)
     assert isinstance(sim, pd.DataFrame)
 
@@ -218,7 +218,7 @@ def test_dynamic_cmr(data, patterns, param_def_dist, param_dist):
     param_def = param_def_dist.copy()
     param['B_distract'] = .2
     param_def.set_dynamic('study', B_enc='distract * B_distract')
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     logl, n = model.likelihood(data, param, None, param_def, patterns=patterns,
                                study_keys=['distract'])
     np.testing.assert_allclose(logl, -5.9899248839454415)
@@ -230,7 +230,7 @@ def test_dynamic_cmr_recall(data, patterns, param_def_dist, param_dist):
     param_def = param_def_dist.copy()
     param['B_op'] = .2
     param_def.set_dynamic('recall', B_rec='op * B_op')
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     logl, n = model.likelihood(data, param, None, param_def, patterns=patterns,
                                recall_keys=['op'])
     np.testing.assert_allclose(logl, -5.919470385031945)
@@ -303,7 +303,7 @@ def test_sublayer_cmr(data, patterns, param_def_sublayer, param_dist):
     param = param_dist.copy()
     param['B_enc_loc'] = .5
     param['B_enc_cat'] = .8
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     logl, n = model.likelihood(
         data, param, None, param_def_sublayer, patterns=patterns
     )
@@ -315,7 +315,7 @@ def test_sublayer_generate(data, patterns, param_def_sublayer, param_dist):
     param = param_dist.copy()
     param['B_enc_loc'] = .5
     param['B_enc_cat'] = .8
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     sim = model.generate(
         data, param, None, param_def_sublayer, patterns=patterns
     )

@@ -6,7 +6,7 @@ from cymr import operations
 from cymr import fit
 from cymr import network
 from cymr import cmr
-from cymr.cmr import CMRDistributed
+from cymr.cmr import CMR
 from cymr import lba
 
 
@@ -42,7 +42,7 @@ def add_recalls(study, recalls_list, recalls_times):
     return data
 
 
-class CMRLBA(CMRDistributed):
+class CMRLBA(CMR):
     """CMR Distributed with Linear Ballistic Accumulators."""
     def prepare_sim(self, data, param):
         # 'dynamic' field on param
