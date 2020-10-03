@@ -603,6 +603,38 @@ class Recall(ABC):
         sim_data = pd.concat(data_list, axis=0, ignore_index=True)
         return sim_data
 
+    @abstractmethod
+    def record_subject(self, study, recall, param, param_def=None,
+                       patterns=None):
+        """
+        Record model state during simulation of data for one subject.
+
+        Parameters
+        ----------
+        study : dict of (str: list of numpy.array)
+            Information about the study phase in list format.
+
+        recall : dict of (str: list of numpy.array)
+            Information about recalled items in list format.
+
+        param : dict of (str: float)
+            Model parameter values.
+
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definition object; used to interpret parameters.
+
+        patterns : dict of (str: dict of (str: numpy.array)), optional
+            Patterns to use in the model.
+
+        Returns
+        -------
+        study_state : list of lists
+            Recorded state for each study trial.
+
+        recall_state : list of lists
+            Recorded state for each recall attempt.
+        """
+
     def _run_parameter_recovery(self, data, param_def, patterns=None,
                                 method='de', n_rep=1, **kwargs):
         """Run a parameter recovery test."""
