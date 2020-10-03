@@ -198,6 +198,64 @@ class Recall(ABC):
         [items x items] for similarity matrices.
     """
 
+    def prepare_subject(self, subject, data, group_param, subj_param=None,
+                        param_def=None, study_keys=None, recall_keys=None):
+        """
+        Prepare parameters and data for a subject.
+
+        Parameters
+        ----------
+        subject : str or int
+            Identifier for the subject to be simulated.
+
+        data : pandas.DataFrame
+            Full dataset with all subjects.
+
+        group_param : dict of (str: float)
+            Values of parameters that apply to all subjects.
+
+        subj_param : dict of (str: dict of (str: float)), optional
+            Values of subject parameters, indexed by subject ID.
+
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definition object specifying dependent and
+            dynamic parameters.
+
+        study_keys : list of str, optional
+            Columns to export for study list data.
+
+        recall_keys : list of str, optional
+            Columns to export for recall list data.
+
+        Returns
+        -------
+        study : dict of (str: list of numpy.array)
+            Study columns in list format.
+
+        recall : dict of (str: list of numpy.array)
+            Recall columns in list format.
+
+        param : dict of (str: float or numpy.array)
+            Parameters with dependent and dynamic parameters evaluated.
+        """
+        param = group_param.copy()
+        if subj_param is not None:
+            param.update(subj_param[subject])
+
+        # filter the data events for this subject
+        subject_data = data.loc[data['subject'] == subject]
+
+        # convert subject dataframe to list format
+        study, recall = self.prepare_sim(
+            subject_data, study_keys=study_keys, recall_keys=recall_keys
+        )
+
+        # evaluate dependent and dynamic parameters
+        if param_def is not None:
+            param = param_def.eval_dependent(param)
+            param = param_def.eval_dynamic(param, study, recall)
+        return study, recall, param
+
     @abstractmethod
     def likelihood_subject(self, study, recall, param, param_def=None,
                            patterns=None):
