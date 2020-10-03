@@ -730,7 +730,7 @@ class Network(object):
         B = expand_param(B, (n_item, n_sub))
         Lfc = expand_param(Lfc, (n_item, n_sub))
         Lcf = expand_param(Lcf, (n_item, n_sub))
-        state = [self.copy()]
+        state = []
         for i in range(len(item_list)):
             item = (*segment, item_list[i])
             self.present(item, sublayers, B[i], Lfc[i], Lcf[i])
