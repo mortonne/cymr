@@ -766,7 +766,7 @@ class Network(object):
         rec_slice = slice(rec_ind[0], rec_ind[1])
         w_cf = self.w_cf_exp[rec_slice, :] + self.w_cf_pre[rec_slice, :]
         exclude = np.zeros(self.n_f, dtype=bool)
-        state = [self.copy()]
+        state = []
         for output, recall in enumerate(recalls):
             # project the current state of context; assume nonzero support
             self.f_in[rec_slice] = np.dot(w_cf, self.c)
@@ -783,13 +783,18 @@ class Network(object):
             # remove recalled item from competition
             exclude[recall] = True
 
-            # update context
+            # update the item layer
             ind = rec_ind[0] + recall
             self.f[:] = 0
             self.f[ind] = 1
+
+            # save context cue and the item it cued
             state.append(self.copy())
+
+            # update context
             item = (*segment, recall)
             self.present(item, sublayers, B)
+        # save final state of context that resulted in no recall
         state.append(self.copy())
         return state
 
