@@ -36,29 +36,25 @@ source code and have changes be reflected in your installation.
 
 ## Quickstart
 
+Fit the context maintenance and retrieval model (CMR) to sample data: 
+
 ```python
-import numpy as np
-from cymr import fit, parameters, cmr
+from cymr import fit, cmr
 # load sample data
 data = fit.sample_data('Morton2013_mixed').query('subject <= 3')
 
-# define model parameters
-par = parameters.Parameters()
-par.set_fixed(T=0.1, Lfc=0.15, Lcf=0.15, Dfc=0.85, Dcf=0.85, P1=0.2, P2=2,
-              B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25)
-par.set_free(B_enc=(0, 1))
-
 # define model weights
 n_items = 768
-patterns = {'vector': {'loc': np.eye(n_items)}}
-par.set_sublayers(f=['task'], c=['task'])
-weights = {(('task', 'item'), ('task', 'item')): 'loc'}
-par.set_weights('fc', weights)
-par.set_weights('cf', weights)
+param_def, patterns = cmr.config_loc_cmr(n_items)
+param_def.set_fixed(
+    T=0.1, Lfc=0.15, Lcf=0.15, Afc=0, Acf=0, Dfc=0.85, Dcf=0.85, 
+    P1=0.2, P2=2, B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25
+)
+param_def.set_free(B_enc=(0, 1))
 
 # fit the model to sample data
-model = cmr.CMRDistributed()
-results = model.fit_indiv(data, par, patterns=patterns, tol=0.1)
+model = cmr.CMR()
+results = model.fit_indiv(data, param_def, patterns=patterns, tol=0.1)
 ```
 
 See the [documentation](https://cymr.readthedocs.io/en/latest/) for details.
