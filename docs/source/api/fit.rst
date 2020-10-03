@@ -21,6 +21,7 @@ Model Evaluation
 .. autosummary::
     :toctree: api/
 
+    Recall
     Recall.likelihood_subject
     Recall.likelihood
 

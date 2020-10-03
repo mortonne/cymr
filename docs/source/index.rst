@@ -16,3 +16,4 @@ using Cython to speed execution.
    /usage/installation
    /guide/overview
    /api/overview
+   /development/overview
