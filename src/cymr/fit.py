@@ -330,23 +330,11 @@ class Recall(ABC):
         logl = 0
         n = 0
         for subject in subjects:
-            # combine subject-specific parameters with group param definitions
-            param = group_param.copy()
-            if subj_param is not None:
-                param.update(subj_param[subject])
-
-            # filter the data events for this subject
-            subject_data = data.loc[data['subject'] == subject]
-
-            # convert subject dataframe to list format
-            study, recall = self.prepare_sim(
-                subject_data, study_keys=study_keys, recall_keys=recall_keys
+            # prepare subject for simulation
+            study, recall, param = self.prepare_subject(
+                subject, data, group_param, subj_param, param_def,
+                study_keys, recall_keys
             )
-
-            # evaluate dependent and dynamic parameters
-            if param_def is not None:
-                param = param_def.eval_dependent(param)
-                param = param_def.eval_dynamic(param, study, recall)
 
             # run subject-specific likelihood function
             subject_logl, subject_n = self.likelihood_subject(
@@ -586,22 +574,14 @@ class Recall(ABC):
         subjects = data['subject'].unique()
         data_list = []
         for subject in subjects:
-            # combine subject-specific parameters with group param definitions
-            param = group_param.copy()
-            if subj_param is not None:
-                param.update(subj_param[subject])
-
             # filter the data events for this subject
             subject_data = data.loc[data['subject'] == subject]
-            # recall will be empty unless dummy recall events have been provided
-            study, recall = self.prepare_sim(
-                subject_data, study_keys=study_keys, recall_keys=recall_keys
-            )
 
-            # evaluate dependent and dynamic parameters
-            if param_def is not None:
-                param = param_def.eval_dependent(param)
-                param = param_def.eval_dynamic(param, study, recall)
+            # prepare data and parameters
+            study, recall, param = self.prepare_subject(
+                subject, subject_data, group_param, subj_param, param_def,
+                study_keys, recall_keys
+            )
 
             max_list = subject_data['list'].max()
             # iterate over repetitions for this subject
