@@ -92,11 +92,14 @@ def param():
     return param
 
 
-def test_cmr_fit(data, param_def):
+def test_cmr_fit(data, param):
     """Test fit of CMR parameters to sample data."""
-    model = cmr.CMR()
+    model = cmr.CMRDistributed()
+    n_item = data['item_index'].nunique()
+    param_def, patterns = cmr.config_loc_cmr(n_item)
+    param_def.set_fixed(param)
     param_def.set_free(B_enc=(0, 1))
-    results = model.fit_indiv(data, param_def, n_jobs=2)
+    results = model.fit_indiv(data, param_def, patterns=patterns, n_jobs=2)
     np.testing.assert_allclose(results['B_enc'].to_numpy(),
                                np.array([0.72728744, 0.99883425]), atol=0.02)
     np.testing.assert_array_equal(results['n'].to_numpy(), [3, 3])
