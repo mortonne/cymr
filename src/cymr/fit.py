@@ -198,6 +198,36 @@ class Recall(ABC):
         [items x items] for similarity matrices.
     """
 
+    @abstractmethod
+    def prepare_sim(self, subject_data, study_keys=None, recall_keys=None):
+        """
+        Prepare data for simulation.
+
+        Exporting data in DataFrame format to list format for
+        simulation takes time, so this is only done once before running
+        a parameter search.
+
+        Parameters
+        ----------
+        subject_data : pandas.DataFrame
+            Data for one subject.
+
+        study_keys : list of str
+            Data columns to include in the study data.
+
+        recall_keys : list of str
+            Data columns to include in the recall data.
+
+        Returns
+        -------
+        study : dict of (str: list of numpy.array)
+            Information about the study phase in list format.
+
+        recall : dict of (str: list of numpy.array)
+            Information about recalled items in list format.
+        """
+        pass
+
     def prepare_subject(self, subject, data, group_param, subj_param=None,
                         param_def=None, study_keys=None, recall_keys=None):
         """
@@ -343,36 +373,6 @@ class Recall(ABC):
             logl += subject_logl
             n += subject_n
         return logl, n
-
-    @abstractmethod
-    def prepare_sim(self, subject_data, study_keys=None, recall_keys=None):
-        """
-        Prepare data for simulation.
-
-        Exporting data in DataFrame format to list format for
-        simulation takes time, so this is only done once before running
-        a parameter search.
-
-        Parameters
-        ----------
-        subject_data : pandas.DataFrame
-            Data for one subject.
-
-        study_keys : list of str
-            Data columns to include in the study data.
-
-        recall_keys : list of str
-            Data columns to include in the recall data.
-
-        Returns
-        -------
-        study : dict of (str: list of numpy.array)
-            Information about the study phase in list format.
-
-        recall : dict of (str: list of numpy.array)
-            Information about recalled items in list format.
-        """
-        pass
 
     def fit_subject(self, subject_data, param_def, patterns=None,
                     method='de', **kwargs):
