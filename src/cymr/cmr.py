@@ -63,19 +63,18 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
     return p_stop
 
 
-def init_loc_cmr(n_item, param):
-    """Initialize localist CMR for one list."""
-    f_segment = {'task': {'item': n_item, 'start': 1}}
-    c_segment = {'task': {'item': n_item, 'start': 1}}
-
-    net = network.Network(f_segment, c_segment)
-    net.add_pre_weights('fc', ('task', 'item'), ('task', 'item'),
-                        np.eye(n_item), param['Dfc'], param['Afc'])
-    net.add_pre_weights('cf', ('task', 'item'), ('task', 'item'),
-                        np.eye(n_item), param['Dcf'], param['Acf'])
-    net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
-    net.update(('task', 'start', 0), 'task')
-    return net
+def config_loc_cmr(n_item):
+    """Configure a localist CMR network."""
+    patterns = {'vector': {'loc': np.eye(n_item)}}
+    param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['task'])
+    param_def.set_weights('fc', {
+        (('task', 'item'), ('task', 'item')): 'Afc + Dfc * loc'
+    })
+    param_def.set_weights('cf', {
+        (('task', 'item'), ('task', 'item')): 'Acf + Dcf * loc'
+    })
+    return param_def, patterns
 
 
 def init_network(param_def, patterns, param, item_index):
@@ -167,103 +166,8 @@ def prepare_list_param(n_item, n_sub, param, param_def):
 
 
 class CMR(Recall):
-
-    def prepare_sim(self, data, study_keys=None, recall_keys=None):
-        study, recall = fit.prepare_lists(data, study_keys=['input'],
-                                          recall_keys=['input'], clean=True)
-        return study, recall
-
-    def likelihood_subject(self, study, recall, param, param_def=None,
-                           patterns=None):
-        n_item = len(study['input'][0])
-        n_list = len(study['input'])
-        n_sub = 1
-        if param_def is None:
-            param_def = parameters.Parameters()
-        param_def.set_sublayers(f=['task'], c=['task'])
-        trial_param = prepare_list_param(n_item, n_sub, param, param_def)
-        net_init = init_loc_cmr(n_item, param)
-        logl = 0
-        n = 0
-        for i in range(n_list):
-            net = net_init.copy()
-            list_param = param.copy()
-            if param_def is not None:
-                list_param = param_def.get_dynamic(list_param, i)
-            net.study(
-                ('task', 'item'), study['input'][i], 'task',
-                list_param['B_enc'], trial_param['Lfc'], trial_param['Lcf']
-            )
-            p = net.p_recall(
-                ('task', 'item'), recall['input'][i], 'task', list_param['B_rec'],
-                list_param['T'], trial_param['p_stop']
-            )
-            if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
-                logl = -10e6
-                break
-            logl += np.sum(np.log(p))
-            n += p.size
-        return logl, n
-
-    def generate_subject(self, study, recall, param, param_def=None,
-                         patterns=None, **kwargs):
-        # study = fit.prepare_study(study_data, study_keys=['position'])
-        n_item = len(study['input'][0])
-        n_list = len(study['input'])
-        n_sub = 1
-        if param_def is None:
-            param_def = parameters.Parameters()
-        param_def.set_sublayers(f=['task'], c=['task'])
-        trial_param = prepare_list_param(n_item, n_sub, param, param_def)
-
-        net_init = init_loc_cmr(n_item, param)
-        recalls_list = []
-        for i in range(n_list):
-            net = net_init.copy()
-            list_param = param.copy()
-            if param_def is not None:
-                list_param = param_def.get_dynamic(list_param, i)
-            net.study(
-                ('task', 'item'), study['input'][i], 'task', list_param['B_enc'],
-                trial_param['Lfc'], trial_param['Lcf']
-            )
-            recall_vec = net.generate_recall(
-                ('task', 'item'), 'task', list_param['B_rec'],
-                list_param['T'], trial_param['p_stop']
-            )
-            recalls_list.append(recall_vec)
-        return recalls_list
-
-    def record_network(self, data, param):
-        study, recall = self.prepare_sim(data)
-        n_item = len(study['input'][0])
-        n_sub = 1
-        param_def = parameters.Parameters()
-        param_def.set_sublayers(f=['task'], c=['task'])
-        list_param = prepare_list_param(n_item, n_sub, param, param_def)
-        net_init = init_loc_cmr(n_item, param)
-        n_list = len(study['input'])
-
-        net_state = []
-        for i in range(n_list):
-            net = net_init.copy()
-            item_list = study['input'][i].astype(int)
-            state = net.record_study(
-                ('task', 'item'), item_list, 'task', param['B_enc'],
-                list_param['Lfc'], list_param['Lcf']
-            )
-            rec = net.record_recall(
-                ('task', 'item'), recall['input'][i], 'task',
-                param['B_rec'], param['T']
-            )
-            state.extend(rec)
-            net_state.append(state)
-        return net_state
-
-
-class CMRDistributed(Recall):
     """
-    Context Maintenance and Retrieval-Distributed model.
+    Context Maintenance and Retrieval model.
 
     **Model Parameters**
 
@@ -410,7 +314,9 @@ class CMRDistributed(Recall):
                 ('task', 'item'), net.c_sublayers, list_param['B_rec'],
                 list_param['T'], list_param['p_stop']
             )
-            recalls_list.append(recall_vec)
+            recall_index = study['item_index'][i][recall_vec]
+            recall_items = patterns['items'][recall_index]
+            recalls_list.append(recall_items)
         return recalls_list
 
     def record_network(self, data, param, param_def=None, patterns=None,

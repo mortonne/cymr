@@ -80,43 +80,6 @@ def load_patterns(h5_file, features=None):
     return patterns
 
 
-def prepare_patterns(patterns, weights):
-    """Scale and concatenate item patterns and connections."""
-    scaled = {'fcf': None, 'ff': None}
-    if 'fcf' in weights:
-        # scale weights
-        w = np.array(list(weights['fcf'].values()))
-        ws = w / np.linalg.norm(w, ord=2)
-        features = list(weights['fcf'].keys())
-
-        # apply weights and make full patterns
-        fcf = []
-        for feature, wr in zip(features, ws):
-            mat = patterns['vector'][feature] * wr
-            fcf.append(mat)
-        scaled['fcf'] = np.hstack(fcf)
-
-    if 'ff' in weights:
-        w = np.array(list(weights['ff'].values()))
-        ws = w / np.linalg.norm(w, ord=1)
-        features = list(weights['ff'].keys())
-
-        # sum weights
-        w_shape = patterns['similarity'][features[0]].shape
-        scaled['ff'] = np.zeros(w_shape)
-        for feature, wr in zip(features, ws):
-            mat = patterns['similarity'][feature] * wr
-            scaled['ff'] += mat
-    return scaled
-
-
-def unpack_weights(weight_template, weight_param):
-    """Apply parameter values to a weight template."""
-    weights = {f: {k: weight_param[v] for k, v in w.items()}
-               for f, w in weight_template.items()}
-    return weights
-
-
 def expand_param(param, size):
     """
     Expand a scalar parameter to array format.

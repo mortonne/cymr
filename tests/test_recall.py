@@ -111,7 +111,7 @@ def test_generate_subject(data):
     rec = TestRecall()
     study = data.loc[(data['trial_type'] == 'study') &
                      (data['subject'] == 1)]
-    param = {'recalls': [1, 2]}
+    param = {'recalls': ['hollow', 'pupil']}
     # our "model" recalls the positions indicated in the recalls parameter
     rec_list = rec.generate_subject(study, None, param)
     data_sim = fit.add_recalls(study, rec_list)
@@ -122,8 +122,8 @@ def test_generate_subject(data):
 def test_generate(data):
     data = data.copy()
     rec = TestRecall()
-    subj_param = {1: {'recalls': [1, 2]},
-                  2: {'recalls': [2, 0, 1]}}
+    subj_param = {1: {'recalls': ['hollow', 'pupil']},
+                  2: {'recalls': ['pillow', 'fountain', 'piano']}}
     sim = rec.generate(data, {}, subj_param)
     expected = ['absence', 'hollow', 'pupil',
                 'hollow', 'pupil',
