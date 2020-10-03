@@ -64,6 +64,7 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
 
 
 def config_loc_cmr(n_item):
+    """Configure a localist CMR network."""
     patterns = {'vector': {'loc': np.eye(n_item)}}
     param_def = parameters.Parameters()
     param_def.set_sublayers(f=['task'], c=['task'])
