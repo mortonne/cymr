@@ -108,6 +108,34 @@ def test_study_record(net_pre):
     ))
 
 
+def test_recall_record(net_study):
+    net = net_study
+    recalls = [2, 0, 1]
+    B = .8
+    T = 10
+    state = net.record_recall(('task', 'item'), recalls, 'task', B, T)
+
+    # cuing context states
+    np.testing.assert_allclose(state[0].c, np.array(
+        [0.27217749, 0.341992, 0.4118065, 0.481621, 0.55143551, 0.32145976],
+    ))
+    np.testing.assert_allclose(state[1].c, np.array(
+        [0.35085785, 0.39607634, 0.44129483, 0.48651332, 0.53173181, 0.07646726],
+    ))
+    np.testing.assert_allclose(state[2].c, np.array(
+        [0.07687014, 0.23132715, 0.38578417, 0.54024118, 0.69469819, 0.13146559],
+    ))
+    np.testing.assert_allclose(state[3].c, np.array(
+        [0.26180973, 0.34607603, 0.43034234, 0.51460865, 0.59887495, 0.05494768],
+    ))
+
+    # recalled item activation
+    np.testing.assert_array_equal(state[0].f, np.array([0, 0, 1, 0]))
+    np.testing.assert_array_equal(state[1].f, np.array([1, 0, 0, 0]))
+    np.testing.assert_array_equal(state[2].f, np.array([0, 1, 0, 0]))
+    np.testing.assert_array_equal(state[3].f, np.array([0, 1, 0, 0]))
+
+
 @pytest.fixture()
 def net_sublayers():
     f_segments = {'task': {'item': 3, 'start': 1}}
