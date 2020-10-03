@@ -122,9 +122,8 @@ def add_recalls(study, recalls_list):
     study : pandas.DataFrame
         Study list data.
 
-    recalls_list : list of list of int
-        Recall sequence for each list in output order. Each entry is
-        the index of the recalled item in the list.
+    recalls_list : list of numpy.array
+        Recalled items for each list in output order.
 
     Returns
     -------
@@ -148,10 +147,9 @@ def add_recalls(study, recalls_list):
     # set basic information (list, item, position)
     n = 0
     for i, seq in enumerate(recalls_list):
-        pool = study.loc[study['list'] == lists[i], 'item'].to_numpy()
-        for j, pos in enumerate(seq):
+        for j, item in enumerate(seq):
             recall.loc[n, 'list'] = lists[i]
-            recall.loc[n, 'item'] = pool[pos]
+            recall.loc[n, 'item'] = item
             recall.loc[n, 'position'] = j + 1
             n += 1
     data = pd.concat((study, recall), axis=0, ignore_index=True)
