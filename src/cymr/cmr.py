@@ -423,7 +423,9 @@ class CMRDistributed(Recall):
                 ('task', 'item'), net.c_sublayers, list_param['B_rec'],
                 list_param['T'], list_param['p_stop']
             )
-            recalls_list.append(recall_vec)
+            recall_index = study['item_index'][i][recall_vec]
+            recall_items = patterns['items'][recall_index]
+            recalls_list.append(recall_items)
         return recalls_list
 
     def record_network(self, data, param, param_def=None, patterns=None,
