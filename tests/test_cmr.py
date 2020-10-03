@@ -72,10 +72,9 @@ def test_cmr(data):
 
 
 @pytest.fixture()
-def param_def():
+def param():
     """Generate a parameter definition with standard fixed values."""
-    param_def = parameters.Parameters()
-    param_def.set_fixed(
+    param = dict(
         B_rec=0.8,
         B_start=0,
         Afc=0,
@@ -90,7 +89,7 @@ def param_def():
         X1=0.05,
         X2=1
     )
-    return param_def
+    return param
 
 
 def test_cmr_fit(data, param_def):
