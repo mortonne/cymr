@@ -60,12 +60,13 @@ def test_prepare_study(data):
 
 def test_cmr(data):
     """Test CMR likelihood evaluation."""
-    model = cmr.CMR()
-    param = {'B_enc': .5, 'B_rec': .8,
+    model = cmr.CMRDistributed()
+    param = {'B_enc': .5, 'B_rec': .8, 'B_start': 0,
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    logl, n = model.likelihood(data, param)
+    param_def, patterns = cmr.config_loc_cmr(768)
+    logl, n = model.likelihood(data, param, param_def=param_def, patterns=patterns)
     np.testing.assert_allclose(logl, -5.936799964636842)
     assert n == 6
 
