@@ -107,8 +107,11 @@ def patterns():
     """Generate patterns for use in CMR-D."""
     cat = np.array([[1, 0, 1, 1, 0, 1],
                     [0, 1, 0, 0, 1, 0]]).T
-    patterns = {'vector': {'loc': np.eye(6), 'cat': cat},
-                'similarity': {'loc': np.eye(6), 'cat': np.dot(cat, cat.T)}}
+    patterns = {
+        'items': ['absence', 'hollow', 'pupil', 'fountain', 'piano', 'pillow'],
+        'vector': {'loc': np.eye(6), 'cat': cat},
+        'similarity': {'loc': np.eye(6), 'cat': np.dot(cat, cat.T)},
+    }
     return patterns
 
 
