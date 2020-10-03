@@ -94,6 +94,13 @@ def test_study_record(net_pre):
     item_list = np.arange(n_item)
     state = net.record_study(('task', 'item'), item_list, ['task'], B, L, L)
 
+    # presented items
+    np.testing.assert_array_equal(state[0].f, np.array([0, 0, 0, 1]))
+    np.testing.assert_array_equal(state[1].f, np.array([1, 0, 0, 0]))
+    np.testing.assert_array_equal(state[2].f, np.array([0, 1, 0, 0]))
+    np.testing.assert_array_equal(state[3].f, np.array([0, 0, 1, 0]))
+
+    # context states
     np.testing.assert_allclose(state[0].c, np.array(
         [0., 0., 0., 0., 0., 1.]
     ))
