@@ -720,8 +720,7 @@ class Network(object):
         Returns
         -------
         state : list of cymr.network.Network
-            Copy of the network state before and after each item
-            presentation. The state[0] is before the first presentation.
+            Copy of the network state after presentation of each item.
         """
         n_item = len(item_list)
         if not isinstance(sublayers, list):
@@ -739,7 +738,7 @@ class Network(object):
 
     def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001):
         """
-        Calculate the probability of a specific recall sequence.
+        Simulate a recall sequence and record network states.
 
         Parameters
         ----------
@@ -761,6 +760,11 @@ class Network(object):
         amin : float, optional
             Minimum activation for each not-yet-recalled item on each
             recall attempt.
+
+        Returns
+        -------
+        state : list of cymr.network.Network
+            Copy of the network state after each recall attempt.
         """
         rec_ind = self.get_segment('f', *segment)
         rec_slice = slice(rec_ind[0], rec_ind[1])
