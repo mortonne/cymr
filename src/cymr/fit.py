@@ -530,8 +530,8 @@ class Recall(ABC):
 
         Returns
         -------
-        recalls_list : list of (list of int)
-            Recalled item indices for each simulated list.
+        recalls_list : list of numpy.array
+            Recalled items for each simulated list.
         """
         pass
 
