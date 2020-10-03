@@ -414,8 +414,8 @@ class CMRDistributed(Recall):
         return recalls_list
 
     def record_network(self, data, param, param_def=None, patterns=None,
-                       remove_blank=False):
-        study, recall = self.prepare_sim(data)
+                       remove_blank=False, study_keys=None, recall_keys=None):
+        study, recall = self.prepare_sim(data, study_keys, recall_keys)
         n_item = len(study['input'][0])
         if param_def is None:
             raise ValueError('Must provide a Parameters object.')
