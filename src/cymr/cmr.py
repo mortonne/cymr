@@ -78,6 +78,19 @@ def init_loc_cmr(n_item, param):
     return net
 
 
+def config_loc_cmr(n_item):
+    patterns = {'vector': {'loc': np.eye(n_item)}}
+    param_def = parameters.Parameters()
+    param_def.set_sublayers(f=['task'], c=['task'])
+    param_def.set_weights('fc', {
+        (('task', 'item'), ('task', 'item')): 'Afc + Dfc * loc'
+    })
+    param_def.set_weights('cf', {
+        (('task', 'item'), ('task', 'item')): 'Acf + Dcf * loc'
+    })
+    return param_def, patterns
+
+
 def init_network(param_def, patterns, param, item_index):
     """Initialize a network with pattern weights."""
     # set item weights
