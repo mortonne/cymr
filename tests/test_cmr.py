@@ -163,9 +163,10 @@ def test_init_network(patterns):
 
 
 @pytest.fixture()
-def param_def_dist(param_def):
+def param_def_dist(param):
     """Generate parameter definitions for a simple CMR-D network."""
-    param_def = param_def.copy()
+    param_def = parameters.Parameters()
+    param_def.set_fixed(param)
     param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
