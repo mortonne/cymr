@@ -34,6 +34,12 @@ class TestRecall(Recall):
         recalls_list = [param['recalls']]
         return recalls_list
 
+    def record_subject(self, study, recall, param, param_def=None,
+                       patterns=None):
+        study_state = study['input']
+        recall_state = recall['input']
+        return study_state, recall_state
+
 
 @pytest.fixture()
 def data():
@@ -130,3 +136,11 @@ def test_generate(data):
                 'fountain', 'piano', 'pillow',
                 'pillow', 'fountain', 'piano']
     assert sim['item'].to_list() == expected
+
+
+def test_record_subject(data):
+    rec = TestRecall()
+    study, recall = fit.prepare_lists(data.loc[data['subject'] == 1])
+    study_state, recall_state = rec.record_subject(study, recall, {})
+    np.testing.assert_array_equal(study_state[0], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(recall_state[0], np.array([1, 2]))

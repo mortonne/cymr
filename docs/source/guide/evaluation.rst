@@ -129,7 +129,7 @@ the best-fitting parameters for a model.
 .. ipython:: python
 
     from cymr import cmr
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     logl, n = model.likelihood(data, param, param_def=param_def, patterns=patterns)
     print(f'{n} data points evaluated.')
     print(f'Log likelihood is: {logl:.4f}')

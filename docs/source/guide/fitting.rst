@@ -68,7 +68,7 @@ clustering, etc.
     par.set_free(B_enc=(0, 1))
     par.set_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
 
-To simulate free recall using the CMR-Distributed model, we must first
+To simulate free recall using the context maintenance and retrieval (CMR) model, we must first
 define pre-experimental weights for the network. For this example, we'll define
 localist patterns, which are distinct for each presented item. They can be
 represented by an identity matrix with one entry for each item. See
@@ -111,7 +111,7 @@ that the search converges.
 .. ipython:: python
 
     from cymr import cmr
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     results = model.fit_indiv(data, par, patterns=patterns, tol=0.1)
     results[['B_enc', 'logl', 'n', 'k']]
 

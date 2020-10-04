@@ -19,7 +19,7 @@ Model Initialization
 .. autosummary::
     :toctree: api/
 
-    init_loc_cmr
+    config_loc_cmr
     init_network
     study_list
 
@@ -29,9 +29,9 @@ Model Framework
 .. autosummary::
     :toctree: api/
 
-    CMRDistributed
-    CMRDistributed.fit_indiv
-    CMRDistributed.generate
-    CMRDistributed.record_network
-    CMRDistributed.parameter_sweep
-    CMRDistributed.parameter_recovery
+    CMR
+    CMR.fit_indiv
+    CMR.generate
+    CMR.record_network
+    CMR.parameter_sweep
+    CMR.parameter_recovery

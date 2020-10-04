@@ -37,7 +37,14 @@ simulation.
 
     from cymr import fit, parameters
     from psifr import fr
-    data = fit.sample_data('Morton2013_mixed').query('subject == 1')
+    data = fit.sample_data('Morton2013_mixed')
+    items = (data
+        .query('trial_type == "study"')
+        .groupby('item_index')
+        .first()['item']
+        .to_numpy()
+    )
+    data = fr.filter_data(data, subjects=1)
     fr.filter_data(data, trial_type='study')
 
 .. note:: It's also possible to use columns of the DataFrame
@@ -75,7 +82,7 @@ patterns are used.
         'X1': 0.001,
         'X2': 0.35
     }
-    patterns = {'vector': {'loc': np.eye(768)}}
+    patterns = {'items': items, 'vector': {'loc': np.eye(768)}}
     param_def = parameters.Parameters()
     param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
@@ -93,7 +100,7 @@ get a stable estimate of the model's behavior in this task.
 .. ipython:: python
 
     from cymr import cmr
-    model = cmr.CMRDistributed()
+    model = cmr.CMR()
     sim = model.generate(data, param, param_def=param_def, patterns=patterns, n_rep=5)
 
 Analying simulated data
