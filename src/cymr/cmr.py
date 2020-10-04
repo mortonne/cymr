@@ -349,3 +349,7 @@ class CMR(Recall):
             state.extend(rec)
             net_state.append(state)
         return net_state
+
+    def record_subject(self, study, recall, param, param_def=None,
+                       patterns=None):
+        pass
