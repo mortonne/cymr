@@ -11,8 +11,6 @@ Weight Patterns
 
     save_patterns
     load_patterns
-    prepare_patterns
-    unpack_weights
 
 Network Initialization
 ~~~~~~~~~~~~~~~~~~~~~~
