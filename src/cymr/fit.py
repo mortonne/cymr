@@ -635,6 +635,67 @@ class Recall(ABC):
             Recorded state for each recall attempt.
         """
 
+    def record(self, data, group_param, subj_param=None, param_def=None,
+               patterns=None, study_keys=None, recall_keys=None):
+        """
+        Record model states during a simulation.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            Data to guide simulation. Must include a 'subject' column.
+            May include dummy recall events if there is a dynamic
+            recall parameter.
+
+        group_param : dict of (str: float)
+            Values of parameters that apply to all subjects.
+
+        subj_param : dict of (str: dict of (str: float))
+            Parameters that vary by subject, indexed by subject.
+
+        param_def : cymr.parameters.Parameters, optional
+            Parameter definitions.
+
+        patterns : dict of (str: dict of (str: numpy.array)), optional
+            Patterns to use in the model.
+
+        study_keys : list of str
+            Data columns to include for the study phase.
+
+        recall_keys : list of str
+            Data columns to include for the recall phase.
+
+        Returns
+        -------
+        states : list
+            List of model states.
+        """
+        # get the list of subjects
+        subjects = data['subject'].unique()
+        states = []
+        for subject in subjects:
+            # filter the data events for this subject
+            subject_data = data.loc[data['subject'] == subject]
+
+            # prepare data and parameters
+            study, recall, param = self.prepare_subject(
+                subject, subject_data, group_param, subj_param, param_def,
+                study_keys, recall_keys
+            )
+
+            # record study and recall states
+            study_state, recall_state = self.record_subject(
+                study, recall, param, param_def=param_def, patterns=patterns
+            )
+
+            # combine states into a flat list
+            for study_list, recall_list in zip(study_state, recall_state):
+                for trial_state in study_list:
+                    states.append(trial_state)
+                for trial_state in recall_list:
+                    states.append(trial_state)
+        return states
+
     def _run_parameter_recovery(self, data, param_def, patterns=None,
                                 method='de', n_rep=1, **kwargs):
         """Run a parameter recovery test."""
