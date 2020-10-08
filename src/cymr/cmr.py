@@ -327,37 +327,6 @@ class CMR(Recall):
             recalls_list.append(recall_items)
         return recalls_list
 
-    def record_network(self, data, param, param_def=None, patterns=None,
-                       remove_blank=False, study_keys=None, recall_keys=None):
-        study, recall = self.prepare_sim(data, study_keys, recall_keys)
-        n_item = len(study['input'][0])
-        if param_def is None:
-            raise ValueError('Must provide a Parameters object.')
-        n_sub = len(param_def.sublayers['c'])
-        list_param = prepare_list_param(n_item, n_sub, param, param_def)
-        n_list = len(study['input'])
-
-        net_state = []
-        for i in range(n_list):
-            if remove_blank:
-                # include = np.any(scaled['fcf'][study['item_index'][i]] != 0, 0)
-                # scaled['fcf'] = scaled['fcf'][:, include]
-                raise ValueError('remove_blank option currently unsupported.')
-            net = init_network(param_def, patterns, param, study['item_index'][i])
-            item_list = study['input'][i].astype(int)
-            state = net.record_study(
-                ('task', 'item'), item_list, 'task', param['B_enc'],
-                list_param['Lfc'], list_param['Lcf']
-            )
-            net.integrate(('task', 'start', 0), 'task', param['B_start'])
-            rec = net.record_recall(
-                ('task', 'item'), recall['input'][i], 'task',
-                param['B_rec'], param['T']
-            )
-            state.extend(rec)
-            net_state.append(state)
-        return net_state
-
     def record_subject(self, study, recall, param, param_def=None,
                        patterns=None, remove_blank=False):
         n_item = len(study['input'][0])
