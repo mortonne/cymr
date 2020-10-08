@@ -605,7 +605,7 @@ class Recall(ABC):
 
     @abstractmethod
     def record_subject(self, study, recall, param, param_def=None,
-                       patterns=None):
+                       patterns=None, **kwargs):
         """
         Record model state during simulation of data for one subject.
 
@@ -636,7 +636,7 @@ class Recall(ABC):
         """
 
     def record(self, data, group_param, subj_param=None, param_def=None,
-               patterns=None, study_keys=None, recall_keys=None):
+               patterns=None, study_keys=None, recall_keys=None, **kwargs):
         """
         Record model states during a simulation.
 
@@ -685,7 +685,7 @@ class Recall(ABC):
 
             # record study and recall states
             study_state, recall_state = self.record_subject(
-                study, recall, param, param_def=param_def, patterns=patterns
+                study, recall, param, param_def=param_def, patterns=patterns, **kwargs
             )
 
             # combine states into a flat list
