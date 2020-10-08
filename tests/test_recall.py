@@ -144,3 +144,12 @@ def test_record_subject(data):
     study_state, recall_state = rec.record_subject(study, recall, {})
     np.testing.assert_array_equal(study_state[0], np.array([0, 1, 2]))
     np.testing.assert_array_equal(recall_state[0], np.array([1, 2]))
+
+
+def test_record(data):
+    rec = TestRecall()
+    states = rec.record(data, {})
+    np.testing.assert_array_equal(
+        np.asarray(states),
+        np.array([1, 2, 3, 2, 3, np.nan, 1, 2, 3, 3, 1, 3])
+    )
