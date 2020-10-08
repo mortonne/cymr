@@ -359,7 +359,7 @@ class CMR(Recall):
         return net_state
 
     def record_subject(self, study, recall, param, param_def=None,
-                       patterns=None):
+                       patterns=None, remove_blank=False):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         if param_def is None:
@@ -375,7 +375,10 @@ class CMR(Recall):
             list_param = param_def.get_dynamic(list_param, i)
 
             # initialize the network
-            net = init_network(param_def, patterns, param, study['item_index'][i])
+            net = init_network(
+                param_def, patterns, param, study['item_index'][i],
+                remove_blank=remove_blank
+            )
 
             # record study phase
             item_list = study['input'][i].astype(int)
