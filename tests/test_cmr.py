@@ -212,6 +212,55 @@ def test_dist_cmr_generate(data, patterns, param_def_dist, param_dist):
     assert isinstance(sim, pd.DataFrame)
 
 
+def test_dist_cmr_record(data, patterns, param_def_dist, param_dist):
+    model = cmr.CMR()
+    states = model.record(data, param_dist, None, param_def_dist, patterns=patterns)
+
+    # test the series of context states
+    np.testing.assert_allclose(
+        states[0].c,
+        np.array([0.5, 0., 0., 0., 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[1].c,
+        np.array([0.4330127, 0.5, 0., 0., 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[2].c,
+        np.array([0.375, 0.4330127, 0.5, 0., 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[3].c,
+        np.array([0.375, 0.4330127, 0.5, 0., 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[4].c,
+        np.array([0.33966609, 0.90462271, 0.15704801, 0., 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[5].c,
+        np.array([0.29963555, 0.51614971, 0.79951126, 0., 0., 0., 0.])
+    )
+
+    # test various network components
+    np.testing.assert_allclose(
+        states[6].c,
+        np.array([0., 0., 0., 0.5, 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[6].c_in,
+        np.array([0., 0., 0., 1., 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[6].f,
+        np.array([1., 0., 0., 0.])
+    )
+    np.testing.assert_allclose(
+        states[6].f_in,
+        np.array([0., 0., 0., 0.])
+    )
+
+
 def test_dynamic_cmr(data, patterns, param_def_dist, param_dist):
     """Test evaluation of a dynamic study parameter."""
     param = param_dist.copy()
