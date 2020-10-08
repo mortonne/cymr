@@ -353,4 +353,36 @@ class CMR(Recall):
 
     def record_subject(self, study, recall, param, param_def=None,
                        patterns=None):
-        pass
+        n_item = len(study['input'][0])
+        n_list = len(study['input'])
+        if param_def is None:
+            raise ValueError('Must provide a Parameters object.')
+        n_sub = len(param_def.sublayers['c'])
+        param = prepare_list_param(n_item, n_sub, param, param_def)
+
+        study_state = []
+        recall_state = []
+        for i in range(n_list):
+            # access the dynamic parameters needed for this list
+            list_param = param.copy()
+            list_param = param_def.get_dynamic(list_param, i)
+
+            # initialize the network
+            net = init_network(param_def, patterns, param, study['item_index'][i])
+
+            # record study phase
+            item_list = study['input'][i].astype(int)
+            list_study_state = net.record_study(
+                ('task', 'item'), item_list, 'task', param['B_enc'],
+                list_param['Lfc'], list_param['Lcf']
+            )
+            net.integrate(('task', 'start', 0), 'task', param['B_start'])
+
+            # record recall phase
+            list_recall_state = net.record_recall(
+                ('task', 'item'), recall['input'][i], 'task',
+                param['B_rec'], param['T']
+            )
+            study_state.append(list_study_state)
+            recall_state.append(list_recall_state)
+        return study_state, recall_state
