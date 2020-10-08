@@ -78,10 +78,17 @@ def config_loc_cmr(n_item):
     return param_def, patterns
 
 
-def init_network(param_def, patterns, param, item_index):
+def init_network(param_def, patterns, param, item_index, remove_blank=False):
     """Initialize a network with pattern weights."""
     # set item weights
     weights = param_def.eval_weights(patterns, param, item_index)
+
+    if remove_blank:
+        # remove context units that are zero for all items
+        for connect in ['fc', 'cf']:
+            for region, mat in weights[connect].items():
+                include = np.any(mat != 0, 0)
+                weights[connect][region] = mat[:, include]
 
     # set task units
     for f_sublayer in param_def.sublayers['f']:
