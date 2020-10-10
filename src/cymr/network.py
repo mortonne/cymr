@@ -731,8 +731,9 @@ class Network(object):
         sublayers : str or list of str
             Sublayer(s) of context to update.
 
-        B : float
-            Context updating rate after each recalled item.
+        B : float or numpy.array
+            Context updating rate. If an array, specifies a rate for
+            each individual recall trial.
 
         T : float
             Decision parameter for choice rule.
