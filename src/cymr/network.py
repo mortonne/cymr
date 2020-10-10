@@ -117,6 +117,27 @@ def expand_param(param, size):
     return param
 
 
+def prepare_study_param(n_item, n_sub, B, Lfc, Lcf, distract_B=None):
+    """Prepare parameters for simulating a study phase."""
+    B = expand_param(B, (n_item, n_sub))
+    Lfc = expand_param(Lfc, (n_item, n_sub))
+    Lcf = expand_param(Lcf, (n_item, n_sub))
+    param = {'B': B, 'Lfc': Lfc, 'Lcf': Lcf, 'distract_B': None}
+    if distract_B is not None:
+        distract_B = expand_param(distract_B, (n_item + 1, n_sub))
+        param['distract_B'] = distract_B
+    return param
+
+
+def prepare_recall_param(n_item, n_sub, B, T, amin):
+    """Prepare parameters for simulating a recall phase."""
+    B = expand_param(B, (n_item, n_sub))
+    if T < amin:
+        T = amin
+    param = {'B': B, 'T': T}
+    return param
+
+
 def sample_response_lba(A, b, v, s, tau):
     """Sample a response and response time."""
     while True:
