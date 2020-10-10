@@ -603,17 +603,17 @@ class Network(object):
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        n_item = item_list.shape[0]
-        n_sub = len(sublayers)
-        B = expand_param(B, (n_item, n_sub))
-        Lfc = expand_param(Lfc, (n_item, n_sub))
-        Lcf = expand_param(Lcf, (n_item, n_sub))
+        param = prepare_study_param(item_list.shape[0], len(sublayers), B, Lfc, Lcf)
+
+        # get unit indices
         f_ind = self.get_segment('f', *segment)
         item_ind = (f_ind[0] + item_list).astype(np.dtype('i'))
         c_ind = self.get_sublayers('c', sublayers)
-        operations.study(self.w_fc_exp, self.w_fc_pre,
-                         self.w_cf_exp, self.c, self.c_in,
-                         self.f, item_ind, c_ind, B, Lfc, Lcf)
+
+        operations.study(
+            self.w_fc_exp, self.w_fc_pre, self.w_cf_exp, self.c, self.c_in,
+            self.f, item_ind, c_ind, param['B'], param['Lfc'], param['Lcf']
+        )
 
     def study_distract(self, segment, item_list, sublayers, B, Lfc, Lcf,
                        distract_segment, distract_list, distract_B):
@@ -654,26 +654,23 @@ class Network(object):
             n_items + 1. Distraction will not be presented on trials i
             where distract_B[i] is zero.
         """
-        f_ind = self.get_segment('f', *segment)
-        item_ind = (f_ind[0] + item_list).astype(np.dtype('i'))
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        n_item = item_list.shape[0]
-        n_sub = len(sublayers)
-        B = expand_param(B, (n_item, n_sub))
-        Lfc = expand_param(Lfc, (n_item, n_sub))
-        Lcf = expand_param(Lcf, (n_item, n_sub))
+        param = prepare_study_param(
+            item_list.shape[0], len(sublayers), B, Lfc, Lcf, distract_B
+        )
 
-        f_ind = self.get_segment('f', *distract_segment)
-        distract_ind = (f_ind[0] + distract_list).astype(np.dtype('i'))
-
-        if not isinstance(distract_B, np.ndarray):
-            distract_B = np.tile(distract_B, (n_item + 1, n_sub)).astype(float)
-
+        # get unit indices
+        f_ind = self.get_segment('f', *segment)
+        item_ind = (f_ind[0] + item_list).astype(np.dtype('i'))
+        f_ind_distract = self.get_segment('f', *distract_segment)
+        distract_ind = (f_ind_distract[0] + distract_list).astype(np.dtype('i'))
         c_ind = self.get_sublayers('c', sublayers)
+
         operations.study_distract(
             self.w_fc_exp, self.w_fc_pre, self.w_cf_exp, self.c, self.c_in,
-            self.f, item_ind, c_ind, B, Lfc, Lcf, distract_ind, distract_B
+            self.f, item_ind, c_ind, param['B'], param['Lfc'], param['Lcf'],
+            distract_ind, param['distract_B']
         )
 
     def record_study(self, segment, item_list, sublayers, B, Lfc, Lcf):
