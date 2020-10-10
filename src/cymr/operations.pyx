@@ -1,4 +1,4 @@
-# cython: language_level=3, profile=False, boundscheck=False, wraparound=False
+# cython: language_level=3, profile=False, boundscheck=False, wraparound=False, embedsignature=True
 
 cimport cython
 from libc.math cimport sqrt, exp
@@ -6,6 +6,22 @@ from libc.math cimport sqrt, exp
 
 @cython.profile(False)
 cdef inline double calc_rho(double cdot, double B):
+    """
+    Calculate context integration scaling factor.
+    
+    Parameters
+    ----------
+    cdot
+        Dot product between :math:`c` and :math:`c^{IN}`.
+    
+    B
+        Beta parameter weighting :math:`c^{IN}`.
+    
+    Returns
+    -------
+    rho
+        Scaling factor for :math:`c`.   
+    """
     rho = sqrt(1 + (B * B) * ((cdot * cdot) - 1)) - (B * cdot)
     return rho
 
@@ -14,6 +30,23 @@ cpdef integrate_context(double [:] c,
                         double[:] c_in,
                         double B,
                         int [:] c_ind):
+    """
+    Integrate context input.
+    
+    Parameters
+    ----------
+    c
+        Context state :math:`c`.
+    
+    c_in
+        Input to context :math:`c^{IN}`
+    
+    B
+        :math:`\beta` parameter weighting :math:`c`.
+    
+    c_ind
+        Start and end indices of context to update.
+    """
     cdef double cdot = 0
     cdef int i
     for i in range(c_ind[0], c_ind[1]):
@@ -32,6 +65,35 @@ cpdef integrate(double [:, :] w_fc_exp,
                 int item,
                 int [:, :] c_ind,
                 double [:] B):
+    """
+    Integrate context input associated with an item into context.
+    
+    Parameters
+    ----------
+    w_fc_exp
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{exp}`.
+    
+    w_fc_pre
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{pre}`.
+    
+    c
+        Context state :math:`\mathbf{c}`.
+    
+    c_in
+        Context input :math:`\mathbf{c}^\mathrm{IN}`.
+    
+    f
+        Item representation :math:`\mathbf{f}`.
+    
+    item
+        Index of item to present.
+    
+    c_ind
+        Start and end indices of the context sublayer.
+    
+    B
+        :math:`\\beta` parameter.
+    """
     cdef Py_ssize_t n_f = f.shape[0]
     cdef Py_ssize_t n_s = c_ind.shape[0]
     cdef int i
@@ -73,6 +135,44 @@ cpdef present(double [:, :] w_fc_exp,
               double [:] B,
               double [:] Lfc,
               double [:] Lcf):
+    """
+    Present an item and associate with context.
+    
+    Parameters
+    ----------
+    w_fc_exp
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{exp}`.
+    
+    w_fc_pre
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{pre}`.
+    
+    w_cf_exp
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{exp}`.
+    
+    c
+        Context state :math:`\mathbf{c}`.
+    
+    c_in
+        Context input :math:`\mathbf{c}^\mathrm{IN}`.
+    
+    f
+        Item representation :math:`\mathbf{f}`.
+    
+    item
+        Index of item to present.
+    
+    c_ind
+        Start and end indices of the context sublayer.
+    
+    B
+        :math:`\\beta` parameter.
+    
+    Lfc
+        :math:`L^{FC}` parameter.
+    
+    Lcf
+        :math:`L^{CF}` parameter.
+    """
     cdef Py_ssize_t n_f = f.shape[0]
     cdef Py_ssize_t n_s = c_ind.shape[0]
     cdef int i
@@ -106,6 +206,44 @@ cpdef study(
     double [:, :] Lfc,
     double [:, :] Lcf,
 ):
+    """
+    Simulate study of a list.
+    
+    Parameters
+    ----------
+    w_fc_exp
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{exp}`.
+    
+    w_fc_pre
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{pre}`.
+    
+    w_cf_exp
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{exp}`.
+    
+    c
+        Context state :math:`\mathbf{c}`.
+    
+    c_in
+        Context input :math:`\mathbf{c}^\mathrm{IN}`.
+    
+    f
+        Item representation :math:`\mathbf{f}`.
+    
+    item_list
+        Indices of items to present.
+    
+    c_ind
+        Start and end indices of the context sublayer.
+    
+    B
+        :math:`\\beta` parameter.
+    
+    Lfc
+        :math:`L^{FC}` parameter.
+    
+    Lcf
+        :math:`L^{CF}` parameter.
+    """
     cdef Py_ssize_t n = item_list.shape[0]
     for i in range(n):
         present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
@@ -127,6 +265,50 @@ cpdef study_distract(
     const int [:] distract_list,
     double [:, :] distract_B
 ):
+    """
+    Simulate study of a list with distraction.
+    
+    Parameters
+    ----------
+    w_fc_exp
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{exp}`.
+    
+    w_fc_pre
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{pre}`.
+    
+    w_cf_exp
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{exp}`.
+    
+    c
+        Context state :math:`\mathbf{c}`.
+    
+    c_in
+        Context input :math:`\mathbf{c}^\mathrm{IN}`.
+    
+    f
+        Item representation :math:`\mathbf{f}`.
+    
+    item_list
+        Indices of items to present.
+    
+    c_ind
+        Start and end indices of the context sublayer.
+    
+    B
+        :math:`\\beta` parameter.
+    
+    Lfc
+        :math:`L^{FC}` parameter.
+    
+    Lcf
+        :math:`L^{CF}` parameter.
+    
+    distract_list
+        Indices of distraction items to present.
+    
+    distract_B
+        :math:`\\beta_\mathrm{distract}` parameter.
+    """
     cdef Py_ssize_t n = item_list.shape[0]
     for i in range(n):
         integrate(w_fc_exp, w_fc_pre, c, c_in, f,
@@ -148,6 +330,44 @@ cpdef cue_item(int n,
                int [:] exclude,
                int [:] recalls,
                int output):
+    """
+    Cue an item based on context.
+    
+    Parameters
+    ----------
+    n
+        Start index of the item segment being recalled from.
+    
+    n_f
+        Number of units in the item segment.
+    
+    w_cf_pre
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{pre}`.
+    
+    w_cf_exp
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{exp}`.
+    
+    w_ff_pre
+        Weight matrix :math:`\mathbf{M}^{FF}_\mathrm{pre}`.
+    
+    w_ff_exp
+        Weight matrix :math:`\mathbf{M}^{FF}_\mathrm{exp}`.
+        
+    f_in
+        Item input :math:`\mathbf{f}^\mathrm{IN}`.
+    
+    c
+        Context representation :math:`\mathbf{c}`.
+    
+    exclude
+        Vector of item indices to exclude from recall.
+    
+    recalls
+        Item indices of recalls in output order.
+    
+    output
+        Output position, starting from zero.
+    """
     cdef Py_ssize_t n_c = w_cf_exp.shape[1]
     cdef int i
     cdef int j
@@ -173,6 +393,29 @@ cpdef apply_softmax(int n,
                     int [:] exclude,
                     double amin,
                     double T):
+    """
+    Apply softmax rule to item activation.
+    
+    Parameters
+    ----------
+    n
+        Start index of the item segment being recalled from.
+    
+    n_f
+        Number of units in the item segment.
+    
+    f_in
+        Item input :math:`\mathbf{f}^\mathrm{IN}`.
+    
+    exclude
+        Vector of item indices to exclude from recall.
+    
+    amin
+        Minimum item activation for non-excluded items.
+    
+    T
+        Temperature parameter of the softmax function.
+    """
     cdef int i
     for i in range(n_f):
         if exclude[i]:
@@ -206,6 +449,68 @@ def p_recall(int start,
              double T,
              const double [:] p_stop,
              double [:] p):
+    """
+    Calculate the likelihood of each recall in a sequence.
+
+    Parameters
+    ----------
+    n_f
+        Number of units in the item segment.
+
+    recalls
+        Item indices of recalls in output order.
+
+    w_fc_exp
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{exp}`.
+
+    w_fc_pre
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{pre}`.
+
+    w_cf_exp
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{exp}`.
+
+    w_cf_pre
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{pre}`.
+
+    w_ff_exp
+        Weight matrix :math:`\mathbf{M}^{FF}_\mathrm{exp}`.
+
+    w_ff_pre
+        Weight matrix :math:`\mathbf{M}^{FF}_\mathrm{pre}`.
+
+    f
+        Item representation :math:`\mathbf{f}`.
+
+    f_in
+        Item activation input :math:`\mathbf{f}^\mathrm{IN}`.
+
+    c
+        Context state :math:`\mathbf{c}`.
+
+    c_in
+        Context input :math:`\mathbf{c}^\mathrm{IN}`.
+
+    c_ind
+        Start and end indices of the context sublayer.
+
+    exclude
+        Vector of item indices to exclude from recall.
+
+    amin
+        Minimum item activation for non-excluded items.
+
+    B
+        :math:`\\beta` parameter.
+
+    T
+        Temperature parameter of the softmax function.
+
+    p_stop
+        Probability of stopping by output position.
+
+    p
+        Likelihood of each recall and the stopping event.
+    """
     cdef Py_ssize_t n_r = recalls.shape[0]
     cdef int i
     cdef int j
