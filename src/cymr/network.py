@@ -746,38 +746,37 @@ class Network(object):
         state : list of cymr.network.Network
             Copy of the network state after each recall attempt.
         """
-        rec_ind = self.get_segment('f', *segment)
-        rec_slice = slice(rec_ind[0], rec_ind[1])
-        w_cf = self.w_cf_exp[rec_slice, :] + self.w_cf_pre[rec_slice, :]
-        exclude = np.zeros(self.n_f, dtype=bool)
+        if not isinstance(sublayers, list):
+            sublayers = [sublayers]
+        recalls = np.array(recalls, dtype=np.dtype('i'))
+        n_item = recalls.shape[0]
+        n_sub = len(sublayers)
+        param = prepare_recall_param(n_item, n_sub, B, T, amin)
+
+        f_ind = self.get_segment('f', *segment)
+        exclude = np.zeros(self.n_f, dtype=np.dtype('i'))
         state = []
-        for output, recall in enumerate(recalls):
-            # project the current state of context; assume nonzero support
-            self.f_in[rec_slice] = np.dot(w_cf, self.c)
-            if output > 0:
-                item_cue = (self.w_ff_pre[rec_slice, recalls[output - 1]] +
-                            self.w_ff_exp[rec_slice, recalls[output - 1]])
-                self.f_in[rec_slice] += item_cue
-            self.f_in[self.f_in < amin] = amin
-
-            # scale based on choice parameter, set recalled items to zero
-            self.f_in[rec_slice] = np.exp((2 * self.f_in[rec_slice]) / T)
-            self.f_in[exclude] = 0
-
-            # remove recalled item from competition
-            exclude[recall] = True
+        for i, recall in enumerate(recalls):
+            # calculate item support
+            operations.cue_item(
+                f_ind[0], n_item, self.w_cf_pre, self.w_cf_exp, self.w_ff_pre,
+                self.w_ff_exp, self.f_in, self.c, exclude, recalls, i
+            )
+            operations.apply_softmax(f_ind[0], n_item, self.f_in,
+                                     exclude, amin, param['T'])
 
             # update the item layer
-            ind = rec_ind[0] + recall
+            ind = f_ind[0] + recall
             self.f[:] = 0
             self.f[ind] = 1
+            exclude[ind] = 1
 
             # save context cue and the item it cued
             state.append(self.copy())
 
             # update context
             item = (*segment, recall)
-            self.present(item, sublayers, B)
+            self.integrate(item, sublayers, param['B'][i])
         # save final state of context that resulted in no recall
         state.append(self.copy())
         return state
