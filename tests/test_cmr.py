@@ -219,33 +219,33 @@ def test_dist_cmr_record(data, patterns, param_def_dist, param_dist):
     # test the series of context states
     np.testing.assert_allclose(
         states[0].c,
-        np.array([0.5, 0., 0., 0., 0., 0., 0.])
+        np.array([0.5, 0., 0., 0., 0., 0., 0.8660254])
     )
     np.testing.assert_allclose(
         states[1].c,
-        np.array([0.4330127, 0.5, 0., 0., 0., 0., 0.])
+        np.array([0.4330127, 0.5, 0., 0., 0., 0., 0.75])
     )
     np.testing.assert_allclose(
         states[2].c,
-        np.array([0.375, 0.4330127, 0.5, 0., 0., 0., 0.])
+        np.array([0.375, 0.4330127, 0.5, 0., 0., 0., 0.64951905])
     )
     np.testing.assert_allclose(
         states[3].c,
-        np.array([0.375, 0.4330127, 0.5, 0., 0., 0., 0.])
+        np.array([0.375, 0.4330127, 0.5, 0., 0., 0., 0.64951905])
     )
     np.testing.assert_allclose(
         states[4].c,
-        np.array([0.33966609, 0.90462271, 0.15704801, 0., 0., 0., 0.])
+        np.array([0.29319805, 0.80043616, 0.12426407, 0., 0., 0., 0.50783392])
     )
     np.testing.assert_allclose(
         states[5].c,
-        np.array([0.29963555, 0.51614971, 0.79951126, 0., 0., 0., 0.])
+        np.array([0.26124507, 0.44035082, 0.73013369, 0., 0., 0., 0.45248974])
     )
 
     # test various network components
     np.testing.assert_allclose(
         states[6].c,
-        np.array([0., 0., 0., 0.5, 0., 0., 0.])
+        np.array([0., 0., 0., 0.5, 0., 0., 0.8660254])
     )
     np.testing.assert_allclose(
         states[6].c_in,
@@ -268,7 +268,7 @@ def test_dist_cmr_record_trim(data, patterns, param_def_dist, param_dist):
     )
     np.testing.assert_allclose(
         states[0].c,
-        np.array([0.5, 0., 0., 0.])
+        np.array([0.5, 0., 0., 0.8660254])
     )
 
 
