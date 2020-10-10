@@ -442,14 +442,14 @@ class CMR(Recall):
             # record study phase
             item_list = study['input'][i].astype(int)
             list_study_state = net.record_study(
-                ('task', 'item'), item_list, 'task', param['B_enc'],
+                ('task', 'item'), item_list, net.c_sublayers, param['B_enc'],
                 list_param['Lfc'], list_param['Lcf']
             )
-            net.integrate(('task', 'start', 0), 'task', param['B_start'])
+            net.integrate(('task', 'start', 0), net.c_sublayers, param['B_start'])
 
             # record recall phase
             list_recall_state = net.record_recall(
-                ('task', 'item'), recall['input'][i], 'task',
+                ('task', 'item'), recall['input'][i], net.c_sublayers,
                 param['B_rec'], param['T']
             )
             study_state.append(list_study_state)
