@@ -53,6 +53,11 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
 
     pmin : float, optional
         Minimum probability of stopping recall at any position.
+
+    Returns
+    -------
+    p_stop : numpy.array
+        Probability of stopping for each output position.
     """
     p_stop = X1 * np.exp(X2 * np.arange(n_item + 1))
     p_stop[p_stop < pmin] = pmin
@@ -64,7 +69,22 @@ def p_stop_op(n_item, X1, X2, pmin=0.000001):
 
 
 def config_loc_cmr(n_item):
-    """Configure a localist CMR network."""
+    """
+    Configure a localist CMR network.
+
+    Parameters
+    ----------
+    n_item : int
+        Number of item patterns to include in the network
+
+    Returns
+    -------
+    param_def : cymr.parameters.Parameters
+        Parameters object with configuration for the network.
+
+    patterns : dict
+        Patterns to place in the network.
+    """
     items = np.arange(n_item)
     patterns = {'items': items, 'vector': {'loc': np.eye(n_item)}}
     param_def = parameters.Parameters()
@@ -79,7 +99,31 @@ def config_loc_cmr(n_item):
 
 
 def init_network(param_def, patterns, param, item_index, remove_blank=False):
-    """Initialize a network with pattern weights."""
+    """
+    Initialize a network with pattern weights.
+
+    Parameters
+    ----------
+    param_def : cymr.parameters.Parameters
+        Parameters definition defining network sublayers and weights.
+
+    patterns : dict
+        Patterns to place in the network.
+
+    param : dict of (str: float)
+        Parameter values; used to initialize network weights.
+
+    item_index : numpy.array
+        Indices of item patterns to include in the network.
+
+    remove_blank : bool
+        If true, context units with zero weights will be removed.
+
+    Returns
+    -------
+    net : cymr.network.Network
+        Network initialized with pre-experimental weights.
+    """
     # set item weights
     weights = param_def.eval_weights(patterns, param, item_index)
 
@@ -125,7 +169,31 @@ def init_network(param_def, patterns, param, item_index, remove_blank=False):
 
 
 def study_list(param_def, param, item_index, item_input, patterns):
-    """Simulate study of a list."""
+    """
+    Simulate study of a list.
+
+    Parameters
+    ----------
+    param_def : cymr.parameters.Parameters
+        Parameters definition defining network sublayers and weights.
+
+    param : dict of (str: float)
+        Parameter values; used to set context evolution and learning.
+
+    item_index : numpy.array
+        Indices of presented item patterns.
+
+    item_input : numpy.array
+        Input position of presented items.
+
+    patterns : dict
+        Item pattern vectors.
+
+    Returns
+    -------
+    net : cymr.network.Network
+        Network after simulation of the study phase.
+    """
     net = init_network(param_def, patterns, param, item_index)
     net.update(('task', 'start', 0), net.c_sublayers)
     net.study(
@@ -137,7 +205,28 @@ def study_list(param_def, param, item_index, item_input, patterns):
 
 
 def prepare_list_param(n_item, n_sub, param, param_def):
-    """Prepare parameters that vary within list."""
+    """
+    Prepare parameters that vary within list.
+
+    Parameters
+    ----------
+    n_item : int
+        Number of items in the list.
+
+    n_sub : int
+        Number of sublayers of context.
+
+    param : dict of (str: float)
+        Parameter values.
+
+    param_def : cymr.parameters.Parameters
+        Parameter definitions indicating sublayer parameters.
+
+    Returns
+    -------
+    list_param : dict
+        Parameters prepared for changes between sublayer and trials.
+    """
     if 'c' in param_def.sublayer_param:
         # evaluate sublayer parameters
         param = param_def.eval_sublayer_param('c', param, n_item)
