@@ -32,6 +32,6 @@ Model Framework
     CMR
     CMR.fit_indiv
     CMR.generate
-    CMR.record_network
+    CMR.record
     CMR.parameter_sweep
     CMR.parameter_recovery
