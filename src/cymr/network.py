@@ -813,11 +813,8 @@ class Network(object):
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
         recalls = np.array(recalls, dtype=np.dtype('i'))
-        n_item = recalls.shape[0]
-        n_sub = len(sublayers)
-        B = expand_param(B, (n_item, n_sub))
-        if T < amin:
-            T = amin
+        param = prepare_recall_param(recalls.shape[0], len(sublayers), B, T, amin)
+
         f_ind = self.get_segment('f', *segment)
         start = f_ind[0]
         n_f = f_ind[1] - f_ind[0]
@@ -829,7 +826,7 @@ class Network(object):
             start, n_f, recalls, self.w_fc_exp, self.w_fc_pre,
             self.w_cf_exp, self.w_cf_pre, self.w_ff_exp, self.w_ff_pre,
             self.f, self.f_in, self.c, self.c_in, c_ind, exclude,
-            amin, B, T, p_stop, p
+            amin, param['B'], param['T'], p_stop, p
         )
         return p
 
@@ -865,11 +862,12 @@ class Network(object):
         """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
+
         # weights to use for recall (assume fixed during recall)
         rec_ind = self.get_segment('f', *segment)
         n_item = rec_ind[1] - rec_ind[0]
         n_sub = len(sublayers)
-        B = expand_param(B, (n_item, n_sub))
+        param = prepare_recall_param(n_item, n_sub, B, T, amin)
 
         recalls = []
         exclude = np.zeros(n_item, dtype=np.dtype('i'))
@@ -886,7 +884,7 @@ class Network(object):
                 np.asarray(recalls, dtype=np.dtype('i')), i
             )
             operations.apply_softmax(rec_ind[0], n_item, self.f_in,
-                                     exclude, amin, T)
+                                     exclude, amin, param['T'])
 
             # select item for recall proportionate to support
             support = self.f_in[rec_ind[0]:rec_ind[1]]
@@ -903,7 +901,7 @@ class Network(object):
 
             # integrate context associated with the item into context
             item = (*segment, recall)
-            self.integrate(item, sublayers, B[i])
+            self.integrate(item, sublayers, param['B'][i])
         return recalls
 
     def generate_recall_lba(self, segment, sublayers, time_limit, B, A, b, s, tau):
