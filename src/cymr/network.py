@@ -704,17 +704,15 @@ class Network(object):
         state : list of cymr.network.Network
             Copy of the network state after presentation of each item.
         """
-        n_item = len(item_list)
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
-        n_sub = len(sublayers)
-        B = expand_param(B, (n_item, n_sub))
-        Lfc = expand_param(Lfc, (n_item, n_sub))
-        Lcf = expand_param(Lcf, (n_item, n_sub))
+        param = prepare_study_param(item_list.shape[0], len(sublayers), B, Lfc, Lcf)
         state = []
         for i in range(len(item_list)):
             item = (*segment, item_list[i])
-            self.present(item, sublayers, B[i], Lfc[i], Lcf[i])
+            self.present(
+                item, sublayers, param['B'][i], param['Lfc'][i], param['Lcf'][i]
+            )
             state.append(self.copy())
         return state
 
