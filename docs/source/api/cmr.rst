@@ -30,6 +30,7 @@ Model Framework
     :toctree: api/
 
     CMR
+    CMR.likelihood
     CMR.fit_indiv
     CMR.generate
     CMR.record
