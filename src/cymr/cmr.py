@@ -437,6 +437,7 @@ class CMR(Recall):
                 param_def, patterns, param, study['item_index'][i],
                 remove_blank=remove_blank
             )
+            net.update(('task', 'start', 0), net.c_sublayers)
 
             # record study phase
             item_list = study['input'][i].astype(int)
