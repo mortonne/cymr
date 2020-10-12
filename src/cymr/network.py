@@ -778,8 +778,6 @@ class Network(object):
             # update context
             item = (*segment, recall)
             self.integrate(item, sublayers, param['B'][i])
-        # save final state of context that resulted in no recall
-        state.append(self.copy())
         return state
 
     def p_recall(self, segment, recalls, sublayers, B, T, p_stop, amin=0.000001):
