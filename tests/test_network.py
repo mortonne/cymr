@@ -128,15 +128,11 @@ def test_recall_record(net_study):
     np.testing.assert_allclose(state[2].c, np.array(
         [0.07687014, 0.23132715, 0.38578417, 0.54024118, 0.69469819, 0.13146559],
     ))
-    np.testing.assert_allclose(state[3].c, np.array(
-        [0.26180973, 0.34607603, 0.43034234, 0.51460865, 0.59887495, 0.05494768],
-    ))
 
     # recalled item activation
     np.testing.assert_array_equal(state[0].f, np.array([0, 0, 1, 0]))
     np.testing.assert_array_equal(state[1].f, np.array([1, 0, 0, 0]))
     np.testing.assert_array_equal(state[2].f, np.array([0, 1, 0, 0]))
-    np.testing.assert_array_equal(state[3].f, np.array([0, 1, 0, 0]))
 
 
 @pytest.fixture()

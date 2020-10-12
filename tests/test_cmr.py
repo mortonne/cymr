@@ -237,26 +237,22 @@ def test_dist_cmr_record(data, patterns, param_def_dist, param_dist):
         states[4].c,
         np.array([0.29319805, 0.80043616, 0.12426407, 0., 0., 0., 0.50783392])
     )
-    np.testing.assert_allclose(
-        states[5].c,
-        np.array([0.26124507, 0.44035082, 0.73013369, 0., 0., 0., 0.45248974])
-    )
 
     # test various network components
     np.testing.assert_allclose(
-        states[6].c,
+        states[5].c,
         np.array([0., 0., 0., 0.5, 0., 0., 0.8660254])
     )
     np.testing.assert_allclose(
-        states[6].c_in,
+        states[5].c_in,
         np.array([0., 0., 0., 1., 0., 0., 0.])
     )
     np.testing.assert_allclose(
-        states[6].f,
+        states[5].f,
         np.array([1., 0., 0., 0.])
     )
     np.testing.assert_allclose(
-        states[6].f_in,
+        states[5].f_in,
         np.array([0., 0., 0., 0.])
     )
 
