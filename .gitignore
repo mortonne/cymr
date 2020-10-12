@@ -144,3 +144,4 @@ src/cymr/*.html
 docs/source/api/api
 docs/source/savefig
 docs/*.json
+.DS_Store
