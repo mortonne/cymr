@@ -85,6 +85,22 @@ def net_study_distract():
     return net
 
 
+def test_copy(net_pre):
+    net2 = net_pre.copy()
+    np.testing.assert_array_equal(net_pre.w_fc_pre, net2.w_fc_pre)
+
+    # test inclusion list
+    net3 = net_pre.copy(include=['f', 'c'])
+    assert hasattr(net3, 'f') and hasattr(net3, 'c')
+    assert not hasattr(net3, 'w_fc_pre')
+
+    # test exclusion list
+    net4 = net_pre.copy(exclude=['w_fc_pre'])
+    assert hasattr(net4, 'f') and hasattr(net4, 'c')
+    assert hasattr(net4, 'w_fc_exp')
+    assert not hasattr(net4, 'w_fc_pre')
+
+
 def test_study_record(net_pre):
     net = net_pre.copy()
     net.update(('task', 'start', 0), 'task')
