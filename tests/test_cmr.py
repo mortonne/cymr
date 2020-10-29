@@ -268,6 +268,16 @@ def test_dist_cmr_record_trim(data, patterns, param_def_dist, param_dist):
     )
 
 
+def test_dist_cmr_record_include(data, patterns, param_def_dist, param_dist):
+    model = cmr.CMR()
+    states = model.record(
+        data, param_dist, None, param_def_dist, patterns=patterns,
+        include=['c', 'c_in']
+    )
+    assert hasattr(states[0], 'c') and hasattr(states[0], 'c_in')
+    assert not hasattr(states[0], 'f')
+
+
 def test_dynamic_cmr(data, patterns, param_def_dist, param_dist):
     """Test evaluation of a dynamic study parameter."""
     param = param_dist.copy()
