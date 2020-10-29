@@ -307,7 +307,7 @@ class Network(object):
         self.w_ff_exp[:] = 0
         self.w_ff_pre[:] = 0
 
-    def copy(self):
+    def copy(self, include=None, exclude=None):
         """
         Copy the network to a new network object.
 
@@ -316,17 +316,25 @@ class Network(object):
         net : cymr.Network
             Network with the same segments, weights, and activations.
         """
+        # all attributes that contain an array
+        fields = [
+            'f', 'f_in', 'c', 'c_in', 'w_fc_exp', 'w_fc_pre',
+            'w_cf_exp', 'w_cf_pre', 'w_ff_exp', 'w_ff_pre'
+        ]
+
+        # set the fields to include in the copy (default is all)
+        if include is None:
+            include = fields
+        if exclude is not None:
+            include = [i for i in include if i not in exclude]
+
+        # copy included attributes
         net = Network(self.f_segment, self.c_segment)
-        net.f = self.f.copy()
-        net.f_in = self.f_in.copy()
-        net.c = self.c.copy()
-        net.c_in = self.c_in.copy()
-        net.w_fc_exp = self.w_fc_exp.copy()
-        net.w_fc_pre = self.w_fc_pre.copy()
-        net.w_cf_exp = self.w_cf_exp.copy()
-        net.w_cf_pre = self.w_cf_pre.copy()
-        net.w_ff_exp = self.w_ff_exp.copy()
-        net.w_ff_pre = self.w_ff_pre.copy()
+        for field in fields:
+            if field in include:
+                setattr(net, field, getattr(self, field).copy())
+            else:
+                delattr(net, field)
         return net
 
     def get_sublayer(self, layer, sublayer):
