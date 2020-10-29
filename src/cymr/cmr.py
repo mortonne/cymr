@@ -417,7 +417,8 @@ class CMR(Recall):
         return recalls_list
 
     def record_subject(self, study, recall, param, param_def=None,
-                       patterns=None, remove_blank=False):
+                       patterns=None, remove_blank=False, include=None,
+                       exclude=None):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         if param_def is None:
@@ -443,14 +444,15 @@ class CMR(Recall):
             item_list = study['input'][i].astype(int)
             list_study_state = net.record_study(
                 ('task', 'item'), item_list, net.c_sublayers, param['B_enc'],
-                list_param['Lfc'], list_param['Lcf']
+                list_param['Lfc'], list_param['Lcf'], include=include,
+                exclude=exclude
             )
             net.integrate(('task', 'start', 0), net.c_sublayers, param['B_start'])
 
             # record recall phase
             list_recall_state = net.record_recall(
                 ('task', 'item'), recall['input'][i], net.c_sublayers,
-                param['B_rec'], param['T']
+                param['B_rec'], param['T'], include=include, exclude=exclude
             )
             study_state.append(list_study_state)
             recall_state.append(list_recall_state)
