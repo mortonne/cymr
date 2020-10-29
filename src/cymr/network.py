@@ -681,7 +681,8 @@ class Network(object):
             distract_ind, param['distract_B']
         )
 
-    def record_study(self, segment, item_list, sublayers, B, Lfc, Lcf):
+    def record_study(self, segment, item_list, sublayers, B, Lfc, Lcf,
+                     include=None, exclude=None):
         """
         Study a list of items and record network states.
 
@@ -707,6 +708,13 @@ class Network(object):
         Lcf : float or numpy.array
             Learning rate for context to item associations.
 
+        include : list of str, optional
+            Network attributes to include in the recorded states.
+            Default is to include all attributes.
+
+        exclude : list of str, optional
+            Network attributes to exclude from the recorded states.
+
         Returns
         -------
         state : list of cymr.network.Network
@@ -721,10 +729,11 @@ class Network(object):
             self.present(
                 item, sublayers, param['B'][i], param['Lfc'][i], param['Lcf'][i]
             )
-            state.append(self.copy())
+            state.append(self.copy(include=include, exclude=exclude))
         return state
 
-    def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001):
+    def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001,
+                      include=None, exclude=None):
         """
         Simulate a recall sequence and record network states.
 
@@ -750,6 +759,13 @@ class Network(object):
             Minimum activation for each not-yet-recalled item on each
             recall attempt.
 
+        include : list of str, optional
+            Network attributes to include in the recorded states.
+            Default is to include all attributes.
+
+        exclude : list of str, optional
+            Network attributes to exclude from the recorded states.
+
         Returns
         -------
         state : list of cymr.network.Network
@@ -763,25 +779,25 @@ class Network(object):
         param = prepare_recall_param(n_item, n_sub, B, T, amin)
 
         f_ind = self.get_segment('f', *segment)
-        exclude = np.zeros(self.n_f, dtype=np.dtype('i'))
+        exclude_items = np.zeros(self.n_f, dtype=np.dtype('i'))
         state = []
         for i, recall in enumerate(recalls):
             # calculate item support
             operations.cue_item(
                 f_ind[0], n_item, self.w_cf_pre, self.w_cf_exp, self.w_ff_pre,
-                self.w_ff_exp, self.f_in, self.c, exclude, recalls, i
+                self.w_ff_exp, self.f_in, self.c, exclude_items, recalls, i
             )
             operations.apply_softmax(f_ind[0], n_item, self.f_in,
-                                     exclude, amin, param['T'])
+                                     exclude_items, amin, param['T'])
 
             # update the item layer
             ind = f_ind[0] + recall
             self.f[:] = 0
             self.f[ind] = 1
-            exclude[ind] = 1
+            exclude_items[ind] = 1
 
             # save context cue and the item it cued
-            state.append(self.copy())
+            state.append(self.copy(include=include, exclude=exclude))
 
             # update context
             item = (*segment, recall)
