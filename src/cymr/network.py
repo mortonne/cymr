@@ -360,6 +360,14 @@ class Network(object):
         """
         Return slices for a region.
 
+        Parameters
+        ----------
+        f_segment : tuple of (str, str)
+            Sublayer and segment of the item layer.
+
+        c_segment : tuple of (str, str)
+            Sublayer and segment of the context layer.
+
         Returns
         -------
         f_ind : slice
