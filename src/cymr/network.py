@@ -168,6 +168,31 @@ def init_plot(**kwargs):
 
 
 class LayerIndex(object):
+    """
+    Representation of one layer of a network.
+
+    Parameters
+    ----------
+    layer_segments : dict of (str: dict of (str: int))
+        Size of each named segment for each sublayer.
+
+    Attributes
+    ----------
+    size : int
+        Number of units in the layer.
+
+    size_sublayer : dict of (str: int)
+        Number of units in each sublayer.
+
+    size_segment : dict of (str: dict of (str: int))
+        Size of each segment in each sublayer.
+
+    sublayer : dict of (str: numpy.ndarray)
+        Start and stop units of each sublayer.
+
+    segment : dict of (str: dict of (str: numpy.ndarray)
+        Start and stop units of each segment.
+    """
     def __init__(self, layer_segments):
         self.size = 0
         self.size_sublayer = {}
