@@ -396,30 +396,6 @@ class Network(object):
             ind_list.append(self.get_sublayer(layer, sublayer))
         return np.array(ind_list, dtype=np.dtype('i'))
 
-    def get_region(self, f_segment, c_segment):
-        """
-        Return slices for a region.
-
-        Parameters
-        ----------
-        f_segment : tuple of (str, str)
-            Sublayer and segment of the item layer.
-
-        c_segment : tuple of (str, str)
-            Sublayer and segment of the context layer.
-
-        Returns
-        -------
-        f_ind : slice
-            Span of the region in the item dimension.
-
-        c_ind : slice
-            Span of the region in the context dimension.
-        """
-        f_ind = slice(*tuple(self.f_ind.get_segment(*f_segment)))
-        c_ind = slice(*tuple(self.c_ind.get_segment(*c_segment)))
-        return f_ind, c_ind
-
     def get_segment(self, layer, sublayer, segment):
         """
         Get indices for a segment.
@@ -447,29 +423,6 @@ class Network(object):
         else:
             raise ValueError(f'Invalid layer: {layer}')
         return ind
-
-    def get_slice(self, layer, sublayer, segment):
-        """
-        Get a slice for a segment.
-
-        Parameters
-        ----------
-        layer : {'f', 'c'}
-            Layer to access.
-
-        sublayer : str
-            Sublayer to access.
-
-        segment : str
-            Segment to access.
-
-        Returns
-        -------
-        slice
-            Slice for indexing the segment.
-        """
-        ind = self.get_segment(layer, sublayer, segment)
-        return slice(ind[0], ind[1])
 
     def get_unit(self, layer, sublayer, segment, unit):
         """
@@ -501,6 +454,53 @@ class Network(object):
         else:
             raise ValueError(f'Invalid layer: {layer}')
         return ind
+
+    def get_slice(self, layer, sublayer, segment):
+        """
+        Get a slice for a segment.
+
+        Parameters
+        ----------
+        layer : {'f', 'c'}
+            Layer to access.
+
+        sublayer : str
+            Sublayer to access.
+
+        segment : str
+            Segment to access.
+
+        Returns
+        -------
+        slice
+            Slice for indexing the segment.
+        """
+        ind = self.get_segment(layer, sublayer, segment)
+        return slice(ind[0], ind[1])
+
+    def get_region(self, f_segment, c_segment):
+        """
+        Return slices for a region.
+
+        Parameters
+        ----------
+        f_segment : tuple of (str, str)
+            Sublayer and segment of the item layer.
+
+        c_segment : tuple of (str, str)
+            Sublayer and segment of the context layer.
+
+        Returns
+        -------
+        f_ind : slice
+            Span of the region in the item dimension.
+
+        c_ind : slice
+            Span of the region in the context dimension.
+        """
+        f_ind = slice(*tuple(self.f_ind.get_segment(*f_segment)))
+        c_ind = slice(*tuple(self.c_ind.get_segment(*c_segment)))
+        return f_ind, c_ind
 
     def add_pre_weights(self, connect, f_segment, c_segment, weights,
                         slope=1, intercept=0):
