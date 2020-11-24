@@ -221,6 +221,12 @@ def test_get_segment(net):
     np.testing.assert_array_equal(f_ind, np.array([0, 3]))
 
 
+def test_get_slice(net):
+    f_slice = net.get_slice('f', 'task', 'item')
+    assert f_slice.start == 0
+    assert f_slice.stop == 3
+
+
 def test_get_unit(net):
     ind = net.get_unit('f', 'task', 'start', 0)
     assert ind == 3
