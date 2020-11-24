@@ -311,6 +311,15 @@ class Network(object):
         """
         Copy the network to a new network object.
 
+        Parameters
+        ----------
+        include : list of str, optional
+            List of fields to include. Default is a standard list of
+            fields.
+
+        exclude : list of str, optional
+            List of fields to exclude. Overrides values for include.
+
         Returns
         -------
         net : cymr.Network
@@ -338,7 +347,22 @@ class Network(object):
         return net
 
     def get_sublayer(self, layer, sublayer):
-        """Get indices for a sublayer."""
+        """
+        Get indices for a sublayer.
+
+        Parameters
+        ----------
+        layer : str
+            Layer to access.
+
+        sublayer : str
+            Sublayer to access.
+
+        Returns
+        -------
+        numpy.ndarray
+            Start and stop indices for the sublayer.
+        """
         if layer == 'f':
             ind = self.f_ind.get_sublayer(sublayer)
         elif layer == 'c':
@@ -348,7 +372,23 @@ class Network(object):
         return ind
 
     def get_sublayers(self, layer, sublayers):
-        """Get an array of indices for multiple sublayers."""
+        """
+        Get an array of indices for multiple sublayers.
+
+        Parameters
+        ----------
+        layer : str
+            Layer to access.
+
+        sublayers : list of str
+            Sublayers to access.
+
+        Returns
+        -------
+        numpy.array
+            [sublayers x 2] array of start and stop indices for each
+            sublayer.
+        """
         if not isinstance(sublayers, list):
             sublayers = [sublayers]
         ind_list = []
