@@ -231,6 +231,10 @@ class LayerIndex(object):
     def get_segment(self, sublayer, segment):
         return self.segment[sublayer][segment]
 
+    def get_slice(self, sublayer, segment):
+        ind = self.get_segment(sublayer, segment)
+        return slice(ind[0], ind[1])
+
     def get_unit(self, sublayer, segment, index):
         return self.segment[sublayer][segment][0] + index
 
