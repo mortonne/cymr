@@ -400,6 +400,29 @@ class Network(object):
             raise ValueError(f'Invalid layer: {layer}')
         return ind
 
+    def get_slice(self, layer, sublayer, segment):
+        """
+        Get a slice for a segment.
+
+        Parameters
+        ----------
+        layer : {'f', 'c'}
+            Layer to access.
+
+        sublayer : str
+            Sublayer to access.
+
+        segment : str
+            Segment to access.
+
+        Returns
+        -------
+        slice
+            Slice for indexing the segment.
+        """
+        ind = self.get_segment(layer, sublayer, segment)
+        return slice(ind[0], ind[1])
+
     def get_unit(self, layer, sublayer, segment, unit):
         """
         Get indices for a unit.
