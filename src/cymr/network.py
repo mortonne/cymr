@@ -504,8 +504,13 @@ class Network(object):
         slice
             Slice for indexing the segment.
         """
-        ind = self.get_segment(layer, sublayer, segment)
-        return slice(ind[0], ind[1])
+        if layer == 'f':
+            index = self.f_ind
+        elif layer == 'c':
+            index = self.c_ind
+        else:
+            raise ValueError(f'Invalid layer: {layer}')
+        return index.get_slice(sublayer, segment)
 
     def get_region(self, f_segment, c_segment):
         """
@@ -527,8 +532,8 @@ class Network(object):
         c_ind : slice
             Span of the region in the context dimension.
         """
-        f_ind = slice(*tuple(self.f_ind.get_segment(*f_segment)))
-        c_ind = slice(*tuple(self.c_ind.get_segment(*c_segment)))
+        f_ind = self.f_ind.get_slice(*f_segment)
+        c_ind = self.c_ind.get_slice(*c_segment)
         return f_ind, c_ind
 
     def add_pre_weights(self, connect, f_segment, c_segment, weights,
