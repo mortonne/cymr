@@ -3,6 +3,6 @@ scipy
 pandas
 cython
 joblib
-h5py
+h5py>=3.0
 matplotlib
 psifr
