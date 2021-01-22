@@ -5,5 +5,4 @@ cython
 joblib
 h5py
 matplotlib
-git+https://github.com/mortonne/psifr
-git+https://github.com/mortonne/cymr
+psifr
