@@ -359,6 +359,7 @@ class CMR(Recall):
         n_sub = len(param_def.sublayers['c'])
         param = prepare_list_param(n_item, n_sub, param, param_def)
 
+        item_index = np.arange(len(patterns['items']))
         logl = 0
         n = 0
         for i in range(n_list):
@@ -368,13 +369,13 @@ class CMR(Recall):
 
             # simulate study
             net = study_list(
-                param_def, list_param, study['item_index'][i],
-                study['input'][i], patterns
+                param_def, list_param, item_index,
+                study['item_index'][i], patterns
             )
 
             # get recall probabilities
             p = net.p_recall(
-                ('task', 'item'), recall['input'][i], net.c_sublayers,
+                ('task', 'item'), recall['item_index'][i], net.c_sublayers,
                 list_param['B_rec'], list_param['T'], list_param['p_stop']
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
@@ -394,6 +395,7 @@ class CMR(Recall):
         n_sub = len(param_def.sublayers['c'])
         param = prepare_list_param(n_item, n_sub, param, param_def)
 
+        item_index = np.arange(len(patterns['items']))
         recalls_list = []
         for i in range(n_list):
             # access the dynamic parameters needed for this list
@@ -402,8 +404,8 @@ class CMR(Recall):
 
             # simulate study
             net = study_list(
-                param_def, list_param, study['item_index'][i],
-                study['input'][i], patterns
+                param_def, list_param, item_index,
+                study['item_index'][i], patterns
             )
 
             # simulate recall
