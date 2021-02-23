@@ -3,6 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/cymr/badge/?version=latest)](https://cymr.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/mortonne/cymr.svg?branch=master)](https://travis-ci.com/mortonne/cymr)
 [![codecov](https://codecov.io/gh/mortonne/cymr/branch/master/graph/badge.svg)](https://codecov.io/gh/mortonne/cymr)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4557123.svg)](https://doi.org/10.5281/zenodo.4557123)
 
 Package for fitting and simulating free recall data. Includes a fast 
 implementation of the context maintenance and retrieval (CMR) model 
