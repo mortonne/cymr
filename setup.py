@@ -10,7 +10,7 @@ def readme():
 setup(
     name='cymr',
     version='0.10.5',
-    description='CMR implemented using Cython.',
+    description='CyMR: Computational modeling of free recall data.',
     long_description=readme(),
     long_description_content_type="text/markdown",
     author='Neal Morton',
