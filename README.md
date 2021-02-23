@@ -29,7 +29,7 @@ pip install git+https://github.com/mortonne/cymr
 To install for development, clone the repository and run: 
 
 ```bash
-python setup.py develop
+python install -e .
 ```
 
 This will set links to the package modules so that you can edit the 
