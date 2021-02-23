@@ -9,7 +9,7 @@ def readme():
 
 setup(
     name='cymr',
-    version='0.10.2',
+    version='0.10.3',
     description='CMR implemented using Cython.',
     long_description=readme(),
     long_description_content_type="text/markdown",
