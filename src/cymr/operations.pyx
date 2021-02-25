@@ -454,6 +454,9 @@ def p_recall(int start,
 
     Parameters
     ----------
+    start
+        Start unit for the item segment to recall from.
+
     n_f
         Number of units in the item segment.
 
