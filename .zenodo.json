@@ -1,0 +1,26 @@
+{
+    "language": "eng",
+    "license": "GPL-3.0+",
+    "title": "CyMR: Computational modeling of free recall data",
+    "upload_type": "software",
+    "creators": [
+        {
+            "orcid": "0000-0002-2631-2710",
+            "affiliation": "The University of Texas at Austin",
+            "name": "Neal W Morton"
+        },
+        {
+            "orcid": "0000-0003-4461-3565",
+            "affiliation": "Vanderbilt University",
+            "name": "Sean M Polyn"
+        }
+    ],
+    "keywords": [
+        "psychology",
+        "neuroscience",
+        "Python",
+        "memory",
+        "cognitive science"
+    ],
+    "access_right": "open"
+}
