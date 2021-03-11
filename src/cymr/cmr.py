@@ -337,7 +337,7 @@ class CMR(Recall):
             for term in study_base:
                 if term not in study_keys:
                     study_keys += [term]
-        recall_base = ['input']
+        recall_base = ['input', 'item_index']
         if recall_keys is None:
             recall_keys = recall_base
         else:
