@@ -65,7 +65,7 @@ def test_cmr(data):
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    param_def, patterns = cmr.config_loc_cmr(768)
+    param_def, patterns = cmr.config_loc_cmr(6)
     logl, n = model.likelihood(data, param, param_def=param_def, patterns=patterns)
     np.testing.assert_allclose(logl, -5.936799964636842)
     assert n == 6
