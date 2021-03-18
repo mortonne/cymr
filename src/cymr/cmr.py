@@ -365,6 +365,10 @@ class CMR(Recall):
         )
         return study, recall
 
+    def set_default_options(self, param_def):
+        if 'scope' not in param_def.options:
+            param_def.set_options(scope='list')
+
     def likelihood_subject(self, study, recall, param, param_def=None,
                            patterns=None):
         n_item = len(study['input'][0])
