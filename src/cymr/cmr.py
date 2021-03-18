@@ -371,6 +371,7 @@ class CMR(Recall):
 
     def likelihood_subject(self, study, recall, param, param_def=None,
                            patterns=None):
+        self.set_default_options(param_def)
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         if param_def is None:
@@ -387,14 +388,14 @@ class CMR(Recall):
             list_param = param_def.get_dynamic(list_param, i)
 
             # simulate study
-            net = study_list(
-                param_def, list_param, item_index,
-                study['item_index'][i], patterns
+            item_pool, item_study, item_recall = get_list_items(
+                item_index, study, recall, i, param_def.options['scope']
             )
+            net = study_list(param_def, list_param, item_pool, item_study, patterns)
 
             # get recall probabilities
             p = net.p_recall(
-                ('task', 'item'), recall['item_index'][i], net.c_sublayers,
+                ('task', 'item'), item_recall, net.c_sublayers,
                 list_param['B_rec'], list_param['T'], list_param['p_stop']
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
