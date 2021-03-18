@@ -172,6 +172,7 @@ class Parameters(object):
     """
 
     def __init__(self):
+        self.options = {}
         self.fixed = {}
         self.free = {}
         self.dependent = {}
@@ -232,6 +233,23 @@ class Parameters(object):
                 data['weights'][layer][region_str] = expr
         with open(json_file, 'w') as f:
             json.dump(data, f, indent=4)
+
+    def set_options(self, *args, **kwargs):
+        """
+        Set model options.
+
+        While model parameters are stored as a dictionary of string: float
+        pairs, model options may be used to store other information such
+        as switching between different model variants.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> param_def.set_options(scope='list', recall_segment='item')
+        >>> param_def.set_options({'option1': True, 'option2': False})
+        """
+        self.options.update(*args, **kwargs)
 
     def set_fixed(self, *args, **kwargs):
         """
