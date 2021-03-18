@@ -429,6 +429,40 @@ cpdef apply_softmax(int n,
         f_in[n + i] = exp((2 * f_in[n + i]) / T)
 
 
+def item_match(
+    int n,
+    int n_f,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_fc_exp,
+    double [:] c,
+    double [:] match,
+):
+    """Calculate match between context and potential item recalls."""
+    cdef Py_ssize_t n_c = w_fc_exp.shape[1]
+    cdef int i
+    cdef int j
+
+    for i in range(n_f):
+        match[n + i] = 0
+
+        # support from context cuing
+        for j in range(n_c):
+            match[n + i] += ((w_fc_exp[n + i, j] + w_fc_pre[n + i, j]) * c[j])
+
+
+def apply_expit(
+    int n,
+    int n_f,
+    double [:] match,
+    double A1,
+    double A2,
+):
+    """Apply expit function to calculate acceptance probability."""
+    cdef int i
+    for i in range(n_f):
+        match[n + i] = 1 / (1 + exp(-(A1 + A2 * match)))
+
+
 def p_recall(int start,
              int n_f,
              int [:] recalls,
