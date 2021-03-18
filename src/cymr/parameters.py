@@ -12,6 +12,8 @@ def read_json(json_file):
         par_dict = json.load(f)
 
     par = Parameters()
+    if 'options' in par_dict:
+        par.set_options(par_dict['options'])
     par.set_free(par_dict['free'])
     par.set_fixed(par_dict['fixed'])
     par.set_dependent(par_dict['dependent'])
@@ -198,6 +200,7 @@ class Parameters(object):
     def copy(self):
         """Copy the parameters definition."""
         param = type(self).__new__(self.__class__)
+        param.options = self.options.copy()
         param.fixed = self.fixed.copy()
         param.free = self.free.copy()
         param.dependent = self.dependent.copy()
@@ -218,6 +221,7 @@ class Parameters(object):
             Path to file to save json data.
         """
         data = {
+            'options': self.options,
             'fixed': self.fixed,
             'free': self.free,
             'dependent': self.dependent,
