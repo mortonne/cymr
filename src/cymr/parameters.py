@@ -180,14 +180,14 @@ class Parameters(object):
         self.weights = {}
         self.sublayer_param = {}
         self._dynamic_names = set()
+        self._fields = [
+            'fixed', 'free', 'dependent', 'dynamic', 'sublayers', 'weights',
+            'sublayer_param'
+        ]
 
     def __repr__(self):
-        names = [
-            'fixed', 'free', 'dependent', 'dynamic', 'sublayers', 'weights',
-            'sublayer_param',
-        ]
         parts = {}
-        for name in names:
+        for name in self._fields:
             obj = getattr(self, name)
             fields = [f'{key}: {value}' for key, value in obj.items()]
             parts[name] = '\n'.join(fields)
