@@ -382,6 +382,16 @@ def test_sublayer_generate(data, patterns, param_def_sublayer, param_dist):
     param['B_enc_loc'] = .5
     param['B_enc_cat'] = .8
     model = cmr.CMR()
+
+    # recall from list items only
+    param_def_sublayer.set_options(scope='list')
+    sim = model.generate(
+        data, param, None, param_def_sublayer, patterns=patterns
+    )
+    assert isinstance(sim, pd.DataFrame)
+
+    # recall from the pool
+    param_def_sublayer.set_options(scope='pool')
     sim = model.generate(
         data, param, None, param_def_sublayer, patterns=patterns
     )
