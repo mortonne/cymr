@@ -262,6 +262,21 @@ def prepare_list_param(n_item, n_sub, param, param_def):
     return list_param
 
 
+def get_list_items(item_index, study, recall, list_ind, scope):
+    """Get item units to present given the paradigm."""
+    if scope == 'list':
+        item_pool = study['item_index'][list_ind]
+        item_study = study['input'][list_ind]
+        item_recall = recall['input'][list_ind]
+    elif scope == 'pool':
+        item_pool = item_index
+        item_study = study['item_index'][list_ind]
+        item_recall = recall['item_index'][list_ind]
+    else:
+        raise ValueError(f'Invalid scope: {scope}')
+    return item_pool, item_study, item_recall
+
+
 class CMR(Recall):
     """
     Context Maintenance and Retrieval model.
