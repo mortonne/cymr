@@ -87,7 +87,7 @@ def param():
         P2=1,
         T=10,
         X1=0.05,
-        X2=1
+        X2=1,
     )
     return param
 
