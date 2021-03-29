@@ -328,6 +328,8 @@ class Network(object):
     def reset(self):
         """Reset network weights and activations to zero."""
         self.f[:] = 0
+        self.f_in[:] = 0
+        self.match[:] = 0
         self.c[:] = 0
         self.c_in[:] = 0
         self.w_fc_exp[:] = 0
