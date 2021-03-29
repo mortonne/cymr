@@ -690,7 +690,7 @@ def p_recall_match(
             total += f_in[start + j]
 
         # calculate probability of this recall
-        item_match(start + recalls[i], 1, w_fc_pre, w_fc_exp, match)
+        item_match(start + recalls[i], 1, w_fc_pre, w_fc_exp, c, match)
         apply_expit(start + recalls[i], 1, match, A1, A2)
         p_recall = (f_in[start + recalls[i]] / total) * match[start + recalls[i]]
         p[i] = p_recall * (1 - p_stop[i])
