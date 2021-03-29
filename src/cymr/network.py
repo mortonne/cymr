@@ -311,6 +311,7 @@ class Network(object):
         self.n_c = n_c
         self.f = np.zeros(n_f)
         self.f_in = np.zeros(n_f)
+        self.match = np.zeros(n_f)
         self.c = np.zeros(n_c)
         self.c_in = np.zeros(n_c)
         self.w_fc_pre = np.zeros((n_f, n_c))
@@ -356,7 +357,7 @@ class Network(object):
         """
         # all attributes that contain an array
         fields = [
-            'f', 'f_in', 'c', 'c_in', 'w_fc_exp', 'w_fc_pre',
+            'f', 'f_in', 'match', 'c', 'c_in', 'w_fc_exp', 'w_fc_pre',
             'w_cf_exp', 'w_cf_pre', 'w_ff_exp', 'w_ff_pre'
         ]
 
