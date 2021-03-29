@@ -460,7 +460,7 @@ cpdef apply_expit(
     """Apply expit function to calculate acceptance probability."""
     cdef int i
     for i in range(n_f):
-        match[n + i] = 1 / (1 + exp(-(A1 + A2 * match)))
+        match[n + i] = 1 / (1 + exp(-(A1 + A2 * match[n + i])))
 
 
 def p_recall(int start,
