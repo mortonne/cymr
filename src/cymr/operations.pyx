@@ -429,7 +429,7 @@ cpdef apply_softmax(int n,
         f_in[n + i] = exp((2 * f_in[n + i]) / T)
 
 
-def item_match(
+cpdef item_match(
     int n,
     int n_f,
     const double [:, :] w_fc_pre,
@@ -450,7 +450,7 @@ def item_match(
             match[n + i] += ((w_fc_exp[n + i, j] + w_fc_pre[n + i, j]) * c[j])
 
 
-def apply_expit(
+cpdef apply_expit(
     int n,
     int n_f,
     double [:] match,
