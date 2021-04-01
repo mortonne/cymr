@@ -396,3 +396,16 @@ def test_sublayer_generate(data, patterns, param_def_sublayer, param_dist):
         data, param, None, param_def_sublayer, patterns=patterns
     )
     assert isinstance(sim, pd.DataFrame)
+
+
+def test_match_generate(data, patterns, param_def_dist, param_dist):
+    """Test generating recalls using context match screening."""
+    param = param_dist.copy()
+    param['A1'] = -3
+    param['A2'] = 1
+    model = cmr.CMR()
+    param_def_dist.set_options(scope='pool', filter_recalls=True)
+    sim = model.generate(
+        data, param, None, param_def_dist, patterns=patterns
+    )
+    assert isinstance(sim, pd.DataFrame)
