@@ -368,6 +368,8 @@ class CMR(Recall):
     def set_default_options(self, param_def):
         if 'scope' not in param_def.options:
             param_def.set_options(scope='list')
+        if 'filter_recalls' not in param_def.options:
+            param_def.set_options(filter_recalls=False)
 
     def likelihood_subject(self, study, recall, param, param_def=None,
                            patterns=None):
@@ -429,10 +431,18 @@ class CMR(Recall):
             net = study_list(param_def, list_param, item_pool, item_study, patterns)
 
             # simulate recall
-            recall_index = net.generate_recall(
-                ('task', 'item'), net.c_sublayers, list_param['B_rec'],
-                list_param['T'], list_param['p_stop']
-            )
+            if param_def.options['filter_recalls']:
+                recall_index = net.generate_recall(
+                    ('task', 'item'), net.c_sublayers, list_param['B_rec'],
+                    list_param['T'], list_param['p_stop'], filter_recalls=True,
+                    A1=list_param['A1'], A2=list_param['A2']
+                )
+            else:
+                recall_index = net.generate_recall(
+                    ('task', 'item'), net.c_sublayers, list_param['B_rec'],
+                    list_param['T'], list_param['p_stop']
+                )
+
             items = patterns['items'][item_pool]
             recall_items = items[recall_index]
             recalls_list.append(recall_items)
