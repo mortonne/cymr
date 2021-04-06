@@ -5,7 +5,7 @@ from Cython.Build import cythonize
 ext_bases = ['src/cymr/operations', 'src/cymr/lba']
 ext_list = []
 for ext_base in ext_bases:
-    ext_name = os.path.basename(ext_base)
+    ext_name = 'cymr.' + os.path.basename(ext_base)
     if os.path.exists(ext_base + '.pyx'):
         # for simplicity, always use .pyx if available
         ext = cythonize(ext_base + '.pyx')[0]
