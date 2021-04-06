@@ -1,8 +1,0 @@
-numpy>=1.18
-scipy
-pandas
-cython
-joblib
-h5py>=3.0
-matplotlib
-psifr
