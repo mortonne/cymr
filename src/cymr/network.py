@@ -67,7 +67,7 @@ def load_patterns(h5_file, features=None):
         Each type of pattern contains a field for each loaded feature.
     """
     with h5py.File(h5_file, 'r') as f:
-        patterns = {'items': [item for item in f['items'].asstr()],
+        patterns = {'items': np.array([item for item in f['items'].asstr()]),
                     'vector': {},
                     'similarity': {}}
 
