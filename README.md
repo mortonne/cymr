@@ -65,7 +65,7 @@ See the [documentation](https://cymr.readthedocs.io/en/latest/) for details.
 First, install extra packages needed for testing:
 
 ```bash
-pip install -r requirements.txt .[test]
+pip install .[test]
 ```
 
 To run all tests (from the main repository directory)
