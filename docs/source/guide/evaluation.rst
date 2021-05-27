@@ -48,6 +48,14 @@ represented by an identity matrix with one entry for each item.
     n_items = 768
     loc_patterns = np.eye(n_items)
 
+We also need to define the item pool that corresponds to those patterns.
+We can get this information from the data:
+
+.. ipython:: python
+
+    study = data.query("trial_type == 'study'")
+    items = study.groupby('item_index')['item'].first().to_numpy()
+
 To indicate where the patterns should be used in the network, they are
 specified as :code:`vector` (for the :math:`\mathrm{M}^{FC}` and/or
 :math:`\mathrm{M}^{CF}` matrices) or :code:`similarity`
@@ -56,7 +64,7 @@ with a name; here, we'll refer to the localist patterns as :code:`'loc'`.
 
 .. ipython:: python
 
-    patterns = {'vector': {'loc': loc_patterns}}
+    patterns = {'items': items, 'vector': {'loc': loc_patterns}}
 
 Parameters
 ~~~~~~~~~~

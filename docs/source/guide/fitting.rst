@@ -77,7 +77,9 @@ represented by an identity matrix with one entry for each item. See
 .. ipython:: python
 
     n_items = 768
-    patterns = {'vector': {'loc': np.eye(n_items)}}
+    study = data.query("trial_type == 'study'")
+    items = study.groupby('item_index')['item'].first().to_numpy()
+    patterns = {'items': items, 'vector': {'loc': np.eye(n_items)}}
     par.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     par.set_weights('fc', weights)
