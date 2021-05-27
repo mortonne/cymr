@@ -65,7 +65,7 @@ def test_cmr(data):
              'Afc': 0, 'Dfc': 1, 'Acf': 0, 'Dcf': 1,
              'Lfc': 1, 'Lcf': 1, 'P1': 0, 'P2': 1,
              'T': 10, 'X1': .05, 'X2': 1}
-    param_def, patterns = cmr.config_loc_cmr(768)
+    param_def, patterns = cmr.config_loc_cmr(6)
     logl, n = model.likelihood(data, param, param_def=param_def, patterns=patterns)
     np.testing.assert_allclose(logl, -5.936799964636842)
     assert n == 6
@@ -87,7 +87,7 @@ def param():
         P2=1,
         T=10,
         X1=0.05,
-        X2=1
+        X2=1,
     )
     return param
 
@@ -382,7 +382,30 @@ def test_sublayer_generate(data, patterns, param_def_sublayer, param_dist):
     param['B_enc_loc'] = .5
     param['B_enc_cat'] = .8
     model = cmr.CMR()
+
+    # recall from list items only
+    param_def_sublayer.set_options(scope='list')
     sim = model.generate(
         data, param, None, param_def_sublayer, patterns=patterns
+    )
+    assert isinstance(sim, pd.DataFrame)
+
+    # recall from the pool
+    param_def_sublayer.set_options(scope='pool')
+    sim = model.generate(
+        data, param, None, param_def_sublayer, patterns=patterns
+    )
+    assert isinstance(sim, pd.DataFrame)
+
+
+def test_match_generate(data, patterns, param_def_dist, param_dist):
+    """Test generating recalls using context match screening."""
+    param = param_dist.copy()
+    param['A1'] = -3
+    param['A2'] = 1
+    model = cmr.CMR()
+    param_def_dist.set_options(scope='pool', filter_recalls=True)
+    sim = model.generate(
+        data, param, None, param_def_dist, patterns=patterns
     )
     assert isinstance(sim, pd.DataFrame)

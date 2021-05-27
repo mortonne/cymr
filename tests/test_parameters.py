@@ -37,8 +37,12 @@ def test_param_simple(param_def_simple):
 @pytest.fixture()
 def param_def():
     """Parameter definitions."""
-    # general parameter management
     param = parameters.Parameters()
+
+    # options
+    param.set_options(scope='list')
+
+    # general parameter management
     param.set_fixed(a=1, b=2)
     param.set_fixed({'c': 3})
     param.set_dependent(d='2 + mean([a, b])')
@@ -63,6 +67,7 @@ def param_def():
 
 def test_param(param_def):
     """Test that parameter definitions are correct."""
+    assert param_def.options == {'scope': 'list'}
     assert param_def.fixed == {'a': 1, 'b': 2, 'c': 3}
     assert param_def.free == {'f': [0, 1]}
     assert param_def.dependent == {'d': '2 + mean([a, b])'}
@@ -248,6 +253,7 @@ def test_json(param_def, tmp_path):
     p = tmp_path / 'parameters.json'
     param_def.to_json(p.as_posix())
     param = parameters.read_json(p.as_posix())
+    assert param.options == param_def.options
     assert param.fixed == param_def.fixed
     assert param.free == param_def.free
     assert param.dependent == param_def.dependent

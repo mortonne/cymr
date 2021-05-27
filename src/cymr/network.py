@@ -311,6 +311,7 @@ class Network(object):
         self.n_c = n_c
         self.f = np.zeros(n_f)
         self.f_in = np.zeros(n_f)
+        self.match = np.zeros(n_f)
         self.c = np.zeros(n_c)
         self.c_in = np.zeros(n_c)
         self.w_fc_pre = np.zeros((n_f, n_c))
@@ -327,6 +328,8 @@ class Network(object):
     def reset(self):
         """Reset network weights and activations to zero."""
         self.f[:] = 0
+        self.f_in[:] = 0
+        self.match[:] = 0
         self.c[:] = 0
         self.c_in[:] = 0
         self.w_fc_exp[:] = 0
@@ -356,7 +359,7 @@ class Network(object):
         """
         # all attributes that contain an array
         fields = [
-            'f', 'f_in', 'c', 'c_in', 'w_fc_exp', 'w_fc_pre',
+            'f', 'f_in', 'match', 'c', 'c_in', 'w_fc_exp', 'w_fc_pre',
             'w_cf_exp', 'w_cf_pre', 'w_ff_exp', 'w_ff_pre'
         ]
 
@@ -957,7 +960,10 @@ class Network(object):
         )
         return p
 
-    def generate_recall(self, segment, sublayers, B, T, p_stop, amin=0.000001):
+    def generate_recall(
+        self, segment, sublayers, B, T, p_stop, amin=0.000001, filter_recalls=False,
+        A1=None, A2=None
+    ):
         """
         Generate a sequence of simulated free recall events.
 
@@ -981,6 +987,17 @@ class Network(object):
         amin : float, optional
             Minimum activation of each not-yet-recalled item on each
             recall attempt.
+
+        filter_recalls : bool, optional
+            If true, potential recalls will be filtered based on match
+            to context.
+
+        A1 : float, optional
+            Intercept mapping context match to an expit to determine
+            recovery probability.
+
+        A2 : float, optional
+            Slope mapping match to an expit.
 
         Returns
         -------
@@ -1016,6 +1033,21 @@ class Network(object):
             # select item for recall proportionate to support
             support = self.f_in[rec_ind[0]:rec_ind[1]]
             p_recall = support / np.sum(support)
+
+            if filter_recalls:
+                # acceptance probability based on context match
+                operations.item_match(
+                    rec_ind[0], n_item, self.w_fc_pre, self.w_fc_exp, self.c,
+                    self.match
+                )
+                operations.apply_expit(rec_ind[0], n_item, self.match, A1, A2)
+
+                # recall probabiity is selection + acceptance
+                p_recall = p_recall * self.match[rec_ind[0]:rec_ind[1]]
+
+                # rescale probability to vary between 0 and 1
+                p_recall = p_recall / np.sum(p_recall)
+
             if np.any(np.isnan(p_recall)):
                 n = np.count_nonzero(exclude == 0)
                 p_recall[exclude == 0] = 1 / n

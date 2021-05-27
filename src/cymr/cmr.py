@@ -262,6 +262,21 @@ def prepare_list_param(n_item, n_sub, param, param_def):
     return list_param
 
 
+def get_list_items(item_index, study, recall, list_ind, scope):
+    """Get item units to present given the paradigm."""
+    if scope == 'list':
+        item_pool = study['item_index'][list_ind]
+        item_study = study['input'][list_ind]
+        item_recall = recall['input'][list_ind]
+    elif scope == 'pool':
+        item_pool = item_index
+        item_study = study['item_index'][list_ind]
+        item_recall = recall['item_index'][list_ind]
+    else:
+        raise ValueError(f'Invalid scope: {scope}')
+    return item_pool, item_study, item_recall
+
+
 class CMR(Recall):
     """
     Context Maintenance and Retrieval model.
@@ -337,7 +352,7 @@ class CMR(Recall):
             for term in study_base:
                 if term not in study_keys:
                     study_keys += [term]
-        recall_base = ['input']
+        recall_base = ['input', 'item_index']
         if recall_keys is None:
             recall_keys = recall_base
         else:
@@ -350,8 +365,15 @@ class CMR(Recall):
         )
         return study, recall
 
+    def set_default_options(self, param_def):
+        if 'scope' not in param_def.options:
+            param_def.set_options(scope='list')
+        if 'filter_recalls' not in param_def.options:
+            param_def.set_options(filter_recalls=False)
+
     def likelihood_subject(self, study, recall, param, param_def=None,
                            patterns=None):
+        self.set_default_options(param_def)
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         if param_def is None:
@@ -359,6 +381,7 @@ class CMR(Recall):
         n_sub = len(param_def.sublayers['c'])
         param = prepare_list_param(n_item, n_sub, param, param_def)
 
+        item_index = np.arange(len(patterns['items']))
         logl = 0
         n = 0
         for i in range(n_list):
@@ -367,14 +390,14 @@ class CMR(Recall):
             list_param = param_def.get_dynamic(list_param, i)
 
             # simulate study
-            net = study_list(
-                param_def, list_param, study['item_index'][i],
-                study['input'][i], patterns
+            item_pool, item_study, item_recall = get_list_items(
+                item_index, study, recall, i, param_def.options['scope']
             )
+            net = study_list(param_def, list_param, item_pool, item_study, patterns)
 
             # get recall probabilities
             p = net.p_recall(
-                ('task', 'item'), recall['input'][i], net.c_sublayers,
+                ('task', 'item'), item_recall, net.c_sublayers,
                 list_param['B_rec'], list_param['T'], list_param['p_stop']
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
@@ -386,7 +409,7 @@ class CMR(Recall):
 
     def generate_subject(self, study, recall, param, param_def=None,
                          patterns=None, **kwargs):
-
+        self.set_default_options(param_def)
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         if param_def is None:
@@ -394,6 +417,7 @@ class CMR(Recall):
         n_sub = len(param_def.sublayers['c'])
         param = prepare_list_param(n_item, n_sub, param, param_def)
 
+        item_index = np.arange(len(patterns['items']))
         recalls_list = []
         for i in range(n_list):
             # access the dynamic parameters needed for this list
@@ -401,18 +425,26 @@ class CMR(Recall):
             list_param = param_def.get_dynamic(list_param, i)
 
             # simulate study
-            net = study_list(
-                param_def, list_param, study['item_index'][i],
-                study['input'][i], patterns
+            item_pool, item_study, item_recall = get_list_items(
+                item_index, study, recall, i, param_def.options['scope']
             )
+            net = study_list(param_def, list_param, item_pool, item_study, patterns)
 
             # simulate recall
-            recall_vec = net.generate_recall(
-                ('task', 'item'), net.c_sublayers, list_param['B_rec'],
-                list_param['T'], list_param['p_stop']
-            )
-            recall_index = study['item_index'][i][recall_vec]
-            recall_items = patterns['items'][recall_index]
+            if param_def.options['filter_recalls']:
+                recall_index = net.generate_recall(
+                    ('task', 'item'), net.c_sublayers, list_param['B_rec'],
+                    list_param['T'], list_param['p_stop'], filter_recalls=True,
+                    A1=list_param['A1'], A2=list_param['A2']
+                )
+            else:
+                recall_index = net.generate_recall(
+                    ('task', 'item'), net.c_sublayers, list_param['B_rec'],
+                    list_param['T'], list_param['p_stop']
+                )
+
+            items = patterns['items'][item_pool]
+            recall_items = items[recall_index]
             recalls_list.append(recall_items)
         return recalls_list
 

@@ -12,6 +12,8 @@ def read_json(json_file):
         par_dict = json.load(f)
 
     par = Parameters()
+    if 'options' in par_dict:
+        par.set_options(par_dict['options'])
     par.set_free(par_dict['free'])
     par.set_fixed(par_dict['fixed'])
     par.set_dependent(par_dict['dependent'])
@@ -172,6 +174,7 @@ class Parameters(object):
     """
 
     def __init__(self):
+        self.options = {}
         self.fixed = {}
         self.free = {}
         self.dependent = {}
@@ -180,14 +183,14 @@ class Parameters(object):
         self.weights = {}
         self.sublayer_param = {}
         self._dynamic_names = set()
+        self._fields = [
+            'fixed', 'free', 'dependent', 'dynamic', 'sublayers', 'weights',
+            'sublayer_param'
+        ]
 
     def __repr__(self):
-        names = [
-            'fixed', 'free', 'dependent', 'dynamic', 'sublayers', 'weights',
-            'sublayer_param',
-        ]
         parts = {}
-        for name in names:
+        for name in self._fields:
             obj = getattr(self, name)
             fields = [f'{key}: {value}' for key, value in obj.items()]
             parts[name] = '\n'.join(fields)
@@ -197,6 +200,7 @@ class Parameters(object):
     def copy(self):
         """Copy the parameters definition."""
         param = type(self).__new__(self.__class__)
+        param.options = self.options.copy()
         param.fixed = self.fixed.copy()
         param.free = self.free.copy()
         param.dependent = self.dependent.copy()
@@ -217,6 +221,7 @@ class Parameters(object):
             Path to file to save json data.
         """
         data = {
+            'options': self.options,
             'fixed': self.fixed,
             'free': self.free,
             'dependent': self.dependent,
@@ -232,6 +237,23 @@ class Parameters(object):
                 data['weights'][layer][region_str] = expr
         with open(json_file, 'w') as f:
             json.dump(data, f, indent=4)
+
+    def set_options(self, *args, **kwargs):
+        """
+        Set model options.
+
+        While model parameters are stored as a dictionary of string: float
+        pairs, model options may be used to store other information such
+        as switching between different model variants.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> param_def.set_options(scope='list', recall_segment='item')
+        >>> param_def.set_options({'option1': True, 'option2': False})
+        """
+        self.options.update(*args, **kwargs)
 
     def set_fixed(self, *args, **kwargs):
         """

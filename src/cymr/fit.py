@@ -54,12 +54,14 @@ def prepare_lists(data, study_keys=None, recall_keys=None, clean=True):
         study_keys = ['input', 'item_index']
 
     if recall_keys is None:
-        recall_keys = ['input']
+        recall_keys = ['input', 'item_index']
 
     s_keys = study_keys.copy()
     s_keys.remove('input')
     r_keys = recall_keys.copy()
     r_keys.remove('input')
+    if 'item_index' in r_keys:
+        r_keys.remove('item_index')
     merged = fr.merge_free_recall(data, study_keys=s_keys, recall_keys=r_keys)
     if clean:
         merged = merged.query('~intrusion and repeat == 0')

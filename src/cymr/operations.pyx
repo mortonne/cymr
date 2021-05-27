@@ -429,6 +429,40 @@ cpdef apply_softmax(int n,
         f_in[n + i] = exp((2 * f_in[n + i]) / T)
 
 
+cpdef item_match(
+    int n,
+    int n_f,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_fc_exp,
+    double [:] c,
+    double [:] match,
+):
+    """Calculate match between context and potential item recalls."""
+    cdef Py_ssize_t n_c = w_fc_exp.shape[1]
+    cdef int i
+    cdef int j
+
+    for i in range(n_f):
+        match[n + i] = 0
+
+        # support from context cuing
+        for j in range(n_c):
+            match[n + i] += ((w_fc_exp[n + i, j] + w_fc_pre[n + i, j]) * c[j])
+
+
+cpdef apply_expit(
+    int n,
+    int n_f,
+    double [:] match,
+    double A1,
+    double A2,
+):
+    """Apply expit function to calculate acceptance probability."""
+    cdef int i
+    for i in range(n_f):
+        match[n + i] = 1 / (1 + exp(-(A1 + A2 * match[n + i])))
+
+
 def p_recall(int start,
              int n_f,
              int [:] recalls,
@@ -454,6 +488,9 @@ def p_recall(int start,
 
     Parameters
     ----------
+    start
+        Start unit for the item segment to recall from.
+
     n_f
         Number of units in the item segment.
 
@@ -528,6 +565,135 @@ def p_recall(int start,
 
         # calculate probability of this recall
         p[i] = (f_in[start + recalls[i]] / total) * (1 - p_stop[i])
+
+        # update context
+        if i < (n_r - 1):
+            exclude[recalls[i]] = 1
+            integrate(w_fc_exp, w_fc_pre, c, c_in, f, recalls[i], c_ind, B[i])
+    p[n_r] = p_stop[n_r]
+
+
+def p_recall_match(
+    int start,
+    int n_f,
+    int [:] recalls,
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_cf_exp,
+    const double [:, :] w_cf_pre,
+    double [:, :] w_ff_exp,
+    const double [:, :] w_ff_pre,
+    double [:] f,
+    double [:] f_in,
+    double [:] c,
+    double [:] c_in,
+    int [:, :] c_ind,
+    int [:] exclude,
+    double amin,
+    double [:, :] B,
+    double T,
+    const double [:] p_stop,
+    double [:] p,
+    double [:] match,
+    double A1,
+    double A2,
+):
+    """
+    Calculate the likelihood of each recall in a sequence.
+
+    Parameters
+    ----------
+    start
+        Start unit for the item segment to recall from.
+
+    n_f
+        Number of units in the item segment.
+
+    recalls
+        Item indices of recalls in output order.
+
+    w_fc_exp
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{exp}`.
+
+    w_fc_pre
+        Weight matrix :math:`\mathbf{M}^{FC}_\mathrm{pre}`.
+
+    w_cf_exp
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{exp}`.
+
+    w_cf_pre
+        Weight matrix :math:`\mathbf{M}^{CF}_\mathrm{pre}`.
+
+    w_ff_exp
+        Weight matrix :math:`\mathbf{M}^{FF}_\mathrm{exp}`.
+
+    w_ff_pre
+        Weight matrix :math:`\mathbf{M}^{FF}_\mathrm{pre}`.
+
+    f
+        Item representation :math:`\mathbf{f}`.
+
+    f_in
+        Item activation input :math:`\mathbf{f}^\mathrm{IN}`.
+
+    c
+        Context state :math:`\mathbf{c}`.
+
+    c_in
+        Context input :math:`\mathbf{c}^\mathrm{IN}`.
+
+    c_ind
+        Start and end indices of the context sublayer.
+
+    exclude
+        Vector of item indices to exclude from recall.
+
+    amin
+        Minimum item activation for non-excluded items.
+
+    B
+        :math:`\\beta` parameter.
+
+    T
+        Temperature parameter of the softmax function.
+
+    p_stop
+        Probability of stopping by output position.
+
+    p
+        Likelihood of each recall and the stopping event.
+
+    match
+        Degree of match between current context and context associated
+        with an item.
+
+    A1
+        Intercept mapping match to an expit function.
+
+    A2
+        Slope mapping match to an expit function.
+    """
+    cdef Py_ssize_t n_r = recalls.shape[0]
+    cdef int i
+    cdef int j
+    cdef double total
+    cdef double p_recall
+
+    for i in range(n_r):
+        # calculate support for each item
+        cue_item(start, n_f, w_cf_pre, w_cf_exp, w_ff_pre, w_ff_exp,
+                 f_in, c, exclude, recalls, i)
+        apply_softmax(start, n_f, f_in, exclude, amin, T)
+
+        total = 0
+        for j in range(n_f):
+            total += f_in[start + j]
+
+        # calculate probability of this recall
+        item_match(start + recalls[i], 1, w_fc_pre, w_fc_exp, c, match)
+        apply_expit(start + recalls[i], 1, match, A1, A2)
+        p_recall = (f_in[start + recalls[i]] / total) * match[start + recalls[i]]
+        p[i] = p_recall * (1 - p_stop[i])
 
         # update context
         if i < (n_r - 1):
