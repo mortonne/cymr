@@ -12,7 +12,9 @@ class TimeLikelihood(object):
         self.data = fit.sample_data('Morton2013_mixed')
 
         n_items = 768
-        self.patterns = {'vector': {'loc': np.eye(n_items)}}
+        study = self.data.query('trial_type == "study"')
+        items = study.groupby('item_index')['item'].first().to_numpy()
+        self.patterns = {'items': items, 'vector': {'loc': np.eye(n_items)}}
 
         param_def = parameters.Parameters()
         param_def.set_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
