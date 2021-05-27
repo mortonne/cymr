@@ -19,18 +19,31 @@ class TimeLikelihood(object):
         param_def = parameters.Parameters()
         param_def.set_dependent(Dfc='1 - Lfc', Dcf='1 - Lcf')
         param_def.set_sublayers(f=['task'], c=['task'])
-        param_def.set_weights('fc', {
-            (('task', 'item'), ('task', 'item')): 'Dfc * loc',
-        })
-        param_def.set_weights('cf', {
-            (('task', 'item'), ('task', 'item')): 'Dcf * loc',
-        })
+        param_def.set_weights(
+            'fc',
+            {
+                (('task', 'item'), ('task', 'item')): 'Dfc * loc',
+            },
+        )
+        param_def.set_weights(
+            'cf',
+            {
+                (('task', 'item'), ('task', 'item')): 'Dcf * loc',
+            },
+        )
         self.param_def = param_def
 
         param = {
-            'B_enc': .5, 'B_start': 0, 'B_rec': .8,
-            'Lfc': .8, 'Lcf': .8, 'P1': 1, 'P2': 1,
-            'T': 10, 'X1': .05, 'X2': .2
+            'B_enc': 0.5,
+            'B_start': 0,
+            'B_rec': 0.8,
+            'Lfc': 0.8,
+            'Lcf': 0.8,
+            'P1': 1,
+            'P2': 1,
+            'T': 10,
+            'X1': 0.05,
+            'X2': 0.2,
         }
         self.param = param_def.eval_dependent(param)
         self.model = cmr.CMR()
