@@ -25,12 +25,8 @@ def test_param_simple(param_def_simple):
     assert param_def.dependent == {}
     assert param_def.dynamic == {}
     assert param_def.sublayers == {'f': ['task'], 'c': ['task']}
-    assert param_def.weights['fc'] == {
-        (('task', 'item'), ('task', 'item')): 'loc'
-    }
-    assert param_def.weights['cf'] == {
-        (('task', 'item'), ('task', 'item')): 'loc'
-    }
+    assert param_def.weights['fc'] == {(('task', 'item'), ('task', 'item')): 'loc'}
+    assert param_def.weights['cf'] == {(('task', 'item'), ('task', 'item')): 'loc'}
     assert param_def.sublayer_param == {}
 
 
@@ -91,28 +87,42 @@ def test_param(param_def):
 @pytest.fixture()
 def data():
     """Base test DataFrame."""
-    data = pd.DataFrame({
-        'subject': [1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1],
-        'list': [1, 1, 1, 1, 1, 1,
-                 2, 2, 2, 2, 2, 2],
-        'trial_type': ['study', 'study', 'study',
-                       'recall', 'recall', 'recall',
-                       'study', 'study', 'study',
-                       'recall', 'recall', 'recall'],
-        'position': [1, 2, 3, 1, 2, 3,
-                     1, 2, 3, 1, 2, 3],
-        'item': ['absence', 'hollow', 'pupil',
-                 'hollow', 'pupil', 'empty',
-                 'fountain', 'piano', 'pillow',
-                 'pillow', 'fountain', 'pillow'],
-        'item_index': [0, 1, 2, 1, 2, np.nan,
-                       3, 4, 5, 5, 3, 5],
-        'task': [1, 2, 1, 2, 1, np.nan,
-                 1, 2, 1, 1, 1, 1],
-        'distract': [1, 2, 3, np.nan, np.nan, np.nan,
-                     3, 2, 1, np.nan, np.nan, np.nan],
-    })
+    data = pd.DataFrame(
+        {
+            'subject': [
+                1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1,
+            ],
+            'list': [
+                1, 1, 1, 1, 1, 1,
+                2, 2, 2, 2, 2, 2
+            ],
+            'trial_type': [
+                'study', 'study', 'study', 'recall', 'recall', 'recall',
+                'study', 'study', 'study', 'recall', 'recall', 'recall',
+            ],
+            'position': [
+                1, 2, 3, 1, 2, 3,
+                1, 2, 3, 1, 2, 3,
+            ],
+            'item': [
+                'absence', 'hollow', 'pupil', 'hollow', 'pupil', 'empty',
+                'fountain', 'piano', 'pillow', 'pillow', 'fountain', 'pillow',
+            ],
+            'item_index': [
+                0, 1, 2, 1, 2, np.nan,
+                3, 4, 5, 5, 3, 5,
+            ],
+            'task': [
+                1, 2, 1, 2, 1, np.nan,
+                1, 2, 1, 1, 1, 1,
+            ],
+            'distract': [
+                1, 2, 3, np.nan, np.nan, np.nan,
+                3, 2, 1, np.nan, np.nan, np.nan,
+            ],
+        }
+    )
     return data
 
 
@@ -145,26 +155,26 @@ def patterns():
         'similarity': {
             'loc': np.eye(24),
             'cat': sim_cat,
-        }
+        },
     }
     return patterns
 
 
 def test_set_dependent():
-    param = {'Lfc': .7}
+    param = {'Lfc': 0.7}
     dependent = {'Dfc': '1 - Lfc'}
     updated = parameters.set_dependent(param, dependent)
-    expected = {'Lfc': .7, 'Dfc': .3}
+    expected = {'Lfc': 0.7, 'Dfc': 0.3}
     np.testing.assert_allclose(updated['Dfc'], expected['Dfc'])
 
 
 def test_set_dynamic(data):
-    param = {'B_distract': .2}
+    param = {'B_distract': 0.2}
     dynamic = {'study': {'B_enc': 'distract * B_distract'}}
     study_data = fr.filter_data(data, 1, 1, 'study')
     study = fr.split_lists(study_data, 'raw', ['distract'])
     updated = parameters.set_dynamic(param, study, dynamic['study'])
-    expected = {'B_distract': .2, 'B_enc': [np.array([.2, .4, .6])]}
+    expected = {'B_distract': 0.2, 'B_enc': [np.array([0.2, 0.4, 0.6])]}
     np.testing.assert_allclose(updated['B_enc'][0], expected['B_enc'][0])
 
 
@@ -209,24 +219,20 @@ def test_blank(split_data):
 def test_eval_weights(param_def, patterns):
     weights = param_def.eval_weights(patterns)
     np.testing.assert_array_equal(
-        weights['fc'][(('task', 'item'), ('loc', 'item'))],
-        patterns['vector']['loc']
+        weights['fc'][(('task', 'item'), ('loc', 'item'))], patterns['vector']['loc']
     )
     np.testing.assert_array_equal(
-        weights['fc'][(('task', 'item'), ('cat', 'item'))],
-        patterns['vector']['cat']
+        weights['fc'][(('task', 'item'), ('cat', 'item'))], patterns['vector']['cat']
     )
     np.testing.assert_array_equal(
-        weights['cf'][(('task', 'item'), ('loc', 'item'))],
-        patterns['vector']['loc']
+        weights['cf'][(('task', 'item'), ('loc', 'item'))], patterns['vector']['loc']
     )
     np.testing.assert_array_equal(
-        weights['cf'][(('task', 'item'), ('cat', 'item'))],
-        patterns['vector']['cat']
+        weights['cf'][(('task', 'item'), ('cat', 'item'))], patterns['vector']['cat']
     )
     np.testing.assert_array_equal(
         weights['ff'][('task', 'item')],
-        patterns['similarity']['loc'] + patterns['similarity']['cat']
+        patterns['similarity']['loc'] + patterns['similarity']['cat'],
     )
 
 
@@ -239,13 +245,9 @@ def test_eval_weights_index(param_def, patterns):
 
 
 def test_eval_sublayer_param(param_def):
-    param = {'B_enc_loc': .8, 'B_enc_cat': .4}
+    param = {'B_enc_loc': 0.8, 'B_enc_cat': 0.4}
     eval_param = param_def.eval_sublayer_param('c', param, 3)
-    expected = np.array(
-        [[.8, .4],
-         [.8, .4],
-         [.8, .4]]
-    )
+    expected = np.array([[0.8, 0.4], [0.8, 0.4], [0.8, 0.4]])
     np.testing.assert_array_equal(eval_param['B_enc'], expected)
 
 

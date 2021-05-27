@@ -89,12 +89,12 @@ def config_loc_cmr(n_item):
     patterns = {'items': items, 'vector': {'loc': np.eye(n_item)}}
     param_def = parameters.Parameters()
     param_def.set_sublayers(f=['task'], c=['task'])
-    param_def.set_weights('fc', {
-        (('task', 'item'), ('task', 'item')): 'Afc + Dfc * loc'
-    })
-    param_def.set_weights('cf', {
-        (('task', 'item'), ('task', 'item')): 'Acf + Dcf * loc'
-    })
+    param_def.set_weights(
+        'fc', {(('task', 'item'), ('task', 'item')): 'Afc + Dfc * loc'}
+    )
+    param_def.set_weights(
+        'cf', {(('task', 'item'), ('task', 'item')): 'Acf + Dcf * loc'}
+    )
     return param_def, patterns
 
 
@@ -197,8 +197,12 @@ def study_list(param_def, param, item_index, item_input, patterns):
     net = init_network(param_def, patterns, param, item_index)
     net.update(('task', 'start', 0), net.c_sublayers)
     net.study(
-        ('task', 'item'), item_input, net.c_sublayers, param['B_enc'],
-        param['Lfc'], param['Lcf']
+        ('task', 'item'),
+        item_input,
+        net.c_sublayers,
+        param['B_enc'],
+        param['Lfc'],
+        param['Lcf'],
     )
     net.integrate(('task', 'start', 0), net.c_sublayers, param['B_start'])
     return net
@@ -249,9 +253,7 @@ def prepare_list_param(n_item, n_sub, param, param_def):
         n_sub = param['Lcf'].shape[1]
         Lcf = np.zeros(param['Lcf'].shape)
         for i in range(n_sub):
-            Lcf[:, i] = primacy(
-                n_item, param['Lcf'][0, i], param['P1'], param['P2']
-            )
+            Lcf[:, i] = primacy(n_item, param['Lcf'][0, i], param['P1'], param['P2'])
     else:
         Lcf_trial = primacy(n_item, param['Lcf'], param['P1'], param['P2'])
         Lcf = np.tile(Lcf_trial[:, None], (1, n_sub))
@@ -371,8 +373,7 @@ class CMR(Recall):
         if 'filter_recalls' not in param_def.options:
             param_def.set_options(filter_recalls=False)
 
-    def likelihood_subject(self, study, recall, param, param_def=None,
-                           patterns=None):
+    def likelihood_subject(self, study, recall, param, param_def=None, patterns=None):
         self.set_default_options(param_def)
         n_item = len(study['input'][0])
         n_list = len(study['input'])
@@ -397,8 +398,12 @@ class CMR(Recall):
 
             # get recall probabilities
             p = net.p_recall(
-                ('task', 'item'), item_recall, net.c_sublayers,
-                list_param['B_rec'], list_param['T'], list_param['p_stop']
+                ('task', 'item'),
+                item_recall,
+                net.c_sublayers,
+                list_param['B_rec'],
+                list_param['T'],
+                list_param['p_stop'],
             )
             if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
                 logl = -10e6
@@ -407,8 +412,9 @@ class CMR(Recall):
             n += p.size
         return logl, n
 
-    def generate_subject(self, study, recall, param, param_def=None,
-                         patterns=None, **kwargs):
+    def generate_subject(
+        self, study, recall, param, param_def=None, patterns=None, **kwargs
+    ):
         self.set_default_options(param_def)
         n_item = len(study['input'][0])
         n_list = len(study['input'])
@@ -433,14 +439,22 @@ class CMR(Recall):
             # simulate recall
             if param_def.options['filter_recalls']:
                 recall_index = net.generate_recall(
-                    ('task', 'item'), net.c_sublayers, list_param['B_rec'],
-                    list_param['T'], list_param['p_stop'], filter_recalls=True,
-                    A1=list_param['A1'], A2=list_param['A2']
+                    ('task', 'item'),
+                    net.c_sublayers,
+                    list_param['B_rec'],
+                    list_param['T'],
+                    list_param['p_stop'],
+                    filter_recalls=True,
+                    A1=list_param['A1'],
+                    A2=list_param['A2'],
                 )
             else:
                 recall_index = net.generate_recall(
-                    ('task', 'item'), net.c_sublayers, list_param['B_rec'],
-                    list_param['T'], list_param['p_stop']
+                    ('task', 'item'),
+                    net.c_sublayers,
+                    list_param['B_rec'],
+                    list_param['T'],
+                    list_param['p_stop'],
                 )
 
             items = patterns['items'][item_pool]
@@ -448,9 +462,17 @@ class CMR(Recall):
             recalls_list.append(recall_items)
         return recalls_list
 
-    def record_subject(self, study, recall, param, param_def=None,
-                       patterns=None, remove_blank=False, include=None,
-                       exclude=None):
+    def record_subject(
+        self,
+        study,
+        recall,
+        param,
+        param_def=None,
+        patterns=None,
+        remove_blank=False,
+        include=None,
+        exclude=None,
+    ):
         n_item = len(study['input'][0])
         n_list = len(study['input'])
         if param_def is None:
@@ -467,24 +489,37 @@ class CMR(Recall):
 
             # initialize the network
             net = init_network(
-                param_def, patterns, param, study['item_index'][i],
-                remove_blank=remove_blank
+                param_def,
+                patterns,
+                param,
+                study['item_index'][i],
+                remove_blank=remove_blank,
             )
             net.update(('task', 'start', 0), net.c_sublayers)
 
             # record study phase
             item_list = study['input'][i].astype(int)
             list_study_state = net.record_study(
-                ('task', 'item'), item_list, net.c_sublayers, param['B_enc'],
-                list_param['Lfc'], list_param['Lcf'], include=include,
-                exclude=exclude
+                ('task', 'item'),
+                item_list,
+                net.c_sublayers,
+                param['B_enc'],
+                list_param['Lfc'],
+                list_param['Lcf'],
+                include=include,
+                exclude=exclude,
             )
             net.integrate(('task', 'start', 0), net.c_sublayers, param['B_start'])
 
             # record recall phase
             list_recall_state = net.record_recall(
-                ('task', 'item'), recall['input'][i], net.c_sublayers,
-                param['B_rec'], param['T'], include=include, exclude=exclude
+                ('task', 'item'),
+                recall['input'][i],
+                net.c_sublayers,
+                param['B_rec'],
+                param['T'],
+                include=include,
+                exclude=exclude,
             )
             study_state.append(list_study_state)
             recall_state.append(list_recall_state)

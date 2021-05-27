@@ -67,9 +67,11 @@ def load_patterns(h5_file, features=None):
         Each type of pattern contains a field for each loaded feature.
     """
     with h5py.File(h5_file, 'r') as f:
-        patterns = {'items': np.array([item for item in f['items'].asstr()]),
-                    'vector': {},
-                    'similarity': {}}
+        patterns = {
+            'items': np.array([item for item in f['items'].asstr()]),
+            'vector': {},
+            'similarity': {},
+        }
 
         if features is None:
             features = f['features'].asstr()
@@ -103,7 +105,7 @@ def expand_param(param, size):
         param = np.tile(param, size).astype(float)
     elif size.shape and param.ndim < len(size):
         # expand array to have to correct number of dimensions
-        axis = tuple(size[param.ndim:])
+        axis = tuple(size[param.ndim :])
         param = np.expand_dims(param, axis)
         if param.shape != tuple(size):
             # expand singleton dimensions as needed
@@ -155,15 +157,17 @@ def sample_response_lba(A, b, v, s, tau):
 def init_plot(**kwargs):
     fig = plt.figure(constrained_layout=True, **kwargs)
     gs = GridSpec(10, 5, figure=fig)
-    ax = {'c': fig.add_subplot(gs[0, 1:4]),
-          'c_in': fig.add_subplot(gs[1, 1:4]),
-          'f_in': fig.add_subplot(gs[8, 1:4]),
-          'f': fig.add_subplot(gs[9, 1:4]),
-          'w_fc_pre': fig.add_subplot(gs[2:8, 0]),
-          'w_fc_exp': fig.add_subplot(gs[2:8, 1]),
-          'w_ff_pre': fig.add_subplot(gs[2:8, 2]),
-          'w_cf_exp': fig.add_subplot(gs[2:8, 3]),
-          'w_cf_pre': fig.add_subplot(gs[2:8, 4])}
+    ax = {
+        'c': fig.add_subplot(gs[0, 1:4]),
+        'c_in': fig.add_subplot(gs[1, 1:4]),
+        'f_in': fig.add_subplot(gs[8, 1:4]),
+        'f': fig.add_subplot(gs[9, 1:4]),
+        'w_fc_pre': fig.add_subplot(gs[2:8, 0]),
+        'w_fc_exp': fig.add_subplot(gs[2:8, 1]),
+        'w_ff_pre': fig.add_subplot(gs[2:8, 2]),
+        'w_cf_exp': fig.add_subplot(gs[2:8, 3]),
+        'w_cf_pre': fig.add_subplot(gs[2:8, 4]),
+    }
     return fig, ax
 
 
@@ -193,6 +197,7 @@ class LayerIndex(object):
     segment : dict of (str: dict of (str: numpy.ndarray)
         Start and stop units of each segment.
     """
+
     def __init__(self, layer_segments):
         self.size = 0
         self.size_sublayer = {}
@@ -298,6 +303,7 @@ class Network(object):
     w_ff_exp : numpy.array
         Weights learned during the experiment connecting f to f.
     """
+
     def __init__(self, f_segment, c_segment):
         self.f_segment = f_segment.copy()
         self.c_segment = c_segment.copy()
@@ -359,8 +365,17 @@ class Network(object):
         """
         # all attributes that contain an array
         fields = [
-            'f', 'f_in', 'match', 'c', 'c_in', 'w_fc_exp', 'w_fc_pre',
-            'w_cf_exp', 'w_cf_pre', 'w_ff_exp', 'w_ff_pre'
+            'f',
+            'f_in',
+            'match',
+            'c',
+            'c_in',
+            'w_fc_exp',
+            'w_fc_pre',
+            'w_cf_exp',
+            'w_cf_pre',
+            'w_ff_exp',
+            'w_ff_pre',
         ]
 
         # set the fields to include in the copy (default is all)
@@ -539,8 +554,9 @@ class Network(object):
         c_ind = self.c_ind.get_slice(*c_segment)
         return f_ind, c_ind
 
-    def add_pre_weights(self, connect, f_segment, c_segment, weights,
-                        slope=1, intercept=0):
+    def add_pre_weights(
+        self, connect, f_segment, c_segment, weights, slope=1, intercept=0
+    ):
         """
         Add pre-experimental weights to a network.
 
@@ -597,8 +613,9 @@ class Network(object):
         f_ind = self.get_unit('f', *item)
         c_ind = self.get_sublayers('c', sublayers)
         B = np.ones(len(sublayers))
-        operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
-                             self.f, f_ind, c_ind, B)
+        operations.integrate(
+            self.w_fc_exp, self.w_fc_pre, self.c, self.c_in, self.f, f_ind, c_ind, B
+        )
 
     def integrate(self, item, sublayers, B):
         """
@@ -621,8 +638,9 @@ class Network(object):
         B = expand_param(B, np.array(len(sublayers)))
         f_ind = self.get_unit('f', *item)
         c_ind = self.get_sublayers('c', sublayers)
-        operations.integrate(self.w_fc_exp, self.w_fc_pre, self.c, self.c_in,
-                             self.f, f_ind, c_ind, B)
+        operations.integrate(
+            self.w_fc_exp, self.w_fc_pre, self.c, self.c_in, self.f, f_ind, c_ind, B
+        )
 
     def present(self, item, sublayers, B, Lfc=0, Lcf=0):
         """
@@ -654,9 +672,19 @@ class Network(object):
         Lcf = expand_param(Lcf, n_sub)
         f_ind = self.get_unit('f', *item)
         c_ind = self.get_sublayers('c', sublayers)
-        operations.present(self.w_fc_exp, self.w_fc_pre, self.w_cf_exp,
-                           self.c, self.c_in, self.f, f_ind, c_ind,
-                           B, Lfc, Lcf)
+        operations.present(
+            self.w_fc_exp,
+            self.w_fc_pre,
+            self.w_cf_exp,
+            self.c,
+            self.c_in,
+            self.f,
+            f_ind,
+            c_ind,
+            B,
+            Lfc,
+            Lcf,
+        )
 
     def learn(self, connect, item, sublayers, L):
         """
@@ -727,12 +755,31 @@ class Network(object):
         c_ind = self.get_sublayers('c', sublayers)
 
         operations.study(
-            self.w_fc_exp, self.w_fc_pre, self.w_cf_exp, self.c, self.c_in,
-            self.f, item_ind, c_ind, param['B'], param['Lfc'], param['Lcf']
+            self.w_fc_exp,
+            self.w_fc_pre,
+            self.w_cf_exp,
+            self.c,
+            self.c_in,
+            self.f,
+            item_ind,
+            c_ind,
+            param['B'],
+            param['Lfc'],
+            param['Lcf'],
         )
 
-    def study_distract(self, segment, item_list, sublayers, B, Lfc, Lcf,
-                       distract_segment, distract_list, distract_B):
+    def study_distract(
+        self,
+        segment,
+        item_list,
+        sublayers,
+        B,
+        Lfc,
+        Lcf,
+        distract_segment,
+        distract_list,
+        distract_B,
+    ):
         """
         Study a list of items.
 
@@ -784,13 +831,24 @@ class Network(object):
         c_ind = self.get_sublayers('c', sublayers)
 
         operations.study_distract(
-            self.w_fc_exp, self.w_fc_pre, self.w_cf_exp, self.c, self.c_in,
-            self.f, item_ind, c_ind, param['B'], param['Lfc'], param['Lcf'],
-            distract_ind, param['distract_B']
+            self.w_fc_exp,
+            self.w_fc_pre,
+            self.w_cf_exp,
+            self.c,
+            self.c_in,
+            self.f,
+            item_ind,
+            c_ind,
+            param['B'],
+            param['Lfc'],
+            param['Lcf'],
+            distract_ind,
+            param['distract_B'],
         )
 
-    def record_study(self, segment, item_list, sublayers, B, Lfc, Lcf,
-                     include=None, exclude=None):
+    def record_study(
+        self, segment, item_list, sublayers, B, Lfc, Lcf, include=None, exclude=None
+    ):
         """
         Study a list of items and record network states.
 
@@ -840,8 +898,17 @@ class Network(object):
             state.append(self.copy(include=include, exclude=exclude))
         return state
 
-    def record_recall(self, segment, recalls, sublayers, B, T, amin=0.000001,
-                      include=None, exclude=None):
+    def record_recall(
+        self,
+        segment,
+        recalls,
+        sublayers,
+        B,
+        T,
+        amin=0.000001,
+        include=None,
+        exclude=None,
+    ):
         """
         Simulate a recall sequence and record network states.
 
@@ -892,11 +959,21 @@ class Network(object):
         for i, recall in enumerate(recalls):
             # calculate item support
             operations.cue_item(
-                f_ind[0], n_item, self.w_cf_pre, self.w_cf_exp, self.w_ff_pre,
-                self.w_ff_exp, self.f_in, self.c, exclude_items, recalls, i
+                f_ind[0],
+                n_item,
+                self.w_cf_pre,
+                self.w_cf_exp,
+                self.w_ff_pre,
+                self.w_ff_exp,
+                self.f_in,
+                self.c,
+                exclude_items,
+                recalls,
+                i,
             )
-            operations.apply_softmax(f_ind[0], n_item, self.f_in,
-                                     exclude_items, amin, param['T'])
+            operations.apply_softmax(
+                f_ind[0], n_item, self.f_in, exclude_items, amin, param['T']
+            )
 
             # update the item layer
             ind = f_ind[0] + recall
@@ -953,16 +1030,40 @@ class Network(object):
         exclude = np.zeros(n_f, dtype=np.dtype('i'))
         p = np.zeros(len(recalls) + 1)
         operations.p_recall(
-            start, n_f, recalls, self.w_fc_exp, self.w_fc_pre,
-            self.w_cf_exp, self.w_cf_pre, self.w_ff_exp, self.w_ff_pre,
-            self.f, self.f_in, self.c, self.c_in, c_ind, exclude,
-            amin, param['B'], param['T'], p_stop, p
+            start,
+            n_f,
+            recalls,
+            self.w_fc_exp,
+            self.w_fc_pre,
+            self.w_cf_exp,
+            self.w_cf_pre,
+            self.w_ff_exp,
+            self.w_ff_pre,
+            self.f,
+            self.f_in,
+            self.c,
+            self.c_in,
+            c_ind,
+            exclude,
+            amin,
+            param['B'],
+            param['T'],
+            p_stop,
+            p,
         )
         return p
 
     def generate_recall(
-        self, segment, sublayers, B, T, p_stop, amin=0.000001, filter_recalls=False,
-        A1=None, A2=None
+        self,
+        segment,
+        sublayers,
+        B,
+        T,
+        p_stop,
+        amin=0.000001,
+        filter_recalls=False,
+        A1=None,
+        A2=None,
     ):
         """
         Generate a sequence of simulated free recall events.
@@ -1023,27 +1124,35 @@ class Network(object):
 
             # calculate item support
             operations.cue_item(
-                rec_ind[0], n_item, self.w_cf_pre, self.w_cf_exp,
-                self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
-                np.asarray(recalls, dtype=np.dtype('i')), i
+                rec_ind[0],
+                n_item,
+                self.w_cf_pre,
+                self.w_cf_exp,
+                self.w_ff_pre,
+                self.w_ff_exp,
+                self.f_in,
+                self.c,
+                exclude,
+                np.asarray(recalls, dtype=np.dtype('i')),
+                i,
             )
-            operations.apply_softmax(rec_ind[0], n_item, self.f_in,
-                                     exclude, amin, param['T'])
+            operations.apply_softmax(
+                rec_ind[0], n_item, self.f_in, exclude, amin, param['T']
+            )
 
             # select item for recall proportionate to support
-            support = self.f_in[rec_ind[0]:rec_ind[1]]
+            support = self.f_in[rec_ind[0] : rec_ind[1]]
             p_recall = support / np.sum(support)
 
             if filter_recalls:
                 # acceptance probability based on context match
                 operations.item_match(
-                    rec_ind[0], n_item, self.w_fc_pre, self.w_fc_exp, self.c,
-                    self.match
+                    rec_ind[0], n_item, self.w_fc_pre, self.w_fc_exp, self.c, self.match
                 )
                 operations.apply_expit(rec_ind[0], n_item, self.match, A1, A2)
 
                 # recall probabiity is selection + acceptance
-                p_recall = p_recall * self.match[rec_ind[0]:rec_ind[1]]
+                p_recall = p_recall * self.match[rec_ind[0] : rec_ind[1]]
 
                 # rescale probability to vary between 0 and 1
                 p_recall = p_recall / np.sum(p_recall)
@@ -1082,11 +1191,19 @@ class Network(object):
 
             # calculate item support
             operations.cue_item(
-                rec_ind[0], n_item, self.w_cf_pre, self.w_cf_exp,
-                self.w_ff_pre, self.w_ff_exp, self.f_in, self.c, exclude,
-                np.asarray(recalls, dtype=np.dtype('i')), i
+                rec_ind[0],
+                n_item,
+                self.w_cf_pre,
+                self.w_cf_exp,
+                self.w_ff_pre,
+                self.w_ff_exp,
+                self.f_in,
+                self.c,
+                exclude,
+                np.asarray(recalls, dtype=np.dtype('i')),
+                i,
             )
-            support = self.f_in[rec_ind[0]:rec_ind[1]]
+            support = self.f_in[rec_ind[0] : rec_ind[1]]
 
             # simulate response competition
             recall, irt = sample_response_lba(A, b, support, s, tau)

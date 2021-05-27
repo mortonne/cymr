@@ -21,8 +21,7 @@ def read_json(json_file):
         par.set_dynamic(trial_type, p)
     par.set_sublayers(par_dict['sublayers'])
     for connect, p in par_dict['weights'].items():
-        weight_dict = {decode_region(region): expr
-                       for region, expr in p.items()}
+        weight_dict = {decode_region(region): expr for region, expr in p.items()}
         par.set_weights(connect, weight_dict)
     for layer, sublayer_param in par_dict['sublayer_param'].items():
         for sublayer, param in sublayer_param.items():
@@ -82,10 +81,7 @@ def set_dynamic(param, list_data, dynamic):
     # flip from dict of list to list of dict
     data_keys = list(list_data.keys())
     n_list = len(list_data[data_keys[0]])
-    data_list = [
-        {key: val[i] for key, val in list_data.items()}
-        for i in range(n_list)
-    ]
+    data_list = [{key: val[i] for key, val in list_data.items()} for i in range(n_list)]
 
     # merge in parameters
     for i in range(len(data_list)):
@@ -184,8 +180,13 @@ class Parameters(object):
         self.sublayer_param = {}
         self._dynamic_names = set()
         self._fields = [
-            'fixed', 'free', 'dependent', 'dynamic', 'sublayers', 'weights',
-            'sublayer_param'
+            'fixed',
+            'free',
+            'dependent',
+            'dynamic',
+            'sublayers',
+            'weights',
+            'sublayer_param',
         ]
 
     def __repr__(self):

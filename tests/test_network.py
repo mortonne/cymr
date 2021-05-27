@@ -36,7 +36,7 @@ def net_pre(net, weights):
 def net_study(net_pre):
     net = net_pre.copy()
     net.update(('task', 'start', 0), 'task')
-    B = .5
+    B = 0.5
     L = 1
     n_item = net.f_segment['task']['item']
     for item in range(n_item):
@@ -50,7 +50,7 @@ def net_study(net_pre):
 def net_study_list(net_pre):
     net = net_pre.copy()
     net.update(('task', 'start', 0), 'task')
-    B = .5
+    B = 0.5
     Lfc = 1
     Lcf = 2
     n_item = net.f_segment['task']['item']
@@ -70,17 +70,24 @@ def net_study_distract():
     net.add_pre_weights('fc', ('task', 'start'), ('task', 'start'), 1)
     net.add_pre_weights('fc', ('task', 'distract'), ('task', 'distract'), np.eye(3))
     net.update(('task', 'start', 0), 'task')
-    B = .5
+    B = 0.5
     Lfc = 1
     Lcf = 2
-    distract_B = .1
+    distract_B = 0.1
     n_item = net.f_segment['task']['item']
     n_distract = net.f_segment['task']['distract']
     item_list = np.arange(n_item)
     distract_list = np.arange(n_distract)
     net.study_distract(
-        ('task', 'item'), item_list, 'task', B, Lfc, Lcf,
-        ('task', 'distract'), distract_list, distract_B
+        ('task', 'item'),
+        item_list,
+        'task',
+        B,
+        Lfc,
+        Lcf,
+        ('task', 'distract'),
+        distract_list,
+        distract_B,
     )
     return net
 
@@ -104,7 +111,7 @@ def test_copy(net_pre):
 def test_study_record(net_pre):
     net = net_pre.copy()
     net.update(('task', 'start', 0), 'task')
-    B = .5
+    B = 0.5
     L = 1
     n_item = net.f_segment['task']['item']
     item_list = np.arange(n_item)
@@ -116,34 +123,50 @@ def test_study_record(net_pre):
     np.testing.assert_array_equal(state[2].f, np.array([0, 0, 1, 0]))
 
     # context states
-    np.testing.assert_allclose(state[0].c, np.array(
-        [0., 0.09128709, 0.18257419, 0.27386128, 0.36514837, 0.8660254]
-    ))
-    np.testing.assert_allclose(state[1].c, np.array(
-        [0.15655607, 0.24875946, 0.34096284, 0.43316622, 0.52536961, 0.57767384],
-    ))
-    np.testing.assert_allclose(state[2].c, np.array(
-        [0.27217749, 0.341992, 0.4118065, 0.481621, 0.55143551, 0.32145976],
-    ))
+    np.testing.assert_allclose(
+        state[0].c,
+        np.array([0.0, 0.09128709, 0.18257419, 0.27386128, 0.36514837, 0.8660254]),
+    )
+    np.testing.assert_allclose(
+        state[1].c,
+        np.array(
+            [0.15655607, 0.24875946, 0.34096284, 0.43316622, 0.52536961, 0.57767384],
+        ),
+    )
+    np.testing.assert_allclose(
+        state[2].c,
+        np.array(
+            [0.27217749, 0.341992, 0.4118065, 0.481621, 0.55143551, 0.32145976],
+        ),
+    )
 
 
 def test_recall_record(net_study):
     net = net_study
     recalls = [2, 0, 1]
-    B = .8
+    B = 0.8
     T = 10
     state = net.record_recall(('task', 'item'), recalls, 'task', B, T)
 
     # cuing context states
-    np.testing.assert_allclose(state[0].c, np.array(
-        [0.27217749, 0.341992, 0.4118065, 0.481621, 0.55143551, 0.32145976],
-    ))
-    np.testing.assert_allclose(state[1].c, np.array(
-        [0.35085785, 0.39607634, 0.44129483, 0.48651332, 0.53173181, 0.07646726],
-    ))
-    np.testing.assert_allclose(state[2].c, np.array(
-        [0.07687014, 0.23132715, 0.38578417, 0.54024118, 0.69469819, 0.13146559],
-    ))
+    np.testing.assert_allclose(
+        state[0].c,
+        np.array(
+            [0.27217749, 0.341992, 0.4118065, 0.481621, 0.55143551, 0.32145976],
+        ),
+    )
+    np.testing.assert_allclose(
+        state[1].c,
+        np.array(
+            [0.35085785, 0.39607634, 0.44129483, 0.48651332, 0.53173181, 0.07646726],
+        ),
+    )
+    np.testing.assert_allclose(
+        state[2].c,
+        np.array(
+            [0.07687014, 0.23132715, 0.38578417, 0.54024118, 0.69469819, 0.13146559],
+        ),
+    )
 
     # recalled item activation
     np.testing.assert_array_equal(state[0].f, np.array([0, 0, 1, 0]))
@@ -157,7 +180,7 @@ def net_sublayers():
     c_segments = {
         'loc': {'item': 3, 'start': 1},
         'cat': {'item': 2, 'start': 1},
-        'sem': {'item': 5, 'start': 1}
+        'sem': {'item': 5, 'start': 1},
     }
     net = network.Network(f_segments, c_segments)
     return net
@@ -167,7 +190,7 @@ def test_init_layer():
     layer_segments = {
         'loc': {'item': 3, 'start': 1},
         'cat': {'item': 2, 'start': 1},
-        'sem': {'item': 5, 'start': 1}
+        'sem': {'item': 5, 'start': 1},
     }
     layer = network.LayerIndex(layer_segments)
 
@@ -251,77 +274,76 @@ def test_update(net_pre):
 def test_present(net_pre):
     net = net_pre
     net.c[0] = 1
-    net.present(('task', 'item', 0), 'task', .5)
+    net.present(('task', 'item', 0), 'task', 0.5)
     np.testing.assert_allclose(np.linalg.norm(net.c, 2), 1)
 
     c_ind = net.get_segment('c', 'task', 'item')
-    expected = np.array(
-        [0.8660254, 0.09128709, 0.18257419, 0.27386128, 0.36514837])
-    np.testing.assert_allclose(net.c[c_ind[0]:c_ind[1]], expected)
+    expected = np.array([0.8660254, 0.09128709, 0.18257419, 0.27386128, 0.36514837])
+    np.testing.assert_allclose(net.c[c_ind[0] : c_ind[1]], expected)
 
 
 def test_learn(net_pre):
     net = net_pre
     net.update(('task', 'start', 0), 'task')
-    net.present(('task', 'item', 0), 'task', .5)
+    net.present(('task', 'item', 0), 'task', 0.5)
     net.learn('fc', ('task', 'item', 0), 'task', 1)
 
     expected = np.array([0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8660])
     ind = net.get_unit('f', 'task', 'item', 0)
     actual = net.w_fc_exp[ind, :]
-    np.testing.assert_allclose(actual, expected, atol=.0001)
+    np.testing.assert_allclose(actual, expected, atol=0.0001)
 
     net.learn('cf', ('task', 'item', 0), 'task', 2)
     actual = net.w_cf_exp[ind, :]
-    np.testing.assert_allclose(actual, expected * 2, atol=.0001)
+    np.testing.assert_allclose(actual, expected * 2, atol=0.0001)
 
 
 def test_study(net_study, net_study_list):
-    expected = np.array([[0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8660],
-                         [0.1566, 0.2488, 0.3410, 0.4332, 0.5254, 0.5777],
-                         [0.2722, 0.3420, 0.4118, 0.4816, 0.5514, 0.3215],
-                         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]])
-    np.testing.assert_allclose(net_study.w_fc_exp, expected, atol=.0001)
-    np.testing.assert_allclose(net_study_list.w_fc_exp, expected, atol=.0001)
+    expected = np.array(
+        [
+            [0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8660],
+            [0.1566, 0.2488, 0.3410, 0.4332, 0.5254, 0.5777],
+            [0.2722, 0.3420, 0.4118, 0.4816, 0.5514, 0.3215],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+        ]
+    )
+    np.testing.assert_allclose(net_study.w_fc_exp, expected, atol=0.0001)
+    np.testing.assert_allclose(net_study_list.w_fc_exp, expected, atol=0.0001)
 
-    expected = np.array([[0.0000, 0.1826, 0.3651, 0.5477, 0.7303, 1.7321],
-                         [0.3131, 0.4975, 0.6819, 0.8663, 1.0507, 1.1553],
-                         [0.5444, 0.6840, 0.8236, 0.9632, 1.1029, 0.6429],
-                         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]])
-    np.testing.assert_allclose(net_study.w_cf_exp, expected, atol=.0001)
-    np.testing.assert_allclose(net_study_list.w_cf_exp, expected, atol=.0001)
+    expected = np.array(
+        [
+            [0.0000, 0.1826, 0.3651, 0.5477, 0.7303, 1.7321],
+            [0.3131, 0.4975, 0.6819, 0.8663, 1.0507, 1.1553],
+            [0.5444, 0.6840, 0.8236, 0.9632, 1.1029, 0.6429],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+        ]
+    )
+    np.testing.assert_allclose(net_study.w_cf_exp, expected, atol=0.0001)
+    np.testing.assert_allclose(net_study_list.w_cf_exp, expected, atol=0.0001)
 
 
 def test_study_distract(net_study_distract):
     net = net_study_distract
     expected = np.array(
-        [[0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8617, 0.0866,
-          0.0000, 0.0000],
-         [0.1566, 0.2485, 0.3405, 0.4325, 0.5245, 0.5726, 0.0576,
-          0.0668, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000]]
+        [
+            [0.0000, 0.0913, 0.1826, 0.2739, 0.3651, 0.8617, 0.0866, 0.0000, 0.0000],
+            [0.1566, 0.2485, 0.3405, 0.4325, 0.5245, 0.5726, 0.0576, 0.0668, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+        ]
     )
     np.testing.assert_allclose(net.w_fc_exp, expected, atol=0.0001)
     expected = np.array(
-        [[0.0000, 0.1826, 0.3651, 0.5477, 0.7303, 1.7234, 0.1732,
-          0.0000, 0.0000],
-         [0.3131, 0.4971, 0.6810, 0.8650, 1.0489, 1.1453, 0.1151,
-          0.1336, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-          0.0000, 0.0000]]
+        [
+            [0.0000, 0.1826, 0.3651, 0.5477, 0.7303, 1.7234, 0.1732, 0.0000, 0.0000],
+            [0.3131, 0.4971, 0.6810, 0.8650, 1.0489, 1.1453, 0.1151, 0.1336, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+            [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+        ]
     )
     np.testing.assert_allclose(net.w_cf_exp, expected, atol=0.0001)
 
@@ -329,14 +351,14 @@ def test_study_distract(net_study_distract):
 def test_recall(net_study):
     net = net_study
     recalls = [2, 0, 1]
-    B = .8
+    B = 0.8
     T = 10
-    X1 = .05
+    X1 = 0.05
     X2 = 1
     p_stop = cmr.p_stop_op(len(recalls), X1, X2)
     p = net.p_recall(('task', 'item'), recalls, 'task', B, T, p_stop)
-    expected = np.array([0.8335545, 0.0760874, 0.6305471, 1.])
-    np.testing.assert_allclose(p, expected, atol=.0000001)
+    expected = np.array([0.8335545, 0.0760874, 0.6305471, 1.0])
+    np.testing.assert_allclose(p, expected, atol=0.0000001)
 
 
 def test_sequences(net_study):
@@ -349,9 +371,9 @@ def test_sequences(net_study):
     for i in range(n_item + 1):
         sequences.extend(list(permutations(range(n_item), i)))
 
-    B = .8
+    B = 0.8
     T = 10
-    X1 = .05
+    X1 = 0.05
     X2 = 1
     p_stop = cmr.p_stop_op(n_item, X1, X2)
     p = np.empty((len(sequences), n_item + 1))
@@ -359,7 +381,7 @@ def test_sequences(net_study):
     for i, recalls in enumerate(sequences):
         net.c = c_study.copy()
         p_recalls = net.p_recall(('task', 'item'), recalls, 'task', B, T, p_stop)
-        p[i, :len(p_recalls)] = p_recalls
+        p[i, : len(p_recalls)] = p_recalls
 
     # probability of any recall sequence should be 1
     p_any = np.sum(np.nanprod(p, 1))
@@ -368,9 +390,9 @@ def test_sequences(net_study):
 
 def test_generate(net_study):
     net = net_study.copy()
-    B = .8
+    B = 0.8
     T = 10
-    X1 = .05
+    X1 = 0.05
     X2 = 1
     n_item = 3
     p_stop = cmr.p_stop_op(n_item, X1, X2)
@@ -379,7 +401,7 @@ def test_generate(net_study):
 
 def test_generate_lba(net_study):
     net = net_study.copy()
-    B = .8
+    B = 0.8
     time_limit = 90
     A = 4
     b = 8
@@ -392,36 +414,37 @@ def test_generate_lba(net_study):
 
 @pytest.fixture()
 def patterns():
-    cat = np.array([[1, 0, 1, 1, 0, 1],
-                    [0, 1, 0, 0, 1, 0]]).T
-    patterns = {'vector': {'loc': np.eye(6), 'cat': cat},
-                'similarity': {'loc': np.eye(6), 'cat': np.dot(cat, cat.T)}}
+    cat = np.array([[1, 0, 1, 1, 0, 1], [0, 1, 0, 0, 1, 0]]).T
+    patterns = {
+        'vector': {'loc': np.eye(6), 'cat': cat},
+        'similarity': {'loc': np.eye(6), 'cat': np.dot(cat, cat.T)},
+    }
     return patterns
 
 
 def test_pattern_io(patterns):
     temp = 'test_pattern.hdf5'
     items = ['absence', 'hollow', 'pupil', 'fountain', 'piano', 'pillow']
-    network.save_patterns(temp, items, loc=patterns['vector']['loc'],
-                          cat=patterns['vector']['cat'])
+    network.save_patterns(
+        temp, items, loc=patterns['vector']['loc'], cat=patterns['vector']['cat']
+    )
     pat = network.load_patterns(temp)
 
     # vector representation
-    expected = np.array([[1, 0],
-                         [0, 1],
-                         [1, 0],
-                         [1, 0],
-                         [0, 1],
-                         [1, 0]])
+    expected = np.array([[1, 0], [0, 1], [1, 0], [1, 0], [0, 1], [1, 0]])
     np.testing.assert_allclose(pat['vector']['cat'], expected)
 
     # similarity matrix
-    expected = np.array([[1, 0, 1, 1, 0, 1],
-                         [0, 1, 0, 0, 1, 0],
-                         [1, 0, 1, 1, 0, 1],
-                         [1, 0, 1, 1, 0, 1],
-                         [0, 1, 0, 0, 1, 0],
-                         [1, 0, 1, 1, 0, 1]])
+    expected = np.array(
+        [
+            [1, 0, 1, 1, 0, 1],
+            [0, 1, 0, 0, 1, 0],
+            [1, 0, 1, 1, 0, 1],
+            [1, 0, 1, 1, 0, 1],
+            [0, 1, 0, 0, 1, 0],
+            [1, 0, 1, 1, 0, 1],
+        ]
+    )
     np.testing.assert_allclose(pat['similarity']['cat'], expected)
     os.remove(temp)
 
@@ -435,51 +458,57 @@ def test_cmr_patterns(patterns):
     ff_weights = {('task', 'item'): 's_loc * loc + s_cat * cat'}
     param_def.set_weights('fc', fcf_weights)
     param_def.set_weights('ff', ff_weights)
-    param_def.set_dependent({
-        'w_loc': 'wr_loc / sqrt(wr_loc**2 + wr_cat**2)',
-        'w_cat': 'wr_cat / sqrt(wr_loc**2 + wr_cat**2)',
-        's_loc': 'sr_loc / (sr_loc + sr_cat)',
-        's_cat': 'sr_cat / (sr_loc + sr_cat)',
-    })
+    param_def.set_dependent(
+        {
+            'w_loc': 'wr_loc / sqrt(wr_loc**2 + wr_cat**2)',
+            'w_cat': 'wr_cat / sqrt(wr_loc**2 + wr_cat**2)',
+            's_loc': 'sr_loc / (sr_loc + sr_cat)',
+            's_cat': 'sr_cat / (sr_loc + sr_cat)',
+        }
+    )
     param = {'wr_loc': 1, 'wr_cat': np.sqrt(2), 'sr_loc': 1, 'sr_cat': 2}
     param = param_def.eval_dependent(param)
     weights = param_def.eval_weights(patterns, param)
 
     # localist FC units
     expected = np.array(
-        [[0.57735027, 0., 0., 0., 0., 0.],
-         [0., 0.57735027, 0., 0., 0., 0.],
-         [0., 0., 0.57735027, 0., 0., 0.],
-         [0., 0., 0., 0.57735027, 0., 0.],
-         [0., 0., 0., 0., 0.57735027, 0.],
-         [0., 0., 0., 0., 0., 0.57735027]]
+        [
+            [0.57735027, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.57735027, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.57735027, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.57735027, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.57735027, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.57735027],
+        ]
     )
     np.testing.assert_allclose(
-        weights['fc'][(('task', 'item'), ('task', 'loc'))],
-        expected
+        weights['fc'][(('task', 'item'), ('task', 'loc'))], expected
     )
 
     # category FC units
     expected = np.array(
-        [[0.81649658, 0.],
-         [0., 0.81649658],
-         [0.81649658, 0.],
-         [0.81649658, 0.],
-         [0., 0.81649658],
-         [0.81649658, 0.]]
+        [
+            [0.81649658, 0.0],
+            [0.0, 0.81649658],
+            [0.81649658, 0.0],
+            [0.81649658, 0.0],
+            [0.0, 0.81649658],
+            [0.81649658, 0.0],
+        ]
     )
     np.testing.assert_allclose(
-        weights['fc'][(('task', 'item'), ('task', 'cat'))],
-        expected
+        weights['fc'][(('task', 'item'), ('task', 'cat'))], expected
     )
 
     # FF units
     expected = np.array(
-        [[1., 0., 0.66666667, 0.66666667, 0., 0.66666667],
-         [0., 1., 0., 0., 0.66666667, 0.],
-         [0.66666667, 0., 1., 0.66666667, 0., 0.66666667],
-         [0.66666667, 0., 0.66666667, 1., 0., 0.66666667],
-         [0., 0.66666667, 0., 0., 1., 0.],
-         [0.66666667, 0., 0.66666667, 0.66666667, 0., 1.]]
+        [
+            [1.0, 0.0, 0.66666667, 0.66666667, 0.0, 0.66666667],
+            [0.0, 1.0, 0.0, 0.0, 0.66666667, 0.0],
+            [0.66666667, 0.0, 1.0, 0.66666667, 0.0, 0.66666667],
+            [0.66666667, 0.0, 0.66666667, 1.0, 0.0, 0.66666667],
+            [0.0, 0.66666667, 0.0, 0.0, 1.0, 0.0],
+            [0.66666667, 0.0, 0.66666667, 0.66666667, 0.0, 1.0],
+        ]
     )
     np.testing.assert_allclose(weights['ff'][('task', 'item')], expected)

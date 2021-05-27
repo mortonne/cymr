@@ -140,11 +140,15 @@ def add_recalls(study, recalls_list):
 
     # initialize recall trials DataFrame
     n_recall = np.sum([len(r) for r in recalls_list])
-    recall = pd.DataFrame({'subject': subject,
-                           'list': np.zeros(n_recall, dtype=int),
-                           'trial_type': 'recall',
-                           'position': np.zeros(n_recall, dtype=int),
-                           'item': ''})
+    recall = pd.DataFrame(
+        {
+            'subject': subject,
+            'list': np.zeros(n_recall, dtype=int),
+            'trial_type': 'recall',
+            'position': np.zeros(n_recall, dtype=int),
+            'item': '',
+        }
+    )
 
     # set basic information (list, item, position)
     n = 0
@@ -228,8 +232,16 @@ class Recall(ABC):
         """
         pass
 
-    def prepare_subject(self, subject, data, group_param, subj_param=None,
-                        param_def=None, study_keys=None, recall_keys=None):
+    def prepare_subject(
+        self,
+        subject,
+        data,
+        group_param,
+        subj_param=None,
+        param_def=None,
+        study_keys=None,
+        recall_keys=None,
+    ):
         """
         Prepare parameters and data for a subject.
 
@@ -287,8 +299,7 @@ class Recall(ABC):
         return study, recall, param
 
     @abstractmethod
-    def likelihood_subject(self, study, recall, param, param_def=None,
-                           patterns=None):
+    def likelihood_subject(self, study, recall, param, param_def=None, patterns=None):
         """
         Log likelihood of data for one subject based on a given model.
 
@@ -319,8 +330,16 @@ class Recall(ABC):
         """
         pass
 
-    def likelihood(self, data, group_param, subj_param=None, param_def=None,
-                   patterns=None, study_keys=None, recall_keys=None):
+    def likelihood(
+        self,
+        data,
+        group_param,
+        subj_param=None,
+        param_def=None,
+        patterns=None,
+        study_keys=None,
+        recall_keys=None,
+    ):
         """
         Log likelihood summed over all subjects.
 
@@ -362,8 +381,13 @@ class Recall(ABC):
         for subject in subjects:
             # prepare subject for simulation
             study, recall, param = self.prepare_subject(
-                subject, data, group_param, subj_param, param_def,
-                study_keys, recall_keys
+                subject,
+                data,
+                group_param,
+                subj_param,
+                param_def,
+                study_keys,
+                recall_keys,
             )
 
             # run subject-specific likelihood function
@@ -374,8 +398,9 @@ class Recall(ABC):
             n += subject_n
         return logl, n
 
-    def fit_subject(self, subject_data, param_def, patterns=None,
-                    method='de', **kwargs):
+    def fit_subject(
+        self, subject_data, param_def, patterns=None, method='de', **kwargs
+    ):
         """
         Fit a model to data for one subject.
 
@@ -447,8 +472,9 @@ class Recall(ABC):
         assert logl == -res['fun']
         return param, logl, n, k
 
-    def _run_fit_subject(self, data, subject, param_def,
-                         patterns=None, method='de', **kwargs):
+    def _run_fit_subject(
+        self, data, subject, param_def, patterns=None, method='de', **kwargs
+    ):
         """Apply fitting to one subject."""
         subject_data = data.loc[data['subject'] == subject]
         param, logl, n, k = self.fit_subject(
@@ -457,8 +483,16 @@ class Recall(ABC):
         results = {**param, 'logl': logl, 'n': n, 'k': k}
         return results
 
-    def fit_indiv(self, data, param_def, patterns=None,
-                  n_jobs=None, method='de', n_rep=1, **kwargs):
+    def fit_indiv(
+        self,
+        data,
+        param_def,
+        patterns=None,
+        n_jobs=None,
+        method='de',
+        n_rep=1,
+        **kwargs,
+    ):
         """
         Fit parameters to individual subjects.
 
@@ -499,17 +533,21 @@ class Recall(ABC):
         full_results = Parallel(n_jobs=n_jobs)(
             delayed(self._run_fit_subject)(
                 data, subject, param_def, patterns, method, **kwargs
-            ) for subject in full_subjects
+            )
+            for subject in full_subjects
         )
-        d = {(subject, rep): res for subject, rep, res in
-             zip(full_subjects, full_reps, full_results)}
+        d = {
+            (subject, rep): res
+            for subject, rep, res in zip(full_subjects, full_reps, full_results)
+        }
         results = pd.DataFrame(d).T
         results.index.rename(['subject', 'rep'], inplace=True)
         return results
 
     @abstractmethod
-    def generate_subject(self, study, recall, param, param_def=None,
-                         patterns=None, **kwargs):
+    def generate_subject(
+        self, study, recall, param, param_def=None, patterns=None, **kwargs
+    ):
         """
         Generate simulated data for one subject.
 
@@ -537,8 +575,17 @@ class Recall(ABC):
         """
         pass
 
-    def generate(self, data, group_param, subj_param=None, param_def=None,
-                 patterns=None, study_keys=None, recall_keys=None, n_rep=1):
+    def generate(
+        self,
+        data,
+        group_param,
+        subj_param=None,
+        param_def=None,
+        patterns=None,
+        study_keys=None,
+        recall_keys=None,
+        n_rep=1,
+    ):
         """
         Generate simulated data for all subjects.
 
@@ -584,8 +631,13 @@ class Recall(ABC):
 
             # prepare data and parameters
             study, recall, param = self.prepare_subject(
-                subject, subject_data, group_param, subj_param, param_def,
-                study_keys, recall_keys
+                subject,
+                subject_data,
+                group_param,
+                subj_param,
+                param_def,
+                study_keys,
+                recall_keys,
             )
 
             max_list = subject_data['list'].max()
@@ -606,8 +658,9 @@ class Recall(ABC):
         return sim_data
 
     @abstractmethod
-    def record_subject(self, study, recall, param, param_def=None,
-                       patterns=None, **kwargs):
+    def record_subject(
+        self, study, recall, param, param_def=None, patterns=None, **kwargs
+    ):
         """
         Record model state during simulation of data for one subject.
 
@@ -637,8 +690,17 @@ class Recall(ABC):
             Recorded state for each recall attempt.
         """
 
-    def record(self, data, group_param, subj_param=None, param_def=None,
-               patterns=None, study_keys=None, recall_keys=None, **kwargs):
+    def record(
+        self,
+        data,
+        group_param,
+        subj_param=None,
+        param_def=None,
+        patterns=None,
+        study_keys=None,
+        recall_keys=None,
+        **kwargs,
+    ):
         """
         Record model states during a simulation.
 
@@ -681,8 +743,13 @@ class Recall(ABC):
 
             # prepare data and parameters
             study, recall, param = self.prepare_subject(
-                subject, subject_data, group_param, subj_param, param_def,
-                study_keys, recall_keys
+                subject,
+                subject_data,
+                group_param,
+                subj_param,
+                param_def,
+                study_keys,
+                recall_keys,
             )
 
             # record study and recall states
@@ -698,8 +765,9 @@ class Recall(ABC):
                     states.append(trial_state)
         return states
 
-    def _run_parameter_recovery(self, data, param_def, patterns=None,
-                                method='de', n_rep=1, **kwargs):
+    def _run_parameter_recovery(
+        self, data, param_def, patterns=None, method='de', n_rep=1, **kwargs
+    ):
         """Run a parameter recovery test."""
         # generate parameters
         param = param_def.fixed.copy()
@@ -707,8 +775,9 @@ class Recall(ABC):
         param.update(sampled)
 
         # generate simulated data
-        sim = self.generate(data, param, None, param_def, patterns=patterns,
-                            n_rep=n_rep)
+        sim = self.generate(
+            data, param, None, param_def, patterns=patterns, n_rep=n_rep
+        )
 
         # fit the simulated data
         fitted_param, logl, n, k = self.fit_subject(
@@ -721,19 +790,30 @@ class Recall(ABC):
         df_sample = pd.concat((df_sim, df_fit), axis=0)
         return df_sample
 
-    def parameter_recovery(self, data, n_sample, param_def, patterns=None,
-                           method='de', n_rep=1, n_jobs=None, **kwargs):
+    def parameter_recovery(
+        self,
+        data,
+        n_sample,
+        param_def,
+        patterns=None,
+        method='de',
+        n_rep=1,
+        n_jobs=None,
+        **kwargs,
+    ):
         """Run multiple iterations of parameter recovery."""
         results_list = Parallel(n_jobs=n_jobs)(
             delayed(self._run_parameter_recovery)(
                 data, param_def, patterns, method, n_rep, **kwargs
-            ) for i in range(n_sample)
+            )
+            for i in range(n_sample)
         )
         results = pd.concat(results_list, axis=0, keys=np.arange(n_sample))
         return results
 
-    def parameter_sweep(self, data, param_def, param_names, param_sweeps,
-                        patterns=None, n_rep=1):
+    def parameter_sweep(
+        self, data, param_def, param_names, param_sweeps, patterns=None, n_rep=1
+    ):
         """Simulate data with varying parameters."""
         index = pd.MultiIndex.from_product(param_sweeps, names=param_names)
         df_list = []
