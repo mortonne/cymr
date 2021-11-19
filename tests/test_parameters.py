@@ -1,10 +1,10 @@
 """Test management of parameters."""
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from psifr import fr
+from cymr import fit
 from cymr import parameters
 
 
@@ -87,42 +87,9 @@ def test_param(param_def):
 @pytest.fixture()
 def data():
     """Base test DataFrame."""
-    data = pd.DataFrame(
-        {
-            'subject': [
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-            ],
-            'list': [
-                1, 1, 1, 1, 1, 1,
-                2, 2, 2, 2, 2, 2
-            ],
-            'trial_type': [
-                'study', 'study', 'study', 'recall', 'recall', 'recall',
-                'study', 'study', 'study', 'recall', 'recall', 'recall',
-            ],
-            'position': [
-                1, 2, 3, 1, 2, 3,
-                1, 2, 3, 1, 2, 3,
-            ],
-            'item': [
-                'absence', 'hollow', 'pupil', 'hollow', 'pupil', 'empty',
-                'fountain', 'piano', 'pillow', 'pillow', 'fountain', 'pillow',
-            ],
-            'item_index': [
-                0, 1, 2, 1, 2, np.nan,
-                3, 4, 5, 5, 3, 5,
-            ],
-            'task': [
-                1, 2, 1, 2, 1, np.nan,
-                1, 2, 1, 1, 1, 1,
-            ],
-            'distract': [
-                1, 2, 3, np.nan, np.nan, np.nan,
-                3, 2, 1, np.nan, np.nan, np.nan,
-            ],
-        }
-    )
+    data = fit.sample_data('sample1')
+    data['list'] = data['subject']
+    data['subject'] = 1
     return data
 
 

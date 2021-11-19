@@ -11,46 +11,8 @@ from cymr import parameters
 @pytest.fixture()
 def data():
     """Generate sample free recall data."""
-    data = pd.DataFrame(
-        {
-            'subject': [
-                1, 1, 1, 1, 1, 1,
-                2, 2, 2, 2, 2, 2,
-            ],
-            'list': [
-                1, 1, 1, 1, 1, 1,
-                2, 2, 2, 2, 2, 2,
-            ],
-            'trial_type': [
-                'study', 'study', 'study', 'recall', 'recall', 'recall',
-                'study', 'study', 'study', 'recall', 'recall', 'recall',
-            ],
-            'position': [
-                1, 2, 3, 1, 2, 3,
-                1, 2, 3, 1, 2, 3,
-            ],
-            'item': [
-                'absence', 'hollow', 'pupil', 'hollow', 'pupil', 'empty',
-                'fountain', 'piano', 'pillow', 'pillow', 'fountain', 'pillow',
-            ],
-            'item_index': [
-                0, 1, 2, 1, 2, np.nan,
-                3, 4, 5, 5, 3, 5,
-            ],
-            'distract': [
-                1, 2, 3, np.nan, np.nan, np.nan,
-                3, 2, 1, np.nan, np.nan, np.nan,
-            ],
-            'op': [
-                1, 2, 3, 1, 2, 3,
-                1, 2, 3, 1, 2, 3,
-            ],
-            'task': [
-                1, 2, 1, 2, 1, np.nan,
-                1, 2, 1, 1, 1, 1,
-            ]
-        }
-    )
+    data = fit.sample_data('sample1')
+    data['list'] = data['subject']
     return data
 
 
