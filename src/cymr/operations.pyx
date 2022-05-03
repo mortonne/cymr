@@ -26,10 +26,7 @@ cdef inline double calc_rho(double cdot, double B):
     return rho
 
 
-cpdef integrate_context(double [:] c,
-                        double[:] c_in,
-                        double B,
-                        int [:] c_ind):
+cpdef integrate_context(double [:] c, double [:] c_in, double B, int [:] c_ind):
     """
     Integrate context input.
     
@@ -57,14 +54,16 @@ cpdef integrate_context(double [:] c,
         c[i] = rho * c[i] + B * c_in[i]
 
 
-cpdef integrate(double [:, :] w_fc_exp,
-                const double [:, :] w_fc_pre,
-                double [:] c,
-                double [:] c_in,
-                double [:] f,
-                int item,
-                int [:, :] c_ind,
-                double [:] B):
+cpdef integrate(
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:] c,
+    double [:] c_in,
+    double [:] f,
+    int item,
+    int [:, :] c_ind,
+    double [:] B,
+):
     """
     Integrate context input associated with an item into context.
     
@@ -124,17 +123,19 @@ cpdef integrate(double [:, :] w_fc_exp,
         integrate_context(c, c_in, B[i], c_ind[i])
 
 
-cpdef present(double [:, :] w_fc_exp,
-              const double [:, :] w_fc_pre,
-              double [:, :] w_cf_exp,
-              double [:] c,
-              double [:] c_in,
-              double [:] f,
-              int item,
-              int [:, :] c_ind,
-              double [:] B,
-              double [:] Lfc,
-              double [:] Lcf):
+cpdef present(
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_cf_exp,
+    double [:] c,
+    double [:] c_in,
+    double [:] f,
+    int item,
+    int [:, :] c_ind,
+    double [:] B,
+    double [:] Lfc,
+    double [:] Lcf,
+):
     """
     Present an item and associate with context.
     
@@ -246,8 +247,19 @@ cpdef study(
     """
     cdef Py_ssize_t n = item_list.shape[0]
     for i in range(n):
-        present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
-                item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
+        present(
+            w_fc_exp,
+            w_fc_pre,
+            w_cf_exp,
+            c,
+            c_in,
+            f,
+            item_list[i],
+            c_ind,
+            B[i],
+            Lfc[i],
+            Lcf[i],
+        )
 
 
 cpdef study_distract(
@@ -263,7 +275,7 @@ cpdef study_distract(
     double [:, :] Lfc,
     double [:, :] Lcf,
     const int [:] distract_list,
-    double [:, :] distract_B
+    double [:, :] distract_B,
 ):
     """
     Simulate study of a list with distraction.
@@ -311,25 +323,36 @@ cpdef study_distract(
     """
     cdef Py_ssize_t n = item_list.shape[0]
     for i in range(n):
-        integrate(w_fc_exp, w_fc_pre, c, c_in, f,
-                  distract_list[i], c_ind, distract_B[i])
-        present(w_fc_exp, w_fc_pre, w_cf_exp, c, c_in, f,
-                item_list[i], c_ind, B[i], Lfc[i], Lcf[i])
-    integrate(w_fc_exp, w_fc_pre, c, c_in, f,
-              distract_list[n], c_ind, distract_B[n])
+        integrate(w_fc_exp, w_fc_pre, c, c_in, f, distract_list[i], c_ind, distract_B[i])
+        present(
+            w_fc_exp,
+            w_fc_pre,
+            w_cf_exp,
+            c,
+            c_in,
+            f,
+            item_list[i],
+            c_ind,
+            B[i],
+            Lfc[i],
+            Lcf[i],
+        )
+    integrate(w_fc_exp, w_fc_pre, c, c_in, f, distract_list[n], c_ind, distract_B[n])
 
 
-cpdef cue_item(int n,
-               int n_f,
-               const double [:, :] w_cf_pre,
-               double [:, :] w_cf_exp,
-               const double [:, :] w_ff_pre,
-               double [:, :] w_ff_exp,
-               double [:] f_in,
-               double [:] c,
-               int [:] exclude,
-               int [:] recalls,
-               int output):
+cpdef cue_item(
+    int n,
+    int n_f,
+    const double [:, :] w_cf_pre,
+    double [:, :] w_cf_exp,
+    const double [:, :] w_ff_pre,
+    double [:, :] w_ff_exp,
+    double [:] f_in,
+    double [:] c,
+    int [:] exclude,
+    int [:] recalls,
+    int output,
+):
     """
     Cue an item based on context.
     
@@ -383,16 +406,15 @@ cpdef cue_item(int n,
 
         if output > 0:
             # support from the previously recalled item
-            f_in[n + i] += (w_ff_exp[n + recalls[output - 1], n + i] +
-                            w_ff_pre[n + recalls[output - 1], n + i])
+            f_in[n + i] += (
+                w_ff_exp[n + recalls[output - 1], n + i] +
+                w_ff_pre[n + recalls[output - 1], n + i]
+            )
 
 
-cpdef apply_softmax(int n,
-                    int n_f,
-                    double [:] f_in,
-                    int [:] exclude,
-                    double amin,
-                    double T):
+cpdef apply_softmax(
+    int n, int n_f, double [:] f_in, int [:] exclude, double amin, double T
+):
     """
     Apply softmax rule to item activation.
     
@@ -450,39 +472,35 @@ cpdef item_match(
             match[n + i] += ((w_fc_exp[n + i, j] + w_fc_pre[n + i, j]) * c[j])
 
 
-cpdef apply_expit(
-    int n,
-    int n_f,
-    double [:] match,
-    double A1,
-    double A2,
-):
+cpdef apply_expit(int n, int n_f, double [:] match, double A1, double A2):
     """Apply expit function to calculate acceptance probability."""
     cdef int i
     for i in range(n_f):
         match[n + i] = 1 / (1 + exp(-(A1 + A2 * match[n + i])))
 
 
-def p_recall(int start,
-             int n_f,
-             int [:] recalls,
-             double [:, :] w_fc_exp,
-             const double [:, :] w_fc_pre,
-             double [:, :] w_cf_exp,
-             const double [:, :] w_cf_pre,
-             double [:, :] w_ff_exp,
-             const double [:, :] w_ff_pre,
-             double [:] f,
-             double [:] f_in,
-             double [:] c,
-             double [:] c_in,
-             int [:, :] c_ind,
-             int [:] exclude,
-             double amin,
-             double [:, :] B,
-             double T,
-             const double [:] p_stop,
-             double [:] p):
+def p_recall(
+    int start,
+    int n_f,
+    int [:] recalls,
+    double [:, :] w_fc_exp,
+    const double [:, :] w_fc_pre,
+    double [:, :] w_cf_exp,
+    const double [:, :] w_cf_pre,
+    double [:, :] w_ff_exp,
+    const double [:, :] w_ff_pre,
+    double [:] f,
+    double [:] f_in,
+    double [:] c,
+    double [:] c_in,
+    int [:, :] c_ind,
+    int [:] exclude,
+    double amin,
+    double [:, :] B,
+    double T,
+    const double [:] p_stop,
+    double [:] p,
+):
     """
     Calculate the likelihood of each recall in a sequence.
 
@@ -555,8 +573,19 @@ def p_recall(int start,
 
     for i in range(n_r):
         # calculate support for each item
-        cue_item(start, n_f, w_cf_pre, w_cf_exp, w_ff_pre, w_ff_exp,
-                 f_in, c, exclude, recalls, i)
+        cue_item(
+            start,
+            n_f,
+            w_cf_pre,
+            w_cf_exp,
+            w_ff_pre,
+            w_ff_exp,
+            f_in,
+            c,
+            exclude,
+            recalls,
+            i,
+        )
         apply_softmax(start, n_f, f_in, exclude, amin, T)
 
         total = 0
@@ -681,8 +710,19 @@ def p_recall_match(
 
     for i in range(n_r):
         # calculate support for each item
-        cue_item(start, n_f, w_cf_pre, w_cf_exp, w_ff_pre, w_ff_exp,
-                 f_in, c, exclude, recalls, i)
+        cue_item(
+            start,
+            n_f,
+            w_cf_pre,
+            w_cf_exp,
+            w_ff_pre,
+            w_ff_exp,
+            f_in,
+            c,
+            exclude,
+            recalls,
+            i,
+        )
         apply_softmax(start, n_f, f_in, exclude, amin, T)
 
         total = 0
