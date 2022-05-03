@@ -376,9 +376,9 @@ class Recall(ABC):
         """
         # get the list of subjects
         subjects = data['subject'].unique()
-        logl = 0
-        n = 0
-        for subject in subjects:
+        logl = np.empty(len(subjects))
+        n = np.empty(len(subjects), int)
+        for i, subject in enumerate(subjects):
             # prepare subject for simulation
             study, recall, param = self.prepare_subject(
                 subject,
@@ -394,9 +394,10 @@ class Recall(ABC):
             subject_logl, subject_n = self.likelihood_subject(
                 study, recall, param, param_def=param_def, patterns=patterns
             )
-            logl += subject_logl
-            n += subject_n
-        return logl, n
+            logl[i] = subject_logl
+            n[i] = subject_n
+        results = pd.DataFrame({'logl': logl, 'n': n}, index=subjects)
+        return results
 
     def fit_subject(
         self, subject_data, param_def, patterns=None, method='de', **kwargs
