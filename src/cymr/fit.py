@@ -543,6 +543,7 @@ class Recall(ABC):
         }
         results = pd.DataFrame(d).T
         results.index.rename(['subject', 'rep'], inplace=True)
+        results = results.astype({'n': int, 'k': int})
         return results
 
     @abstractmethod
