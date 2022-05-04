@@ -58,8 +58,8 @@ def test_likelihood(data):
     data = data.copy()
     rec = TestRecall()
     param = {'x': -2}
-    logl, n = rec.likelihood(data, param)
-    np.testing.assert_allclose(logl, np.log(2) + np.log(2))
+    stats = rec.likelihood(data, param)
+    np.testing.assert_allclose(stats['logl'].to_numpy(), [np.log(2), np.log(2)])
 
 
 def test_fit_subject(data):

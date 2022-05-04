@@ -57,9 +57,9 @@ def test_cmr(data):
         'X2': 1,
     }
     param_def, patterns = cmr.config_loc_cmr(6)
-    logl, n = model.likelihood(data, param, param_def=param_def, patterns=patterns)
-    np.testing.assert_allclose(logl, -5.936799964636842)
-    assert n == 6
+    stats = model.likelihood(data, param, param_def=param_def, patterns=patterns)
+    np.testing.assert_allclose(stats['logl'].sum(), -5.936799964636842)
+    assert stats['n'].sum() == 6
 
 
 @pytest.fixture()
@@ -194,10 +194,10 @@ def param_dist():
 def test_dist_cmr(data, patterns, param_def_dist, param_dist):
     """Test localist CMR using the CMR-D implementation."""
     model = cmr.CMR()
-    logl, n = model.likelihood(
+    stats = model.likelihood(
         data, param_dist, None, param_def_dist, patterns=patterns
     )
-    np.testing.assert_allclose(logl, -5.936799964636842)
+    np.testing.assert_allclose(stats['logl'].sum(), -5.936799964636842)
 
 
 def test_dist_cmr_fit(data, patterns, param_def_dist):
@@ -276,10 +276,10 @@ def test_dynamic_cmr(data, patterns, param_def_dist, param_dist):
     param['B_distract'] = 0.2
     param_def.set_dynamic('study', B_enc='distract * B_distract')
     model = cmr.CMR()
-    logl, n = model.likelihood(
+    stats = model.likelihood(
         data, param, None, param_def, patterns=patterns, study_keys=['distract']
     )
-    np.testing.assert_allclose(logl, -5.9899248839454415)
+    np.testing.assert_allclose(stats['logl'].sum(), -5.9899248839454415)
 
 
 def test_dynamic_cmr_recall(data, patterns, param_def_dist, param_dist):
@@ -289,10 +289,10 @@ def test_dynamic_cmr_recall(data, patterns, param_def_dist, param_dist):
     param['B_op'] = 0.2
     param_def.set_dynamic('recall', B_rec='op * B_op')
     model = cmr.CMR()
-    logl, n = model.likelihood(
+    stats = model.likelihood(
         data, param, None, param_def, patterns=patterns, recall_keys=['op']
     )
-    np.testing.assert_allclose(logl, -5.919470385031945)
+    np.testing.assert_allclose(stats['logl'].sum(), -5.919470385031945)
 
 
 @pytest.fixture()
@@ -360,8 +360,8 @@ def test_sublayer_cmr(data, patterns, param_def_sublayer, param_dist):
     param['B_enc_loc'] = 0.5
     param['B_enc_cat'] = 0.8
     model = cmr.CMR()
-    logl, n = model.likelihood(data, param, None, param_def_sublayer, patterns=patterns)
-    np.testing.assert_allclose(logl, -5.8694368046085215)
+    stats = model.likelihood(data, param, None, param_def_sublayer, patterns=patterns)
+    np.testing.assert_allclose(stats['logl'].sum(), -5.8694368046085215)
 
 
 def test_sublayer_generate(data, patterns, param_def_sublayer, param_dist):
