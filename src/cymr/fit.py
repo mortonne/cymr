@@ -397,6 +397,7 @@ class Recall(ABC):
             logl[i] = subject_logl
             n[i] = subject_n
         results = pd.DataFrame({'logl': logl, 'n': n}, index=subjects)
+        results.index.rename('subject', inplace=True)
         return results
 
     def fit_subject(
