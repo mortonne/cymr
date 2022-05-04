@@ -368,11 +368,10 @@ class Recall(ABC):
 
         Returns
         -------
-        logl : float
-            Log likelihood summed over all subjects.
-
-        n : int
-            Number of evaluated data points.
+        stats : pandas.DataFrame
+            Statistics related to model fitness. Includes logl, the
+            log likelihood for each subject, and n, the number of data
+            points for each subject.
         """
         # get the list of subjects
         subjects = data['subject'].unique()
