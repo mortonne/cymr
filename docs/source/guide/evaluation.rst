@@ -139,4 +139,4 @@ the best-fitting parameters for a model.
     from cymr import cmr
     model = cmr.CMR()
     results = model.likelihood(data, param, param_def=param_def, patterns=patterns)
-    print(results)
+    results
