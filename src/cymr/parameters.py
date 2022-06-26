@@ -534,8 +534,8 @@ class Parameters(object):
         --------
         >>> from cymr import parameters
         >>> param_def = parameters.Parameters()
-        >>> param_def.set_sublayer_param('c', 'sub1', a=1})
-        >>> param_def.set_sublayer_param('c', 'sub1', {'b': 2})
+        >>> param_def.set_sublayer_param('c', 'sub1', a='2 * d'})
+        >>> param_def.set_sublayer_param('c', 'sub1', {'b': 'exp(f)'})
         """
         if layer in self.sublayer_param:
             if sublayer in self.sublayer_param[layer]:
