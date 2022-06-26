@@ -1,10 +1,301 @@
 """Models of free recall."""
 
+from __future__ import annotations
+import json
 import numpy as np
+from typing import Union, Any, Iterable, Optional, Tuple
+from numpy.typing import ArrayLike
 from cymr.fit import Recall
 from cymr import fit
 from cymr import network
-from cymr import parameters
+from cymr.parameters import Parameters
+
+
+Region = Union[Tuple[str, str], Tuple[Tuple[str, str], Tuple[str, str]]]
+
+
+def encode_region(region: Region) -> str:
+    """Encode a region as a string."""
+    if len(region) == 0:
+        raise ValueError('Cannot encode an empty region.')
+    elif isinstance(region[0], str):
+        region_str = '-'.join(region)
+    else:
+        region_str = '_'.join('-'.join(segment) for segment in region)
+    return region_str
+
+
+def decode_region(
+    region_str: str
+) -> Union[tuple[str, ...], tuple[tuple[str, ...], ...]]:
+    """Decode a region string."""
+    if '_' in region_str:
+        region = tuple([tuple(s.split('-')) for s in region_str.split('_')])
+    else:
+        region = tuple(region_str.split('-'))
+    return region
+
+
+def read_config(json_file):
+    """Read model configuration from a JSON file."""
+    with open(json_file, 'r') as f:
+        par_dict = json.load(f)
+
+    par = CMRParameters()
+    if 'options' in par_dict:
+        par.set_options(par_dict['options'])
+    par.set_free(par_dict['free'])
+    par.set_fixed(par_dict['fixed'])
+    par.set_dependent(par_dict['dependent'])
+    for trial_type, p in par_dict['dynamic'].items():
+        par.set_dynamic(trial_type, p)
+    par.set_sublayers(par_dict['sublayers'])
+    for connect, p in par_dict['weights'].items():
+        weight_dict = {decode_region(region): expr for region, expr in p.items()}
+        par.set_weights(connect, weight_dict)
+    for layer, sublayer_param in par_dict['sublayer_param'].items():
+        for sublayer, param in sublayer_param.items():
+            par.set_sublayer_param(layer, sublayer, param)
+    return par
+
+
+class CMRParameters(Parameters):
+    """
+    Configuration of CMR model parameters.
+
+    Attributes
+    ----------
+    fixed : dict of (str: float)
+        Values of fixed parameters.
+
+    free : dict of (str: tuple)
+        Bounds of each free parameter.
+
+    dependent : dict of (str: str)
+        Expressions to define dependent parameters based the other
+        parameters.
+
+    dynamic : dict of (str: dict of (str: str))
+        First dict specifies trial_type for dynamic parameters,
+        second dict keys are parameter names, and values are
+        expressions specifying how to update the parameter.
+
+    sublayers : dict of (list of str)
+        Names of sublayers for each layer in the network.
+
+    weights : dict of (tuple of (tuple of str)): str
+        Weights template to set network connections. Weights are
+        indicated by region within the network. Each region is
+        specified with a tuple giving names of sublayers and segments:
+        ((f_sublayer, f_segment), (c_sublayer, c_segment)). The value
+        for each region should be an expression to be evaluated with
+        patterns and/or parameters.
+
+    sublayer_param : dict of (str: dict of (str: dict of str))
+        Parameters that vary by sublayer. These parameters are
+        specified in terms of their layer and sublayer. Each value
+        should contain an expression to be evaluated with parameters.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.options: dict[str, Any] = {}
+        self.fixed: dict[str, float] = {}
+        self.free: dict[str, Iterable[float]] = {}
+        self.dependent: dict[str, str] = {}
+        self.dynamic: dict[str, dict[str, str]] = {}
+        self.sublayers: dict[str, list[str]] = {}
+        self.weights: dict[str, dict[Region, str]] = {}
+        self.sublayer_param: dict[str, dict[str, dict[str, str]]] = {}
+        self._fields.extend(['sublayers', 'weights', 'sublayer_param'])
+
+    def to_json(self, json_file: str) -> None:
+        """
+        Write parameter definitions to a JSON file.
+
+        Parameters
+        ----------
+        json_file : str
+            Path to file to save json data.
+        """
+        data: dict[str, Any] = {
+            'options': self.options,
+            'fixed': self.fixed,
+            'free': self.free,
+            'dependent': self.dependent,
+            'dynamic': self.dynamic,
+            'sublayers': self.sublayers,
+            'weights': {},
+            'sublayer_param': self.sublayer_param,
+        }
+        for layer, regions in self.weights.items():
+            data['weights'][layer] = {}
+            for region, expr in regions.items():
+                region_str = encode_region(region)
+                data['weights'][layer][region_str] = expr
+        with open(json_file, 'w') as f:
+            json.dump(data, f, indent=4)
+
+    def set_sublayers(self, *args: dict[str, list[str]], **kwargs: list[str]) -> None:
+        """
+        Set layers and sublayers of a network.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> param_def.set_sublayers(f=['task'], c=['task'])
+        """
+        self.sublayers.update(*args, **kwargs)
+
+    def set_weights(
+        self, connect: str, regions: dict[Region, str]
+    ) -> None:
+        """
+        Set weights on model patterns.
+
+        Parameters
+        ----------
+        connect : str
+            Network connection to set weights for.
+
+        regions : dict of (tuple of (tuple of str)): str
+            Weights for each region to set.
+
+        Examples
+        --------
+        >>> from cmr import CMRParameters
+        >>> param_def = Parameters()
+        >>> region = (('f_sub', 'f_reg'), ('c_sub', 'c_reg'))
+        >>> param_def.set_weights('fc', {region: 'b * pattern'})
+        """
+        if connect in self.weights:
+            self.weights[connect].update(regions)
+        else:
+            self.weights[connect] = regions
+
+    def eval_weights(
+        self,
+        patterns: dict[str, dict[str, Any]],
+        param: Optional[dict[str, float]] = None,
+        item_index: Optional[Any] = None
+    ) -> dict[str, dict[Region, ArrayLike]]:
+        """
+        Evaluate weights based on parameters and patterns.
+
+        Parameters
+        ----------
+        patterns : dict of str: (dict of str: numpy.ndarray)
+            Patterns to use when evaluating weights.
+
+        param : dict, optional
+            Parameters to use when evaluating weights.
+
+        item_index : numpy.ndarray, optional
+            Item indices to include in the patterns.
+
+        Returns
+        -------
+        weights : dict of str: (dict of str: numpy.ndarray)
+            Weight matrices for each region in each connection matrix.
+        """
+        weights: dict[str, dict[Region, ArrayLike]] = {}
+        for connect, regions in self.weights.items():
+            # get necessary patterns
+            weights[connect] = {}
+            if connect in ['fc', 'cf']:
+                layer_type = 'vector'
+            elif connect == 'ff':
+                layer_type = 'similarity'
+            else:
+                raise ValueError(f'Invalid connection: {connect}.')
+            data = patterns[layer_type].copy()
+
+            # filter by item index
+            if item_index is not None:
+                for feature, mat in data.items():
+                    if layer_type == 'vector':
+                        data[feature] = mat[item_index, :]
+                    else:
+                        data[feature] = mat[np.ix_(item_index, item_index)]
+
+            # evaluate expressions to get weights
+            if param is not None:
+                data.update(param)
+            for region, expr in regions.items():
+                weights[connect][region] = eval(expr, np.__dict__, data)
+        return weights
+
+    def set_sublayer_param(
+        self, layer: str, sublayer: str, *args: dict[str, str], **kwargs: str
+    ) -> None:
+        """
+        Set sublayer parameters.
+
+        Parameters
+        ----------
+        layer : str
+            Layer containing the sublayer to set.
+
+        sublayer : str
+            Sublayer to set parameters for.
+
+        Examples
+        --------
+        >>> from cymr import parameters
+        >>> param_def = parameters.Parameters()
+        >>> param_def.set_sublayer_param('c', 'sub1', a='2 * d'})
+        >>> param_def.set_sublayer_param('c', 'sub1', {'b': 'exp(f)'})
+        """
+        if layer in self.sublayer_param:
+            if sublayer in self.sublayer_param[layer]:
+                self.sublayer_param[layer][sublayer].update(*args, **kwargs)
+            else:
+                self.sublayer_param[layer][sublayer] = dict(*args, **kwargs)
+        else:
+            self.sublayer_param[layer] = {sublayer: dict(*args, **kwargs)}
+
+    def eval_sublayer_param(
+        self, layer: str, param: dict[str, Any], n_trial: int = None
+    ) -> dict[str, Union[float, ArrayLike]]:
+        """
+        Evaluate sublayer parameters.
+
+        Parameters
+        ----------
+        layer : str
+            Layer to evaluate.
+
+        param : dict
+            Parameters to use when evaluating sublayer parameters.
+
+        n_trial : int, optional
+            Number of trials. If indicated, parameters will be tiled
+            over all trials.
+
+        Returns
+        -------
+        eval_param : dict
+            Input parameters with sublayer-specific parameters set.
+        """
+        eval_param = param.copy()
+
+        # get parameter values for each sublayer
+        param_lists: dict[str, list[ArrayLike]] = {}
+        for sublayer in self.sublayers[layer]:
+            for par, expr in self.sublayer_param[layer][sublayer].items():
+                if par not in param_lists:
+                    param_lists[par] = []
+                value = eval(expr, np.__dict__, param)
+                param_lists[par].append(value)
+
+        # prepare parameter arrays
+        for par, values in param_lists.items():
+            if n_trial is not None:
+                eval_param[par] = np.tile(np.asarray(values), (n_trial, 1))
+            else:
+                eval_param[par] = np.array(values)
+        return eval_param
 
 
 def primacy(n_item, L, P1, P2):
@@ -87,7 +378,7 @@ def config_loc_cmr(n_item):
     """
     items = np.arange(n_item)
     patterns = {'items': items, 'vector': {'loc': np.eye(n_item)}}
-    param_def = parameters.Parameters()
+    param_def = CMRParameters()
     param_def.set_sublayers(f=['task'], c=['task'])
     param_def.set_weights(
         'fc', {(('task', 'item'), ('task', 'item')): 'Afc + Dfc * loc'}
@@ -104,7 +395,7 @@ def init_network(param_def, patterns, param, item_index, remove_blank=False):
 
     Parameters
     ----------
-    param_def : cymr.parameters.Parameters
+    param_def : cymr.cmr.CMRParameters
         Parameters definition defining network sublayers and weights.
 
     patterns : dict
@@ -174,7 +465,7 @@ def study_list(param_def, param, item_index, item_input, patterns):
 
     Parameters
     ----------
-    param_def : cymr.parameters.Parameters
+    param_def : cymr.cmr.CMRParameters
         Parameters definition defining network sublayers and weights.
 
     param : dict of (str: float)
@@ -223,7 +514,7 @@ def prepare_list_param(n_item, n_sub, param, param_def):
     param : dict of (str: float)
         Parameter values.
 
-    param_def : cymr.parameters.Parameters
+    param_def : cymr.cmr.CMRParameters
         Parameter definitions indicating sublayer parameters.
 
     Returns
