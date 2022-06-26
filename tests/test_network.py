@@ -7,7 +7,6 @@ import numpy as np
 
 from cymr import cmr
 from cymr import network
-from cymr import parameters
 
 
 @pytest.fixture()
@@ -450,7 +449,7 @@ def test_pattern_io(patterns):
 
 
 def test_cmr_patterns(patterns):
-    param_def = parameters.Parameters()
+    param_def = cmr.CMRParameters()
     fcf_weights = {
         (('task', 'item'), ('task', 'loc')): 'w_loc * loc',
         (('task', 'item'), ('task', 'cat')): 'w_cat * cat',
