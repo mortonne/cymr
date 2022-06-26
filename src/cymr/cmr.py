@@ -142,8 +142,8 @@ class CMRParameters(Parameters):
 
         Examples
         --------
-        >>> from cymr import parameters
-        >>> param_def = parameters.Parameters()
+        >>> from cymr.cmr import CMRParameters
+        >>> param_def = CMRParameters()
         >>> param_def.set_sublayers(f=['task'], c=['task'])
         """
         self.sublayers.update(*args, **kwargs)
@@ -164,8 +164,8 @@ class CMRParameters(Parameters):
 
         Examples
         --------
-        >>> from cmr import CMRParameters
-        >>> param_def = Parameters()
+        >>> from cymr.cmr import CMRParameters
+        >>> param_def = CMRParameters()
         >>> region = (('f_sub', 'f_reg'), ('c_sub', 'c_reg'))
         >>> param_def.set_weights('fc', {region: 'b * pattern'})
         """
@@ -242,8 +242,8 @@ class CMRParameters(Parameters):
 
         Examples
         --------
-        >>> from cymr import parameters
-        >>> param_def = parameters.Parameters()
+        >>> from cymr.cmr import CMRParameters
+        >>> param_def = CMRParameters()
         >>> param_def.set_sublayer_param('c', 'sub1', a='2 * d'})
         >>> param_def.set_sublayer_param('c', 'sub1', {'b': 'exp(f)'})
         """
