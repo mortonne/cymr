@@ -69,11 +69,4 @@ Generating simulated data
 
 To support generation of simulated data, the model class must implement a
 :code:`generate_subject` method that takes information about the experiment to
-simulate (in Psifr format) and returns a list of recalled item indices
-(in terms of the position of each item in the list) for each free recall list.
-
-.. note::
-
-    Currently this framework does not support modeling of prior-list intrusions.
-    A future version may shift to using item indices within an item pool rather
-    than list indices to add necessary flexibility to simulate intrusions.
+simulate (in Psifr format) and returns a list of recalled items for each free recall list.
