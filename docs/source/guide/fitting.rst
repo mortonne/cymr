@@ -108,14 +108,17 @@ Parameter Search
 Finally, we can run the search. Parameters will be optimized separately
 for each participant. For speed, we'll set the tolerance to
 be pretty high (0.1); normally this should be much lower to ensure
-that the search converges.
+that the search converges. It is also often a good idea to run multiple
+replications of each search using the optional :code:`n_rep` input to ensure
+that the search converges on the best fitting parameter set. Here,
+we'll just run one search for each participant.
 
 .. ipython:: python
 
-    from cymr import cmr
     model = cmr.CMR()
     results = model.fit_indiv(data, par, patterns=patterns, tol=0.1)
-    results[['B_enc', 'logl', 'n', 'k']]
+    best = fit.get_best_results(results)
+    best[['B_enc', 'logl', 'n', 'k']]
 
 The results give the complete set of parameters, including fixed
 parameters, optimized free parameters, and dependent parameters. It
