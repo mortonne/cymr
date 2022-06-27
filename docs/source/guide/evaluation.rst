@@ -32,7 +32,7 @@ First, load some sample data:
 
 .. ipython:: python
 
-    from cymr import fit, parameters
+    from cymr import fit, cmr
     data = fit.sample_data('Morton2013_mixed').query('subject <= 3')
 
 Patterns and Weights
@@ -83,7 +83,7 @@ First, we indicate what sublayers will be included in the network.
 
 .. ipython:: python
 
-    param_def = parameters.Parameters()
+    param_def = cmr.CMRParameters()
     param_def.set_sublayers(f=['task'], c=['task'])
 
 Patterns may include multiple components that may be weighted differently.
@@ -136,7 +136,6 @@ the best-fitting parameters for a model.
 
 .. ipython:: python
 
-    from cymr import cmr
     model = cmr.CMR()
     results = model.likelihood(data, param, param_def=param_def, patterns=patterns)
     results

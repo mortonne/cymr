@@ -35,7 +35,7 @@ simulation.
 
 .. ipython:: python
 
-    from cymr import fit, parameters
+    from cymr import fit, cmr
     from psifr import fr
     data = fit.sample_data('Morton2013_mixed')
     items = (data
@@ -59,7 +59,7 @@ Setting parameters
 Next, we define parameters for the simulation. Often these will be
 taken from a parameter fit (see :doc:`/guide/fitting`). Here, we'll
 just define the parameters we want directly. We also need to create
-a :py:class:`~cymr.parameters.Parameters` object to define how the model
+a :py:class:`~cymr.cmr.CMRParameters` object to define how the model
 patterns are used.
 
 .. ipython:: python
@@ -83,7 +83,7 @@ patterns are used.
         'X2': 0.35
     }
     patterns = {'items': items, 'vector': {'loc': np.eye(768)}}
-    param_def = parameters.Parameters()
+    param_def = cmr.CMRParameters()
     param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
     param_def.set_weights('fc', weights)
@@ -99,7 +99,6 @@ get a stable estimate of the model's behavior in this task.
 
 .. ipython:: python
 
-    from cymr import cmr
     model = cmr.CMR()
     sim = model.generate(data, param, param_def=param_def, patterns=patterns, n_rep=5)
 

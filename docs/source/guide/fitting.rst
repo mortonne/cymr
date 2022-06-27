@@ -27,7 +27,7 @@ First, load some sample data to fit:
 
 .. ipython:: python
 
-    from cymr import fit, parameters
+    from cymr import fit, cmr
     data = fit.sample_data('Morton2013_mixed').query('subject <= 3')
 
 Search Definition
@@ -62,7 +62,7 @@ clustering, etc.
 
 .. ipython:: python
 
-    par = parameters.Parameters()
+    par = cmr.CMRParameters()
     par.set_fixed(T=0.1, Lfc=0.15, Lcf=0.15, P1=0.2, P2=2,
                   B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25)
     par.set_free(B_enc=(0, 1))
@@ -91,8 +91,8 @@ We can print the parameter definition to get an overview of the settings.
 
     print(par)
 
-The :py:meth:`~cymr.parameters.Parameters.to_json` method of
-:py:class:`~cymr.parameters.Parameters` can be used to save out parameter
+The :py:meth:`~cymr.cmr.CMRParameters.to_json` method of
+:py:class:`~cymr.cmr.CMRParameters` can be used to save out parameter
 definitions to a file. The output file uses JSON format, which is
 both human- and machine-readable and can be loaded later to restore
 search settings:
@@ -100,7 +100,7 @@ search settings:
 .. ipython:: python
 
     par.to_json('parameters.json')
-    restored = parameters.read_json('parameters.json')
+    restored = cmr.read_config('parameters.json')
 
 Parameter Search
 ~~~~~~~~~~~~~~~~
