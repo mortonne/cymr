@@ -4,8 +4,8 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   /api/operations
-   /api/network
-   /api/parameters
-   /api/fit
    /api/cmr
+   /api/fit
+   /api/parameters
+   /api/network
+   /api/operations
