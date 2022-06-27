@@ -3,15 +3,6 @@ Network
 
 .. currentmodule:: cymr.network
 
-Weight Patterns
-~~~~~~~~~~~~~~~
-
-.. autosummary::
-    :toctree: api/
-
-    save_patterns
-    load_patterns
-
 Network Initialization
 ~~~~~~~~~~~~~~~~~~~~~~
 
