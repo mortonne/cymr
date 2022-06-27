@@ -1,5 +1,6 @@
 """Test operation of models of free recall."""
 
+import os
 import numpy as np
 import pandas as pd
 import pytest
@@ -107,6 +108,35 @@ def patterns():
         'similarity': {'loc': np.eye(6), 'cat': np.dot(cat, cat.T)},
     }
     return patterns
+
+
+def test_pattern_io(patterns):
+    temp = 'test_pattern.hdf5'
+    cmr.save_patterns(
+        temp,
+        patterns['items'],
+        loc=patterns['vector']['loc'],
+        cat=patterns['vector']['cat'],
+    )
+    pat = cmr.load_patterns(temp)
+
+    # vector representation
+    expected = np.array([[1, 0], [0, 1], [1, 0], [1, 0], [0, 1], [1, 0]])
+    np.testing.assert_allclose(pat['vector']['cat'], expected)
+
+    # similarity matrix
+    expected = np.array(
+        [
+            [1, 0, 1, 1, 0, 1],
+            [0, 1, 0, 0, 1, 0],
+            [1, 0, 1, 1, 0, 1],
+            [1, 0, 1, 1, 0, 1],
+            [0, 1, 0, 0, 1, 0],
+            [1, 0, 1, 1, 0, 1],
+        ]
+    )
+    np.testing.assert_allclose(pat['similarity']['cat'], expected)
+    os.remove(temp)
 
 
 def test_init_network(patterns):

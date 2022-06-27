@@ -3,6 +3,7 @@
 from __future__ import annotations
 import json
 import numpy as np
+import h5py
 from typing import Union, Any, Iterable, Optional, Tuple
 from numpy.typing import ArrayLike
 from cymr.fit import Recall
@@ -12,6 +13,80 @@ from cymr.parameters import Parameters
 
 
 Region = Union[Tuple[str, str], Tuple[Tuple[str, str], Tuple[str, str]]]
+
+
+def save_patterns(h5_file, items, **kwargs):
+    """
+    Write patterns and similarity matrices to hdf5.
+
+    Parameters
+    ----------
+    h5_file : str
+        Path to hdf5 file to save patterns in.
+
+    items : list of str
+        Item strings corresponding to the patterns.
+
+    Additional keyword arguments set named feature vectors. Feature
+    vector arrays must have shape [items x units].
+    """
+    with h5py.File(h5_file, 'w') as f:
+        # items
+        dt = h5py.special_dtype(vlen=str)
+        items = np.asarray(items)
+        dset = f.create_dataset('items', items.shape, dtype=dt)
+        for i, item in enumerate(items):
+            dset[i] = item
+
+        # features
+        features = list(kwargs.keys())
+        dset = f.create_dataset('features', (len(features),), dtype=dt)
+        for i, feature in enumerate(features):
+            dset[i] = feature
+
+        # patterns
+        for name, vectors in kwargs.items():
+            # save vectors
+            f.create_dataset('vector/' + name, data=vectors)
+
+            # set pattern similarity to dot product
+            sim = np.dot(vectors, vectors.T)
+            f.create_dataset('similarity/' + name, data=sim)
+
+
+def load_patterns(h5_file, features=None):
+    """
+    Load weights from an hdf5 file.
+
+    Parameters
+    ----------
+    h5_file : str
+        Path to file saved with `save_patterns`.
+
+    features : list of str, optional
+        Names of features to load. Default is to load all features.
+
+    Returns
+    -------
+    patterns : dict of (str: dict of (str: numpy.array))
+        Loaded patterns. The "vector" field contains vector patterns.
+        The "similarity" field contains pairwise similarity matrices.
+        Each type of pattern contains a field for each loaded feature.
+    """
+    with h5py.File(h5_file, 'r') as f:
+        patterns = {
+            'items': np.array([item for item in f['items'].asstr()]),
+            'vector': {},
+            'similarity': {},
+        }
+
+        if features is None:
+            features = f['features'].asstr()
+
+        for name in features:
+            patterns['vector'][name] = f['vector/' + name][()]
+            patterns['similarity'][name] = f['similarity/' + name][()]
+    return patterns
 
 
 def encode_region(region: Region) -> str:
