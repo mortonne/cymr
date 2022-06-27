@@ -109,7 +109,7 @@ def test_blank(split_data):
 def test_json(param_def, tmp_path):
     p = tmp_path / 'parameters.json'
     param_def.to_json(p.as_posix())
-    param = parameters.read_parameters(p.as_posix())
+    param = parameters.read_json(p.as_posix())
     assert param.options == param_def.options
     assert param.fixed == param_def.fixed
     assert param.free == param_def.free

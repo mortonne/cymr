@@ -9,7 +9,7 @@ from typing import Union, Any, Callable, Iterable, Optional
 from numpy.typing import ArrayLike
 
 
-def read_parameters(json_file: str) -> Parameters:
+def read_json(json_file: str) -> Parameters:
     """Read parameters from a JSON file."""
     with open(json_file, 'r') as f:
         par_dict = json.load(f)
