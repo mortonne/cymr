@@ -21,7 +21,7 @@ copyright = '2020, Neal Morton'
 author = 'Neal Morton'
 
 # The full version, including alpha/beta/rc tags
-release = 'v0.12.0'
+release = 'v0.12.1'
 
 
 # -- General configuration ---------------------------------------------------
