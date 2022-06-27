@@ -133,3 +133,36 @@ n
 
 k
     Number of free parameters.
+
+Using search output
+~~~~~~~~~~~~~~~~~~~
+
+To use the output from the search for evaluating the model on new data
+or running simulations, we must first convert the results DataFrame into
+a dictionary.
+
+.. ipython:: python
+
+    subj_param = best.T.to_dict()
+
+As an example of using the best-fitting parameters, we can use them
+to confirm the likelihood values from the search.
+
+The :code:`group_param` input to :meth:`~cymr.cmr.CMR.likelihood` sets parameters that
+are the same for all participants, while the :code:`subj_param` sets
+subject-specific parameters. Here, we'll just set everything through the
+:code:`subj_param` input.
+
+.. ipython:: python
+
+    group_param = {}
+    model.likelihood(
+        data,
+        group_param,
+        subj_param=subj_param,
+        param_def=par,
+        patterns=patterns,
+    )
+
+In :doc:`/guide/generation`, we'll use a set of parameter values to generate
+simulated data for analysis.
