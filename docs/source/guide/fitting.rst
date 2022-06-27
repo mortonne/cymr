@@ -27,7 +27,7 @@ First, load some sample data to fit:
 
 .. ipython:: python
 
-    from cymr import fit, parameters
+    from cymr import fit, cmr
     data = fit.sample_data('Morton2013_mixed').query('subject <= 3')
 
 Search Definition
@@ -62,7 +62,7 @@ clustering, etc.
 
 .. ipython:: python
 
-    par = parameters.Parameters()
+    par = cmr.CMRParameters()
     par.set_fixed(T=0.1, Lfc=0.15, Lcf=0.15, P1=0.2, P2=2,
                   B_start=0.3, B_rec=0.9, X1=0.001, X2=0.25)
     par.set_free(B_enc=(0, 1))
@@ -91,8 +91,8 @@ We can print the parameter definition to get an overview of the settings.
 
     print(par)
 
-The :py:meth:`~cymr.parameters.Parameters.to_json` method of
-:py:class:`~cymr.parameters.Parameters` can be used to save out parameter
+The :py:meth:`~cymr.cmr.CMRParameters.to_json` method of
+:py:class:`~cymr.cmr.CMRParameters` can be used to save out parameter
 definitions to a file. The output file uses JSON format, which is
 both human- and machine-readable and can be loaded later to restore
 search settings:
@@ -100,7 +100,7 @@ search settings:
 .. ipython:: python
 
     par.to_json('parameters.json')
-    restored = parameters.read_json('parameters.json')
+    restored = cmr.read_config('parameters.json')
 
 Parameter Search
 ~~~~~~~~~~~~~~~~
@@ -108,14 +108,17 @@ Parameter Search
 Finally, we can run the search. Parameters will be optimized separately
 for each participant. For speed, we'll set the tolerance to
 be pretty high (0.1); normally this should be much lower to ensure
-that the search converges.
+that the search converges. It is also often a good idea to run multiple
+replications of each search using the optional :code:`n_rep` input to ensure
+that the search converges on the best fitting parameter set. Here,
+we'll just run one search for each participant.
 
 .. ipython:: python
 
-    from cymr import cmr
     model = cmr.CMR()
     results = model.fit_indiv(data, par, patterns=patterns, tol=0.1)
-    results[['B_enc', 'logl', 'n', 'k']]
+    best = fit.get_best_results(results)
+    best[['B_enc', 'logl', 'n', 'k']]
 
 The results give the complete set of parameters, including fixed
 parameters, optimized free parameters, and dependent parameters. It
@@ -130,3 +133,36 @@ n
 
 k
     Number of free parameters.
+
+Using search output
+~~~~~~~~~~~~~~~~~~~
+
+To use the output from the search for evaluating the model on new data
+or running simulations, we must first convert the results DataFrame into
+a dictionary.
+
+.. ipython:: python
+
+    subj_param = best.T.to_dict()
+
+As an example of using the best-fitting parameters, we can use them
+to confirm the likelihood values from the search.
+
+The :code:`group_param` input to :meth:`~cymr.cmr.CMR.likelihood` sets parameters that
+are the same for all participants, while the :code:`subj_param` sets
+subject-specific parameters. Here, we'll just set everything through the
+:code:`subj_param` input.
+
+.. ipython:: python
+
+    group_param = {}
+    model.likelihood(
+        data,
+        group_param,
+        subj_param=subj_param,
+        param_def=par,
+        patterns=patterns,
+    )
+
+In :doc:`/guide/generation`, we'll use a set of parameter values to generate
+simulated data for analysis.

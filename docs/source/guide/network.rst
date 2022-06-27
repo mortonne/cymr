@@ -93,8 +93,8 @@ First, define the sublayers to be included in the model.
 
 .. ipython:: python
 
-    from cymr import parameters
-    param_def = parameters.Parameters()
+    from cymr import cmr
+    param_def = cmr.CMRParameters()
     param_def.set_sublayers(f=['task'], c=['loc', 'cat'])
 
 Regions of the weights matrices are addressed as tuples of

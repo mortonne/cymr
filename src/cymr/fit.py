@@ -36,8 +36,9 @@ def prepare_lists(data, study_keys=None, recall_keys=None, clean=True):
         one-indexed.
 
     recall_keys : list of str, optional
-        Columns to export for recall list data. Default is: ['input'].
-        Input position is assumed to be one-indexed.
+        Columns to export for recall list data. Default is:
+        ['input', 'item_index']. Input position is assumed to be
+        one-indexed.
 
     clean : bool, optional
         If true, repeats and intrusions will be removed.

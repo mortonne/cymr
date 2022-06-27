@@ -15,7 +15,7 @@ Utilities
     get_best_results
     add_recalls
 
-Model Evaluation
+Model evaluation
 ~~~~~~~~~~~~~~~~
 
 .. autosummary::
@@ -25,7 +25,7 @@ Model Evaluation
     Recall.likelihood_subject
     Recall.likelihood
 
-Parameter Estimation
+Parameter estimation
 ~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
@@ -34,7 +34,7 @@ Parameter Estimation
     Recall.fit_subject
     Recall.fit_indiv
 
-Generating Simulated Data
+Generating simulated data
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
@@ -43,7 +43,7 @@ Generating Simulated Data
     Recall.generate_subject
     Recall.generate
 
-Characterizing Model Parameters
+Characterizing model parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::

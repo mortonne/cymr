@@ -1,13 +1,11 @@
 """Test network operations."""
 
-import os
 from itertools import permutations
 import pytest
 import numpy as np
 
 from cymr import cmr
 from cymr import network
-from cymr import parameters
 
 
 @pytest.fixture()
@@ -422,35 +420,8 @@ def patterns():
     return patterns
 
 
-def test_pattern_io(patterns):
-    temp = 'test_pattern.hdf5'
-    items = ['absence', 'hollow', 'pupil', 'fountain', 'piano', 'pillow']
-    network.save_patterns(
-        temp, items, loc=patterns['vector']['loc'], cat=patterns['vector']['cat']
-    )
-    pat = network.load_patterns(temp)
-
-    # vector representation
-    expected = np.array([[1, 0], [0, 1], [1, 0], [1, 0], [0, 1], [1, 0]])
-    np.testing.assert_allclose(pat['vector']['cat'], expected)
-
-    # similarity matrix
-    expected = np.array(
-        [
-            [1, 0, 1, 1, 0, 1],
-            [0, 1, 0, 0, 1, 0],
-            [1, 0, 1, 1, 0, 1],
-            [1, 0, 1, 1, 0, 1],
-            [0, 1, 0, 0, 1, 0],
-            [1, 0, 1, 1, 0, 1],
-        ]
-    )
-    np.testing.assert_allclose(pat['similarity']['cat'], expected)
-    os.remove(temp)
-
-
 def test_cmr_patterns(patterns):
-    param_def = parameters.Parameters()
+    param_def = cmr.CMRParameters()
     fcf_weights = {
         (('task', 'item'), ('task', 'loc')): 'w_loc * loc',
         (('task', 'item'), ('task', 'cat')): 'w_cat * cat',

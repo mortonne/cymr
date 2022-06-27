@@ -32,16 +32,6 @@ Dynamic parameters
     Parameters.set_dynamic
     Parameters.eval_dynamic
 
-Network definition
-~~~~~~~~~~~~~~~~~~
-
-.. autosummary::
-    :toctree: api/
-
-    Parameters.set_sublayers
-    Parameters.set_weights
-    Parameters.set_sublayer_param
-
 Parameter sets
 ~~~~~~~~~~~~~~
 

@@ -1,11 +1,11 @@
 """Test operation of models of free recall."""
 
+import os
 import numpy as np
 import pandas as pd
 import pytest
 from cymr import fit
 from cymr import cmr
-from cymr import parameters
 
 
 @pytest.fixture()
@@ -110,9 +110,38 @@ def patterns():
     return patterns
 
 
+def test_pattern_io(patterns):
+    temp = 'test_pattern.hdf5'
+    cmr.save_patterns(
+        temp,
+        patterns['items'],
+        loc=patterns['vector']['loc'],
+        cat=patterns['vector']['cat'],
+    )
+    pat = cmr.load_patterns(temp)
+
+    # vector representation
+    expected = np.array([[1, 0], [0, 1], [1, 0], [1, 0], [0, 1], [1, 0]])
+    np.testing.assert_allclose(pat['vector']['cat'], expected)
+
+    # similarity matrix
+    expected = np.array(
+        [
+            [1, 0, 1, 1, 0, 1],
+            [0, 1, 0, 0, 1, 0],
+            [1, 0, 1, 1, 0, 1],
+            [1, 0, 1, 1, 0, 1],
+            [0, 1, 0, 0, 1, 0],
+            [1, 0, 1, 1, 0, 1],
+        ]
+    )
+    np.testing.assert_allclose(pat['similarity']['cat'], expected)
+    os.remove(temp)
+
+
 def test_init_network(patterns):
     """Test initialization of a complex network."""
-    param_def = parameters.Parameters()
+    param_def = cmr.CMRParameters()
     param_def.set_dependent(
         w_loc='wr_loc / sqrt(wr_loc**2 + wr_cat**2)',
         w_cat='wr_cat / sqrt(wr_loc**2 + wr_cat**2)',
@@ -164,7 +193,7 @@ def test_init_network(patterns):
 @pytest.fixture()
 def param_def_dist(param):
     """Generate parameter definitions for a simple CMR-D network."""
-    param_def = parameters.Parameters()
+    param_def = cmr.CMRParameters()
     param_def.set_fixed(param)
     param_def.set_sublayers(f=['task'], c=['task'])
     weights = {(('task', 'item'), ('task', 'item')): 'loc'}
@@ -298,7 +327,7 @@ def test_dynamic_cmr_recall(data, patterns, param_def_dist, param_dist):
 @pytest.fixture()
 def param_def_sublayer():
     """Generate parameter definitions for multiple context sublayers."""
-    param_def = parameters.Parameters()
+    param_def = cmr.CMRParameters()
     param_def.set_sublayers(f=['task'], c=['loc', 'cat'])
     param_def.set_sublayer_param('c', 'loc', {'B_enc': 'B_enc_loc'})
     param_def.set_sublayer_param('c', 'cat', {'B_enc': 'B_enc_cat'})
