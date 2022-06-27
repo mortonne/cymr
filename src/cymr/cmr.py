@@ -771,11 +771,16 @@ class CMR(Recall):
                 list_param['T'],
                 list_param['p_stop'],
             )
-            if np.any(np.isnan(p)) or np.any((p <= 0) | (p >= 1)):
-                logl = -10e6
-                break
-            logl += np.sum(np.log(p))
             n += p.size
+            if np.any(np.isnan(p)):
+                # if any response probability is undefined, so is the
+                # overall likelihood
+                logl = np.nan
+                break
+
+            # ensure probabilities are not zero before log transform
+            p = np.clip(p, 10e-6, 1)
+            logl += np.sum(np.log(p))
         return logl, n
 
     def generate_subject(

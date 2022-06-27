@@ -449,6 +449,8 @@ class Recall(ABC):
             eval_logl, _ = self.likelihood_subject(
                 study, recall, eval_param, param_def, patterns
             )
+            if np.isnan(eval_logl):
+                eval_logl = -10e6
             return -eval_logl
 
         group_lb = [param_def.free[k][0] for k in var_names]
